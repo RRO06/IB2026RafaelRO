@@ -1,4 +1,4 @@
-package com.iberdrola.practicas2026.RafaelRO.ui.theme
+package com.iberdrola.practicas2026.RafaelRO.ui.common.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
