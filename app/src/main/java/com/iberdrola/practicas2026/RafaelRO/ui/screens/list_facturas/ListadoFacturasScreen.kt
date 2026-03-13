@@ -3,6 +3,7 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemList
@@ -50,54 +55,37 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 
 data class ListadoFacturasActions(
-    val onBack: () -> Unit,
-    val onFilterLuz: () -> Unit,
-    val onFilterGas: () -> Unit,
-    val onFilter: () -> Unit
+    val onFilter: () -> Unit,
+    val onFacturaClick : () -> Unit,
+    val dismissDialog : () -> Unit
 )
 
 @Composable
-fun ListadoFacturasScreen(viewModel: ListadoFacturasViewModel) {
-    when (viewModel.stateData) {
-        is ListadoFacturasState.Error -> ErrorScreen()
-        is ListadoFacturasState.Loading -> LoadingScreen()
-        is ListadoFacturasState.Success -> ListadoFacturasContent(
-            actions = ListadoFacturasActions(
-                onBack = { },
-                onFilterLuz = { },
-                onFilterGas = { },
-                onFilter = { }
-            ),
-            stateUI = viewModel.stateUI
-        )
-    }
-}
-
-@Composable
-fun ListadoFacturasContent(
-    actions: ListadoFacturasActions,
-    stateUI: ListadoFacturasUiState
+fun ListadoFacturasScreen(
+    viewModel: ListadoFacturasViewModel,
+    onBack: () -> Unit,
+    modifier : Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        FacturasHeader(onBack = actions.onBack)
+        FacturasHeader(onBack = onBack)
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row{
+        Row {
             BotonFiltroFocuseado(
                 text = "Luz",
-                onClick = { actions.onFilterLuz() },
+                onClick = { viewModel.onFilterLuz() },
                 Modifier,
-                isSelected = stateUI.luz
+                isSelected = viewModel.stateUI.luz
             )
             BotonFiltroFocuseado(
                 text = "Gas",
-                onClick = { actions.onFilterGas() },
+                onClick = { viewModel.onFilterGas() },
                 Modifier,
-                isSelected = stateUI.gas
+                isSelected = viewModel.stateUI.gas
             )
         }
         Box(
@@ -106,70 +94,106 @@ fun ListadoFacturasContent(
                 .height(3.dp)
                 .background(Divider)
         )
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            UltimaFacturaCard(stateUI.ultimaFactura)
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Historico de facturas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Button(
-                    onClick = { actions.onFilter },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = GreenAplication
-                    ),
-                    border = BorderStroke(
-                        width = 2.dp,
-                        color = GreenAplication
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .padding(end = 4.dp)
-                    )
-                    Text(
-                        text = "Filtrar",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-            }
-            LazyColumFacturas(stateUI.facturasPorAnio)
+        when (val state = viewModel.stateData) {
+            is ListadoFacturasState.Error -> ErrorScreen(state.message)
+            is ListadoFacturasState.Loading -> LoadingScreen()
+            is ListadoFacturasState.Success -> ListadoFacturasContent(
+                actions = ListadoFacturasActions(
+                    onFilter = { },
+                    onFacturaClick = viewModel::onFacturaClick,
+                    dismissDialog = viewModel::dismissDialog
+                ),
+                stateUI = viewModel.stateUI
+            )
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LazyColumFacturas( facturasPorAnio: Map<Int, List<Factura>>) {
+fun ListadoFacturasContent(
+    actions: ListadoFacturasActions,
+    stateUI: ListadoFacturasUiState,
+) {
+    Column(
+        modifier = Modifier.padding(12.dp)
+    ) {
+        UltimaFacturaCard(stateUI.ultimaFactura)
+        Spacer(modifier = Modifier.height(24.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Historico de facturas",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Button(
+                onClick = { actions.onFilter },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = GreenAplication
+                ),
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = GreenAplication
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Tune,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(end = 4.dp)
+                )
+                Text(
+                    text = "Filtrar",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+        }
+        LazyColumFacturas(stateUI.facturasPorAnio, actions.onFacturaClick)
+    }
+    if (stateUI.showDialog) {
+        AlertDialog(
+            onDismissRequest = { actions.dismissDialog() },
+            confirmButton = {
+                TextButton(onClick = { actions.dismissDialog() }) {
+                    Text("Aceptar", color = GreenAplication)
+                }
+            },
+            title = { Text(text = "Aviso") },
+            text = { Text(text = "Esta factura no está disponible para su visualización.") }
+        )
+    }
+
+}
+
+@Composable
+fun LazyColumFacturas(
+    facturasPorAnio: Map<Int, List<Factura>> ,
+    onFacturaClick: () -> Unit
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
-    ){
+    ) {
         facturasPorAnio.forEach { (anio, facturas) ->
-            stickyHeader {
+            item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
                         .padding(vertical = 8.dp)
                 ) {
-                    Text(text = "Año $anio", color = Color.Gray, fontWeight = FontWeight.Bold)
+                    Text(text = "$anio", fontWeight = FontWeight.Bold)
                 }
             }
-            items(facturas){ factura ->
-                ItemList(factura = factura)
+            items(facturas) { factura ->
+                ItemList(
+                    factura = factura,
+                    Modifier.clickable{ onFacturaClick() }
+                )
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -179,7 +203,7 @@ fun LazyColumFacturas( facturasPorAnio: Map<Int, List<Factura>>) {
                 )
             }
         }
-        }
+    }
 }
 
 @Composable
@@ -256,7 +280,10 @@ fun UltimaFacturaCard(factura: Factura) {
                     )
                 }
                 Icon(
-                    imageVector = Icons.Outlined.Lightbulb,
+                    imageVector = when(factura.tipo){
+                        Tipo.Luz -> Icons.Outlined.Lightbulb
+                        Tipo.Gas -> Icons.Default.Whatshot
+                    },
                     contentDescription = "",
                     modifier = Modifier
                         .size(34.dp),
@@ -313,10 +340,9 @@ fun FacturaStatusBadge(isPending: Boolean) {
 fun ListadoFacturasContentPreview() {
     ListadoFacturasContent(
         ListadoFacturasActions(
-            onBack = { },
-            onFilterLuz = { },
-            onFilterGas = { },
-            onFilter = { }
+            onFilter = { },
+            onFacturaClick = {},
+            dismissDialog = {}
         ),
         stateUI = ListadoFacturasUiState()
     )

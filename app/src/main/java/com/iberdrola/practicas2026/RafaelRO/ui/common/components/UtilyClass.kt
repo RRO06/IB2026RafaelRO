@@ -5,10 +5,15 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class UtilyClass {
-    companion object{
-        fun toSpanishMediumDate(fecha : LocalDate): String {
+    companion object {
+        fun toSpanishMediumDate(fecha: LocalDate): String {
+            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "ES"))
+            return fecha.format(formatter).lowercase()
+        }
+
+        fun toLongSpanishDate(fecha: LocalDate): String {
             val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "ES"))
-            return fecha.format(formatter)
+            return fecha.format(formatter).lowercase()
         }
 
         fun toCurrencyFormat(cantidad: Double): String {

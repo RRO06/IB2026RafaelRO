@@ -4,11 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.iberdrola.practicas2026.RafaelRO.data.local.dao.FacturaDAO
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import java.util.concurrent.Executors
-
+@TypeConverters(Converters::class)
 @Database(
     entities = [Factura::class], version = 1, exportSchema = false
 )

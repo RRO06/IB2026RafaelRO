@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "fechaInicio": "2026-01-01",
+    "fechaFinal": "2026-01-31",
+    "tipo": "Luz",
+    "estado": true,
+    "valor": 45.50
+  },
+  {
+    "id": 2,
+    "fechaInicio": "2026-01-05",
+    "fechaFinal": "2026-02-05",
+    "tipo": "Gas",
+    "estado": false,
+    "valor": 120.30
+  },
+  {
+    "id": 3,
+    "fechaInicio": "2026-02-01",
+    "fechaFinal": "2026-02-28",
+    "tipo": "Luz",
+    "estado": true,
+    "valor": 38.75
+  },
+  {
+    "id": 4,
+    "fechaInicio": "2026-02-10",
+    "fechaFinal": "2026-03-10",
+    "tipo": "Gas",
+    "estado": true,
+    "valor": 95.00
+  },
+  {
+    "id": 5,
+    "fechaInicio": "2026-03-01",
+    "fechaFinal": "2026-03-31",
+    "tipo": "Luz",
+    "estado": false,
+    "valor": 52.20
+  },
+  {
+    "id": 6,
+    "fechaInicio": "2026-03-15",
+    "fechaFinal": "2026-04-15",
+    "tipo": "Gas",
+    "estado": true,
+    "valor": 110.00
+  },
+  {
+    "id": 7,
+    "fechaInicio": "2026-04-01",
+    "fechaFinal": "2026-04-30",
+    "tipo": "Luz",
+    "estado": true,
+    "valor": 41.15
+  },
+  {
+    "id": 8,
+    "fechaInicio": "2026-04-05",
+    "fechaFinal": "2026-05-05",
+    "tipo": "Gas",
+    "estado": false,
+    "valor": 85.60
+  },
+  {
+    "id": 9,
+    "fechaInicio": "2026-05-01",
+    "fechaFinal": "2026-05-31",
+    "tipo": "Luz",
+    "estado": true,
+    "valor": 47.90
+  },
+  {
+    "id": 10,
+    "fechaInicio": "2026-05-12",
+    "fechaFinal": "2026-06-12",
+    "tipo": "Gas",
+    "estado": true,
+    "valor": 105.25
+  }
+]
