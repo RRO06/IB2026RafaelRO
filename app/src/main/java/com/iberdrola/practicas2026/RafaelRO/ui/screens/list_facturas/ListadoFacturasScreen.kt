@@ -130,7 +130,7 @@ fun ListadoFacturasContent(
                 fontWeight = FontWeight.Bold
             )
             Button(
-                onClick = { actions.onFilter },
+                onClick = { actions.onFilter() },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = GreenAplication
@@ -192,7 +192,7 @@ fun LazyColumFacturas(
             items(facturas) { factura ->
                 ItemList(
                     factura = factura,
-                    Modifier.clickable{ onFacturaClick() }
+                    modifier = Modifier.clickable{ onFacturaClick() }
                 )
                 HorizontalDivider(
                     modifier = Modifier
