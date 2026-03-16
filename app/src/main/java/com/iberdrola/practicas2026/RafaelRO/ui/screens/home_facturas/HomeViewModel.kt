@@ -23,6 +23,42 @@ class HomeViewModel @Inject constructor(
                 stateUI = stateUI.copy(esModoNube = modoGuardado)
             }
         }
+        viewModelScope.launch {
+            settingsDataStore.opinionStateFlow.collect { prefs ->
+                if (prefs.contador >= prefs.objetivo) {
+                    stateUI = stateUI.copy(showBottomSheet = true)
+                }
+            }
+        }
+    }
+    fun onBackFromFacturas() {
+        viewModelScope.launch {
+            settingsDataStore.incrementarContador()
+        }
+    }
+    fun onOpinionDada() {
+        stateUI = stateUI.copy(showBottomSheet = false)
+
+        viewModelScope.launch {
+            // No molestar hasta dentro de 10 veces
+            settingsDataStore.resetEstadoOpinion(nuevoObjetivo = 10, yaOpino = true)
+        }
+    }
+    fun onRecordarMasTarde() {
+        stateUI = stateUI.copy(showBottomSheet = false)
+
+        viewModelScope.launch {
+            // Volver a mostrar en 3 veces
+            settingsDataStore.resetEstadoOpinion(nuevoObjetivo = 3)
+        }
+    }
+    fun onDismissSheet() {
+        stateUI = stateUI.copy(showBottomSheet = false)
+
+        viewModelScope.launch {
+            // Se cerró sin elegir: volver a mostrar a la próxima (objetivo 1)
+            settingsDataStore.resetEstadoOpinion(nuevoObjetivo = 1)
+        }
     }
     fun onModoNubeChanged(value : Boolean) {
         viewModelScope.launch {

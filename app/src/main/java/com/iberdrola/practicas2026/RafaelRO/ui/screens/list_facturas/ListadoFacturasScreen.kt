@@ -1,9 +1,10 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -78,13 +80,13 @@ fun ListadoFacturasScreen(
             BotonFiltroFocuseado(
                 text = "Luz",
                 onClick = { viewModel.onFilterLuz() },
-                Modifier,
+                modifier = Modifier,
                 isSelected = viewModel.stateUI.luz
             )
             BotonFiltroFocuseado(
                 text = "Gas",
                 onClick = { viewModel.onFilterGas() },
-                Modifier,
+                modifier = Modifier,
                 isSelected = viewModel.stateUI.gas
             )
         }
@@ -192,7 +194,10 @@ fun LazyColumFacturas(
             items(facturas) { factura ->
                 ItemList(
                     factura = factura,
-                    modifier = Modifier.clickable{ onFacturaClick() }
+                    modifier = Modifier.clickable(
+                        indication = LocalIndication.current,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { onFacturaClick() }
                 )
                 HorizontalDivider(
                     modifier = Modifier
@@ -347,4 +352,3 @@ fun ListadoFacturasContentPreview() {
         stateUI = ListadoFacturasUiState()
     )
 }
-

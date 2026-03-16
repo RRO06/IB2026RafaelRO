@@ -69,6 +69,7 @@ class ListadoFacturasViewModel @Inject constructor(
 
         if (filtrada.isEmpty()) {
             stateData = ListadoFacturasState.Error("No existen facturas de este tipo")
+            // Salimos de la función para evitar acceder a first() en una lista vacía
             return
         }
 

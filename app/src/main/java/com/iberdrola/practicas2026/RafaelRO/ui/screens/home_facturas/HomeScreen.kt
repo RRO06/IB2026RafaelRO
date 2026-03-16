@@ -31,15 +31,57 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.OpinionBottomSheet
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+
+data class HomeActions(
+    val onNavigateToFacturas: () -> Unit = {},
+    val onModoNubeChanged: (Boolean) -> Unit = {},
+    val onOpinionDada: () -> Unit = {},
+    val onRecordarMasTarde: () -> Unit = {},
+    val onDismissSheet: () -> Unit = {}
+)
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
+    viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToFacturas: () -> Unit,
-    modifier : Modifier = Modifier,
+    modifier: Modifier
 ) {
     val uiState = viewModel.stateUI
+
+    // Creamos el objeto de acciones vinculando el ViewModel
+    val actions = HomeActions(
+        onNavigateToFacturas = {
+            onNavigateToFacturas()
+        },
+        onModoNubeChanged = viewModel::onModoNubeChanged,
+        onOpinionDada = viewModel::onOpinionDada,
+        onRecordarMasTarde = viewModel::onRecordarMasTarde,
+        onDismissSheet = viewModel::onDismissSheet
+    )
+
+    HomeContent(
+        uiState = uiState,
+        actions = actions,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun HomeContent(
+    uiState: HomeUiState,
+    actions: HomeActions,
+    modifier: Modifier = Modifier
+) {
+    // Gestión del Bottom Sheet
+    if (uiState.showBottomSheet) {
+        OpinionBottomSheet(
+            onOpinionSelected = actions.onOpinionDada,
+            onRecordarMasTarde = actions.onRecordarMasTarde,
+            onDismiss = actions.onDismissSheet
+        )
+    }
 
     Column(
         modifier = modifier
@@ -47,31 +89,27 @@ fun HomeScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Cabecera de Bienvenida
         Text(
             text = "¡Bienvenido de nuevo!",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // 2. Tarjeta de Usuario
         UserCard(uiState)
 
         Spacer(modifier = Modifier.weight(4f))
 
-        // 3. Selección de Origen de Datos (Local vs Nube)
         SelectorDeOrigen(
             esNube = uiState.esModoNube,
-            onOptionSelected = { viewModel.onModoNubeChanged(it) }
+            onOptionSelected = actions.onModoNubeChanged
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { onNavigateToFacturas() },
+            onClick = actions.onNavigateToFacturas,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -82,6 +120,7 @@ fun HomeScreen(
         }
     }
 }
+
 @Composable
 fun UserCard(state: HomeUiState) {
     Card(
@@ -91,18 +130,34 @@ fun UserCard(state: HomeUiState) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(48.dp), tint = GreenAplication)
+                Icon(
+                    Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = GreenAplication
+                )
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(text = state.nombreUsuario, fontWeight = FontWeight.Bold)
-                    Text(text = "Usuario: ${state.idUsuario}", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = "Usuario: ${state.idUsuario}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.LightGray.copy(0.5f))
-            Text(text = "Último acceso: ${state.ultimaConexion}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = Color.LightGray.copy(0.5f)
+            )
+            Text(
+                text = "Último acceso: ${state.ultimaConexion}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
         }
     }
 }
+
 @Composable
 fun SelectorDeOrigen(esNube: Boolean, onOptionSelected: (Boolean) -> Unit) {
     Row(
@@ -113,21 +168,22 @@ fun SelectorDeOrigen(esNube: Boolean, onOptionSelected: (Boolean) -> Unit) {
             text = "Local",
             isSelected = !esNube,
             onClick = { onOptionSelected(false) },
-            modifier = Modifier.height(40.dp)
+            modifier = Modifier
         )
         BotonFiltroFocuseado(
             text = "Nube",
             isSelected = esNube,
             onClick = { onOptionSelected(true) },
-            modifier = Modifier.height(40.dp)
+            modifier = Modifier
         )
     }
 }
+
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview(){
-    HomeScreen(
-        viewModel = hiltViewModel(),
-        onNavigateToFacturas = {}
+fun HomeScreenPreview() {
+    HomeContent(
+        uiState = HomeUiState(),
+        actions = HomeActions()
     )
 }

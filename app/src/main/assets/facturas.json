@@ -65,8 +65,8 @@
   },
   {
     "id": 9,
-    "fechaInicio": "2026-05-01",
-    "fechaFinal": "2026-05-31",
+    "fechaInicio": "2025-05-01",
+    "fechaFinal": "2025-05-31",
     "tipo": "Luz",
     "estado": true,
     "valor": 47.90

@@ -50,18 +50,12 @@ class FacturaRepository @Inject constructor(
             BaseResult.Error(InvokeException.UnknownError(e.message))
         }
     }
-    private suspend fun getFacturasLocal(): BaseResult<List<Factura>> {
+    private fun getFacturasLocal(): BaseResult<List<Factura>> {
         return try {
-            var lista = facturaDao.getAllFacturas()
-
-            if (lista.isEmpty()) {
-                val jsonString = context.assets.open("facturas.json").bufferedReader().use { it.readText() }
-                val type = object : TypeToken<List<Factura>>() {}.type
-                val facturasDesdeJson = gson.fromJson<List<Factura>>(jsonString, type)
-                facturaDao.insertAll(facturasDesdeJson)
-                lista = facturasDesdeJson
-            }
-            BaseResult.Sucess(lista)
+            val jsonString = context.assets.open("facturas.json").bufferedReader().use { it.readText() }
+            val type = object : TypeToken<List<Factura>>() {}.type
+            val facturas = gson.fromJson<List<Factura>>(jsonString, type)
+            BaseResult.Sucess(facturas)
         } catch (e: Exception) {
             BaseResult.Error(InvokeException.FileError)
         }

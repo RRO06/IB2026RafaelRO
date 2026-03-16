@@ -3,6 +3,7 @@ package com.iberdrola.practicas2026.RafaelRO.data.local.datastore
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,30 @@ class SettingsDataStore @Inject constructor(
     companion object{
         // Es la variable que se va a estar cambiando
         private val MODO_NUBE = booleanPreferencesKey("modo_nube")
+        private val CONTADOR_BACK = intPreferencesKey("contador_back")
+        private val OBJETIVO_MOSTRAR = intPreferencesKey("objetivo_mostrar")
+        private val YA_OPINO = booleanPreferencesKey("ya_opino")
+    }
+    // Flow para observar todos los datos de opinión
+    val opinionStateFlow: Flow<OpinionPreferences> = context.dataStore.data.map { pref ->
+        OpinionPreferences(
+            contador = pref[CONTADOR_BACK] ?: 0,
+            objetivo = pref[OBJETIVO_MOSTRAR] ?: 1, // Empezamos en 1 para que salga la primera vez
+            yaOpino = pref[YA_OPINO] ?: false
+        )
+    }
+    suspend fun incrementarContador() {
+        context.dataStore.edit { pref ->
+            val actual = pref[CONTADOR_BACK] ?: 0
+            pref[CONTADOR_BACK] = actual + 1
+        }
+    }
+    suspend fun resetEstadoOpinion(nuevoObjetivo: Int, yaOpino: Boolean = false) {
+        context.dataStore.edit { pref ->
+            pref[CONTADOR_BACK] = 0
+            pref[OBJETIVO_MOSTRAR] = nuevoObjetivo
+            pref[YA_OPINO] = yaOpino
+        }
     }
     // Se usa un Flow porque va a estar en cambio constante además de que se va a ir cambiando en la aplicación
     val modoNubeFlow : Flow<Boolean> =
@@ -29,3 +54,4 @@ class SettingsDataStore @Inject constructor(
         }
     }
 }
+data class OpinionPreferences(val contador: Int, val objetivo: Int, val yaOpino: Boolean)
