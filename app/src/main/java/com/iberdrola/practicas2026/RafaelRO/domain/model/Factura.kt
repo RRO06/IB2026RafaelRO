@@ -8,7 +8,13 @@ enum class Tipo{
     Luz,
     Gas
 }
-
+enum class Estado{
+    Pagado,
+    PendientePago,
+    Tramite,
+    Anulado,
+    CuotaFija
+}
 @Entity
 data class Factura(
     @PrimaryKey(autoGenerate = true)
@@ -16,6 +22,6 @@ data class Factura(
     val fechaInicio : LocalDate,
     val fechaFinal : LocalDate,
     val tipo : Tipo,
-    val estado : Boolean,
+    val estado : Estado,
     val valor : Double
 )

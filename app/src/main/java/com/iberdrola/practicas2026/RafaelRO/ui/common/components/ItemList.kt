@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
@@ -32,49 +33,55 @@ private val example = Factura(
     fechaInicio = LocalDate.now(),
     fechaFinal = LocalDate.now(),
     tipo = Tipo.Luz,
-    estado = true,
+    estado = Estado.PendientePago,
     valor = 20.00
 )
 
 @Preview(showBackground = true)
 @Composable
 fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
-    val (statusText, statusColor) = if (factura.estado) {
-        "Pendiente de pago" to Color.Red
-    } else {
-        "Pagada" to GreenAplication
-    }
-
     val fechaFormateada = UtilyClass.toLongSpanishDate(factura.fechaFinal)
-    val importe = "${UtilyClass.toCurrencyFormat(factura.valor)} €"
+    val importe = "${UtilyClass.toCurrencyFormat(factura.valor)}"
 
-    // 2. La UI ahora es mucho más legible
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            InfoFactura(fechaFormateada, factura.tipo.toString(), statusText, statusColor)
+            // Pasamos directamente el objeto 'estado' de la factura
+            InfoFactura(fechaFormateada, factura.tipo.toString(), factura.estado)
 
             ImporteFactura(importe)
         }
-
-        HorizontalDivider(color = Color.LightGray.copy(0.5f))
+        HorizontalDivider(color = Color.LightGray.copy(0.3f))
     }
 }
+
 @Composable
-private fun InfoFactura(fecha: String, tipo: String, statusText: String, color: Color) {
+private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
     Column {
         Text(text = fecha, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        Text(text = "Factura $tipo")
-        Spacer(modifier = Modifier.height(12.dp))
-        StatusBadge(text = statusText, color = color)
+        Text(text = "Factura $tipo", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Reutilizamos la lógica del Badge que definimos antes
+        FacturaStatusBadge(estado = estado)
     }
 }
 
 @Composable
-private fun StatusBadge(text: String, color: Color) {
+fun FacturaStatusBadge(estado: Estado) {
+    val (text, color) = when (estado) {
+        Estado.Pagado -> "Pagada" to GreenAplication
+        Estado.PendientePago -> "Pendiente de pago" to Color.Red
+        Estado.Tramite -> "En trámite de cobro" to Color.Gray
+        Estado.Anulado -> "Anulada" to Color.DarkGray
+        Estado.CuotaFija -> "Cuota fija" to Color.Blue
+    }
+
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = RoundedCornerShape(10.dp)
@@ -82,13 +89,12 @@ private fun StatusBadge(text: String, color: Color) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = color
         )
     }
 }
-
 @Composable
 private fun ImporteFactura(importe: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -97,7 +103,7 @@ private fun ImporteFactura(importe: String) {
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
             tint = Color.Gray,
-            modifier = Modifier.size(35.dp)
+            modifier = Modifier.size(30.dp)
         )
     }
 }

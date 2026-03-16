@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.R
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
@@ -325,15 +326,21 @@ fun UltimaFacturaCard(factura: Factura) {
 }
 
 @Composable
-fun FacturaStatusBadge(isPending: Boolean) {
-    val color = if (isPending) Color.Red else GreenAplication
+fun FacturaStatusBadge(estado: Estado) {
+    val (text, color) = when (estado) {
+        Estado.Pagado -> "Pagada" to GreenAplication
+        Estado.PendientePago -> "Pendiente de pago" to Color.Red
+        Estado.Tramite -> "En trámite" to Color.Gray
+        Estado.Anulado -> "Anulada" to Color.DarkGray
+        Estado.CuotaFija -> "Cuota fija" to Color.Blue
+    }
     Box(
         modifier = Modifier
             .background(color.copy(0.1f), RoundedCornerShape(24.dp))
             .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         Text(
-            text = if (isPending) "Pendiente de pago" else "Pagada",
+            text = text,
             color = color,
             fontWeight = FontWeight.Bold
         )
