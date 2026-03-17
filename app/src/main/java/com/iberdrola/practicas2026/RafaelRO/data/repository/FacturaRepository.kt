@@ -11,8 +11,11 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
 import com.iberdrola.practicas2026.RafaelRO.domain.network.InvokeException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+
+data class FacturasJson(val facturas: List<Factura>)
 
 class FacturaRepository @Inject constructor(
     private val facturasApiService: FacturasApiService,
@@ -52,8 +55,9 @@ class FacturaRepository @Inject constructor(
     private fun getFacturasLocal(): BaseResult<List<Factura>> {
         return try {
             val jsonString = context.assets.open("facturas.json").bufferedReader().use { it.readText() }
-            val type = object : TypeToken<List<Factura>>() {}.type
-            val facturas = gson.fromJson<List<Factura>>(jsonString, type)
+            val type = object : TypeToken<FacturasJson>() {}.type
+            val facturasJson = gson.fromJson<FacturasJson>(jsonString, type)
+            val facturas = facturasJson.facturas
             BaseResult.Sucess(facturas)
         } catch (_: Exception) {
             BaseResult.Error(InvokeException.FileError)

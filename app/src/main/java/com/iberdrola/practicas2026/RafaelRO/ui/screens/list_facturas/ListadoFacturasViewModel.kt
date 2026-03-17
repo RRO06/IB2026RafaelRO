@@ -5,15 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
 import com.iberdrola.practicas2026.RafaelRO.domain.network.InvokeException
 import com.iberdrola.practicas2026.RafaelRO.domain.usercase.GetFacturasUseCase
+import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,6 +22,7 @@ class ListadoFacturasViewModel @Inject constructor(
         private set
     var stateUI by mutableStateOf(ListadoFacturasUiState())
         private set
+    private var filtrosAvanzadosActuales = FiltUiState()
 
     init {
         cargarDatosIniciales()
@@ -34,7 +33,10 @@ class ListadoFacturasViewModel @Inject constructor(
             when (val result = getFacturasUseCase()) {
                 is BaseResult.Sucess -> {
                     stateData = ListadoFacturasState.Success(result.data)
-                    aplicarFiltroYAgrupacion(Tipo.Luz)
+                    stateUI = stateUI.copy(
+                        facturasBase = result.data
+                    )
+                    actualizarInterfaz(Tipo.Luz)
                 }
 
                 is BaseResult.Error -> {
@@ -50,45 +52,64 @@ class ListadoFacturasViewModel @Inject constructor(
             }
         }
     }
-
-
-    fun onFilterLuz() = aplicarFiltroYAgrupacion(Tipo.Luz)
-    fun onFilterGas() = aplicarFiltroYAgrupacion(Tipo.Gas)
-
-    private fun aplicarFiltroYAgrupacion(tipo: Tipo) {
-        stateUI = stateUI.copy(
-            luz = tipo == Tipo.Luz,
-            gas = tipo == Tipo.Gas
+    fun limpiarFiltros() {
+        actualizarInterfaz(
+            tipo = stateUI.filtroTipoActual,
+            filtrosExtra = FiltUiState()
         )
+    }
 
-        val successState = stateData as? ListadoFacturasState.Success ?: return
-        val facturasBase = successState.facturas
+    fun onFilterLuz() = actualizarInterfaz(Tipo.Luz)
+    fun onFilterGas() = actualizarInterfaz(Tipo.Gas)
+    fun actualizarInterfaz(
+        tipo: Tipo = stateUI.filtroTipoActual,
+        filtrosExtra: FiltUiState = filtrosAvanzadosActuales
+    ) {
+        filtrosAvanzadosActuales = filtrosExtra
 
-        // 1. Filtramos por tipo (Luz o Gas)
-        val filtrada = facturasBase.filter { it.tipo == tipo }
+        val resultado = stateUI.facturasBase.filter { factura ->
+            val cumpleTipo = factura.tipo == tipo
+            val cumpleFecha =
+                (filtrosExtra.dateFrom == null || !factura.fechaInicio.isBefore(filtrosExtra.dateFrom)) &&
+                        (filtrosExtra.dateTo == null || !factura.fechaFinal.isAfter(filtrosExtra.dateTo))
+            val cumpleImporte = factura.valor >= filtrosExtra.priceRangeStart &&
+                    factura.valor <= filtrosExtra.priceRangeEnd
+            val cumpleEstado = filtrosExtra.selectedStates.isEmpty() ||
+                    filtrosExtra.selectedStates.contains(factura.estado.name)
 
-        if (filtrada.isEmpty()) {
-            stateData = ListadoFacturasState.Error("No existen facturas de este tipo")
-            // Salimos de la función para evitar acceder a first() en una lista vacía
+            cumpleTipo && cumpleFecha && cumpleImporte && cumpleEstado
+        }
+
+        if (resultado.isEmpty()) {
+            stateUI = stateUI.copy(filtroTipoActual = tipo)
+            // Si 'todasLasFacturas' NO está vacía, pero 'resultado' SÍ, es culpa de los filtros
+            if (stateUI.facturasBase.isNotEmpty()) {
+                stateData = ListadoFacturasState.Error("No existen facturas con estos filtros")
+            } else {
+                // Error real: la base de datos no trajo nada
+                stateData = ListadoFacturasState.Error("No se han encontrado facturas en su cuenta")
+            }
             return
         }
 
         // 2. Identificamos la última factura (la primera de la lista filtrada)
-        val ultima = filtrada.first()
+        val ultima = resultado.first()
 
         // 3. Creamos una lista para el histórico excluyendo la última
-        val historicoRestante = filtrada.drop(1)
+        val historicoRestante = resultado.drop(1)
 
         // 4. Agrupamos solo el histórico restante por año
         val agrupada = historicoRestante.groupBy { it.fechaFinal.year }
 
         stateUI = stateUI.copy(
-            listaFiltrada = filtrada, // Mantenemos la filtrada completa por si la necesitas
+            filtroTipoActual = tipo,
+            facturasAMostrar = resultado, // Mantenemos la filtrada completa por si la necesitas
             facturasPorAnio = agrupada, // Esta ahora no tiene la "última"
             ultimaFactura = ultima
         )
+        stateData = ListadoFacturasState.Success(stateUI.facturasBase)
     }
-
+    fun tieneFiltrosActivos(): Boolean = filtrosAvanzadosActuales != FiltUiState()
     fun onFacturaClick() {
         stateUI = stateUI.copy(showDialog = true)
     }

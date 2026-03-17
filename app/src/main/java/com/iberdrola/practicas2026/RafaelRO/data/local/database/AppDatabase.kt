@@ -9,9 +9,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.iberdrola.practicas2026.RafaelRO.data.local.dao.FacturaDAO
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import java.util.concurrent.Executors
+
 @TypeConverters(Converters::class)
 @Database(
-    entities = [Factura::class], version = 1, exportSchema = false
+    entities = [Factura::class], version = 2, exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun facturaDao(): FacturaDAO
@@ -47,6 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
                 instance
             }
         }
+
         fun prepopulateDatabase(database: AppDatabase) {
             val facturaDao = database.facturaDao()
         }

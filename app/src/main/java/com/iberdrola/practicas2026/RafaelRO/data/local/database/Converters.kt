@@ -1,6 +1,7 @@
 package com.iberdrola.practicas2026.RafaelRO.data.local.database
 
 import androidx.room.TypeConverter
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import java.time.LocalDate
 
@@ -18,4 +19,11 @@ class Converters {
 
     @TypeConverter
     fun tipoToString(tipo: Tipo): String = tipo.name
+
+    // Para el Enum (Estado <-> String)
+    @TypeConverter
+    fun fromEstado(value: String): Estado = Estado.valueOf(value)
+
+    @TypeConverter
+    fun estadoToString(estado: Estado): String = estado.name
 }

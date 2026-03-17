@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,19 +57,25 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.components.LoadingScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 
 data class ListadoFacturasActions(
     val onFilter: () -> Unit,
-    val onFacturaClick : () -> Unit,
-    val dismissDialog : () -> Unit
+    val onFacturaClick: () -> Unit,
+    val dismissDialog: () -> Unit
 )
 
 @Composable
 fun ListadoFacturasScreen(
     viewModel: ListadoFacturasViewModel,
     onBack: () -> Unit,
-    modifier : Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFilter: () -> Unit,
+    filtState: FiltUiState
 ) {
+    LaunchedEffect(filtState) {
+        viewModel.actualizarInterfaz(filtrosExtra = filtState)
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -82,13 +89,13 @@ fun ListadoFacturasScreen(
                 text = "Luz",
                 onClick = { viewModel.onFilterLuz() },
                 modifier = Modifier,
-                isSelected = viewModel.stateUI.luz
+                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Luz
             )
             BotonFiltroFocuseado(
                 text = "Gas",
                 onClick = { viewModel.onFilterGas() },
                 modifier = Modifier,
-                isSelected = viewModel.stateUI.gas
+                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Gas
             )
         }
         Box(
@@ -98,11 +105,16 @@ fun ListadoFacturasScreen(
                 .background(Divider)
         )
         when (val state = viewModel.stateData) {
-            is ListadoFacturasState.Error -> ErrorScreen(state.message)
+            is ListadoFacturasState.Error -> ErrorScreen(
+                mensaje = state.message,
+                onClearFilters = if (viewModel.tieneFiltrosActivos()) {
+                    { viewModel.limpiarFiltros() }
+                } else null
+            )
             is ListadoFacturasState.Loading -> LoadingScreen()
             is ListadoFacturasState.Success -> ListadoFacturasContent(
                 actions = ListadoFacturasActions(
-                    onFilter = { },
+                    onFilter = onFilter,
                     onFacturaClick = viewModel::onFacturaClick,
                     dismissDialog = viewModel::dismissDialog
                 ),
@@ -133,7 +145,7 @@ fun ListadoFacturasContent(
                 fontWeight = FontWeight.Bold
             )
             Button(
-                onClick = { actions.onFilter() },
+                onClick = actions.onFilter,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = GreenAplication
@@ -176,7 +188,7 @@ fun ListadoFacturasContent(
 
 @Composable
 fun LazyColumFacturas(
-    facturasPorAnio: Map<Int, List<Factura>> ,
+    facturasPorAnio: Map<Int, List<Factura>>,
     onFacturaClick: () -> Unit
 ) {
     LazyColumn(
@@ -286,7 +298,7 @@ fun UltimaFacturaCard(factura: Factura) {
                     )
                 }
                 Icon(
-                    imageVector = when(factura.tipo){
+                    imageVector = when (factura.tipo) {
                         Tipo.Luz -> Icons.Outlined.Lightbulb
                         Tipo.Gas -> Icons.Default.Whatshot
                     },
