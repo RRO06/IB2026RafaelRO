@@ -8,6 +8,9 @@ import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -17,6 +20,22 @@ class HomeViewModel @Inject constructor(
     var stateUI by mutableStateOf(HomeUiState())
         private set
     init {
+        viewModelScope.launch {
+            settingsDataStore.userPerfilFlow.collect { perfil ->
+                stateUI = stateUI.copy(
+                    foto = perfil.foto,
+                    nombreUsuario = perfil.nombre,
+                    idUsuario = perfil.id,
+                    telefono = perfil.telefono,
+                    email = perfil.email,
+                    ultimaConexion = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(
+                        Date(
+                            perfil.ultimaConexion
+                        )
+                    )
+                )
+            }
+        }
         viewModelScope.launch {
             settingsDataStore.modoNubeFlow.collect { modoGuardado ->
                 stateUI = stateUI.copy(esModoNube = modoGuardado)

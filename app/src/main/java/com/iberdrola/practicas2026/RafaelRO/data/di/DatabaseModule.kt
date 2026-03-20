@@ -2,6 +2,7 @@ package com.iberdrola.practicas2026.RafaelRO.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.iberdrola.practicas2026.RafaelRO.data.local.dao.ContratoDAO
 import com.iberdrola.practicas2026.RafaelRO.data.local.dao.FacturaDAO
 import com.iberdrola.practicas2026.RafaelRO.data.local.database.AppDatabase
 import dagger.Module
@@ -30,5 +31,9 @@ object DatabaseModule {
     @Provides
     fun provideFacturaDao(db: AppDatabase): FacturaDAO {
         return db.facturaDao()
+    }
+    @Provides
+    fun provideContratoDao(db: AppDatabase): ContratoDAO {
+        return db.contratoDao()
     }
 }

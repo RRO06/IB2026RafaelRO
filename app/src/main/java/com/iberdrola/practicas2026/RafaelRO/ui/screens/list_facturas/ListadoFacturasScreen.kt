@@ -59,6 +59,8 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 
+// Agrupamos las acciones de navegación y eventos de UI en un objeto para mantener
+// la firma de los componentes limpia y facilitar el testing.
 data class ListadoFacturasActions(
     val onFilter: () -> Unit,
     val onFacturaClick: () -> Unit,
@@ -73,6 +75,8 @@ fun ListadoFacturasScreen(
     onFilter: () -> Unit,
     filtState: FiltUiState
 ) {
+    // Escucha cambios en 'filtState' (provenientes del NavHost) para
+    // actualizar la lógica de filtrado en el ViewModel de forma reactiva.
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
     }
@@ -104,13 +108,17 @@ fun ListadoFacturasScreen(
                 .height(3.dp)
                 .background(Divider)
         )
+        // Implementación de State Hoisting: la Screen es "tonta" y se limita a renderizar
+        // el estado que emite el ViewModel (Carga, Error o Éxito).
         when (val state = viewModel.stateData) {
+            // La pantalla de error se muestra de una forma u otra dependiendo de si se han realizado o no filtrados.
             is ListadoFacturasState.Error -> ErrorScreen(
                 mensaje = state.message,
                 onClearFilters = if (viewModel.tieneFiltrosActivos()) {
                     { viewModel.limpiarFiltros() }
                 } else null
             )
+
             is ListadoFacturasState.Loading -> LoadingScreen()
             is ListadoFacturasState.Success -> ListadoFacturasContent(
                 actions = ListadoFacturasActions(
@@ -132,8 +140,10 @@ fun ListadoFacturasContent(
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
+        // Componente destacado que muestra la factura más reciente.
         UltimaFacturaCard(stateUI.ultimaFactura)
         Spacer(modifier = Modifier.height(24.dp))
+        // Sección del histórico con acceso al panel de filtros avanzados.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -169,8 +179,10 @@ fun ListadoFacturasContent(
                 )
             }
         }
+        // Listado scrollable de facturas agrupadas por año.
         LazyColumFacturas(stateUI.facturasPorAnio, actions.onFacturaClick)
     }
+    // Diálogo informativo que se activa al intentar visualizar una factura no disponible.
     if (stateUI.showDialog) {
         AlertDialog(
             onDismissRequest = { actions.dismissDialog() },
@@ -195,6 +207,7 @@ fun LazyColumFacturas(
         modifier = Modifier.fillMaxSize()
     ) {
         facturasPorAnio.forEach { (anio, facturas) ->
+            // Cabecera de sección para cada año disponible en el mapa.
             item {
                 Box(
                     modifier = Modifier
@@ -204,6 +217,7 @@ fun LazyColumFacturas(
                     Text(text = "$anio", fontWeight = FontWeight.Bold)
                 }
             }
+            // Renderizado de las facturas pertenecientes a dicho año mediante componentes reutilizables.
             items(facturas) { factura ->
                 ItemList(
                     factura = factura,
@@ -224,6 +238,7 @@ fun LazyColumFacturas(
     }
 }
 
+// Encabezado con información del punto de suministro y navegación de retorno.
 @Composable
 fun FacturasHeader(onBack: () -> Unit) {
     Column {
@@ -263,7 +278,7 @@ fun FacturasHeader(onBack: () -> Unit) {
         )
     }
 }
-
+// Representación visual destacada de la última factura recibida tras el filtrado.
 @Composable
 fun UltimaFacturaCard(factura: Factura) {
     Card(
@@ -336,7 +351,7 @@ fun UltimaFacturaCard(factura: Factura) {
         }
     }
 }
-
+// Etiqueta visual que adapta color y texto según el estado administrativo de la factura.sexo
 @Composable
 fun FacturaStatusBadge(estado: Estado) {
     val (text, color) = when (estado) {
