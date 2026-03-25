@@ -31,7 +31,8 @@ class UtilyClass {
          * Valida correos electrónicos con el estándar de Android.
          */
         fun isValidEmail(email: String): Boolean {
-            return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+            val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+            return email.isNotBlank() && email.matches(emailRegex)
         }
 
         /**

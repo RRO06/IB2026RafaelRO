@@ -6,6 +6,7 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.iberdrola.practicas2026.RafaelRO.data.remote.FacturasApiService
+import com.iberdrola.practicas2026.RafaelRO.data.remote.RemoteConfigManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,6 +45,10 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideRemoteConfigManager(): RemoteConfigManager = RemoteConfigManager()
 
     @Provides
     @Singleton

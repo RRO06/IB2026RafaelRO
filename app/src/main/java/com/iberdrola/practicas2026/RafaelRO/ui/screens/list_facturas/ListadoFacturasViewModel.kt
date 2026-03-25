@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
 import com.iberdrola.practicas2026.RafaelRO.domain.network.InvokeException
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ListadoFacturasViewModel @Inject constructor(
-    private val getFacturasUseCase: GetFacturasUseCase
+    private val getFacturasUseCase: GetFacturasUseCase,
+    private val analyticsManager: AnalyticsManager,
 ) : ViewModel() {
     var stateData by mutableStateOf<ListadoFacturasState>(ListadoFacturasState.Loading)
         private set
@@ -59,8 +61,14 @@ class ListadoFacturasViewModel @Inject constructor(
         )
     }
 
-    fun onFilterLuz() = actualizarInterfaz(Tipo.Luz)
-    fun onFilterGas() = actualizarInterfaz(Tipo.Gas)
+    fun onFilterLuz() {
+        analyticsManager.logClick("filtro_rapido_luz", "listado_facturas")
+        actualizarInterfaz(Tipo.Luz)
+    }
+    fun onFilterGas() {
+        analyticsManager.logClick("filtro_rapido_gas", "listado_facturas")
+        actualizarInterfaz(Tipo.Gas)
+    }
     fun actualizarInterfaz(
         tipo: Tipo = stateUI.filtroTipoActual,
         filtrosExtra: FiltUiState = filtrosAvanzadosActuales

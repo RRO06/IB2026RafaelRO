@@ -1,16 +1,21 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.logEvent
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.Perfil.PerfilScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.factura_electronica.FacturaElectronicaScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
@@ -27,6 +32,20 @@ import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFact
 
 @Composable
 fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
+
+    val analytics= Firebase.analytics
+
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, detination, _ ->
+            analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+                param(FirebaseAnalytics.Param.SCREEN_NAME, detination.route ?: "Unknown")
+                param(FirebaseAnalytics.Param.SCREEN_CLASS,"MainActivity")
+            }
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route

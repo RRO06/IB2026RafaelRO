@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -31,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,7 +55,9 @@ data class HomeActions(
     val onRecordarMasTarde: () -> Unit = {},
     val onDismissSheet: () -> Unit = {},
     val onNavigateToFacturaElectronica: () -> Unit = {},
-    val onNavigateToPerfil: () -> Unit = {}
+    val onNavigateToPerfil: () -> Unit = {},
+    val onForceCrash: () -> Unit = {},
+    val registrarClickFacturas : () -> Unit = {}
 )
 
 @Composable
@@ -70,13 +74,18 @@ fun HomeScreen(
     val actions = HomeActions(
         onNavigateToFacturas = {
             onNavigateToFacturas()
+            viewModel.onNavigateToFacturaElectronica()
         },
         onModoNubeChanged = viewModel::onModoNubeChanged,
         onOpinionDada = viewModel::onOpinionDada,
         onRecordarMasTarde = viewModel::onRecordarMasTarde,
         onDismissSheet = viewModel::onDismissSheet,
         onNavigateToFacturaElectronica = onNavigateToFacturaElectronica,
-        onNavigateToPerfil = onNavigateToPerfil
+        onNavigateToPerfil = onNavigateToPerfil,
+        onForceCrash = {
+            throw RuntimeException("Test Crash desde el botón de la Home")
+        },
+        registrarClickFacturas = viewModel::registrarClickFacturas
     )
 
     HomeContent(
@@ -137,7 +146,10 @@ fun HomeContent(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = actions.onNavigateToFacturas,
+            onClick = {
+                actions.onNavigateToFacturas()
+                actions.registrarClickFacturas()
+                      },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -145,6 +157,30 @@ fun HomeContent(
             shape = RoundedCornerShape(12.dp)
         ) {
             Text("Ver mis facturas", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+
+        DebugCrashCard(onClick = actions.onForceCrash)
+    }
+}
+@Composable
+fun DebugCrashCard(onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.padding(top = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.BugReport,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = Color.Gray
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "Probar reporte de errores",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
         }
     }
 }

@@ -5,7 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.analytics
+import com.google.firebase.analytics.logEvent
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -15,6 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val analyticsManager: AnalyticsManager,
     private val settingsDataStore: SettingsDataStore
 ): ViewModel() {
     var stateUI by mutableStateOf(HomeUiState())
@@ -79,8 +84,17 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun onModoNubeChanged(value : Boolean) {
+        val modo = if (value) "nube" else "local"
+        analyticsManager.logClick("cambio_modo_datos", "home", mapOf("modo" to modo))
         viewModelScope.launch {
             settingsDataStore.setModoNube(value)
         }
+    }
+    fun registrarClickFacturas() {
+        analyticsManager.logClick("ver_mis_facturas", "home")
+    }
+
+    fun onNavigateToFacturaElectronica() {
+        analyticsManager.logClick("acceso_factura_electronica", "home")
     }
 }

@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "tipo": "Luz",
+    "telefono": "600123456",
+    "direccion": "C/ Principal 123, 4ºB - Madrid",
+    "estado": true,
+    "email": "usuario_luz@ejemplo.com"
+  },
+  {
+    "id": 2,
+    "tipo": "Gas",
+    "telefono": "622333444",
+    "direccion": "Calle Falsa 123 - Barcelona",
+    "estado": false ,
+    "email": "cliente_premium@iberdrola.es"
+  }
+]

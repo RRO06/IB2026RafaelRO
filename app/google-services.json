@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1097811793473",
+    "project_id": "ib2026rafaelro-bb1d4",
+    "storage_bucket": "ib2026rafaelro-bb1d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1097811793473:android:5135a47879785ffded98c0",
+        "android_client_info": {
+          "package_name": "com.iberdrola.practicas2026.RafaelRO"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCs6Y3Xrwm6Ho0rQF_4BstCup6qwtWkOaI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
