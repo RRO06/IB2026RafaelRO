@@ -5,12 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.iberdrola.practicas2026.RafaelRO.data.local.dao.ContratoDAO
 import com.iberdrola.practicas2026.RafaelRO.data.local.dao.FacturaDAO
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
-import java.util.concurrent.Executors
 
 @Database(
     entities = [Factura::class, Contrato::class],
