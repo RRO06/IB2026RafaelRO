@@ -89,18 +89,22 @@ fun ListadoFacturasScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Row {
-            BotonFiltroFocuseado(
-                text = "Luz",
-                onClick = { viewModel.onFilterLuz() },
-                modifier = Modifier,
-                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Luz
-            )
-            BotonFiltroFocuseado(
-                text = "Gas",
-                onClick = { viewModel.onFilterGas() },
-                modifier = Modifier,
-                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Gas
-            )
+            if (viewModel.isLuzVisible()) {
+                BotonFiltroFocuseado(
+                    text = "Luz",
+                    onClick = { viewModel.onFilterLuz() },
+                    modifier = Modifier,
+                    isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Luz
+                )
+            }
+            if (viewModel.isGasVisible()) {
+                BotonFiltroFocuseado(
+                    text = "Gas",
+                    onClick = { viewModel.onFilterGas() },
+                    modifier = Modifier,
+                    isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Gas
+                )
+            }
         }
         Box(
             modifier = Modifier

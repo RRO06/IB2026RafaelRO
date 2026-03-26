@@ -17,7 +17,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -96,25 +95,21 @@ fun FacturaElectronicaContent(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         state.contratos.forEach { contrato ->
-            val bloqueado = isContratoBloqueado(contrato.tipo)
-            ItemFacturaElectronica(
-                tipo = contrato.tipo,
-                estaActiva = contrato.estado,
-                isBlocked = bloqueado,
-                onClick = { onContratoClick(contrato) }
-            )
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
+            val estaHabilitado = !isContratoBloqueado(contrato.tipo)
 
+            // Si NO está bloqueado, lo mostramos. Si está bloqueado, "desaparece".
+            if (estaHabilitado) {
+                ItemFacturaElectronica(
+                    tipo = contrato.tipo,
+                    estaActiva = contrato.estado,
+                    onClick = { onContratoClick(contrato) }
+                )
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp,
+                    color = Color.LightGray.copy(alpha = 0.5f)
+                )
+            }
         }
-        // Divisor de cierre al final de la lista
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = Color.LightGray.copy(alpha = 0.5f)
-        )
     }
 }

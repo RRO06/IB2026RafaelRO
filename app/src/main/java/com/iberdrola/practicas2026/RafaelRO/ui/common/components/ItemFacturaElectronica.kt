@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.HorizontalDivider
@@ -23,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,7 +33,6 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 fun ItemFacturaElectronica(
     tipo: Tipo,
     estaActiva: Boolean,
-    isBlocked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -43,12 +40,12 @@ fun ItemFacturaElectronica(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = !isBlocked) { onClick() }
+                .clickable { onClick() }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Parte 1: El Icono del servicio
-            ServiceIcon(tipo = tipo, isBlocked = isBlocked)
+            ServiceIcon(tipo = tipo)
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -56,12 +53,11 @@ fun ItemFacturaElectronica(
             ServiceInfo(
                 tipo = tipo,
                 estaActiva = estaActiva,
-                isBlocked = isBlocked,
                 modifier = Modifier.weight(1f)
             )
 
-            // Parte 3: La flecha o el candado (Acción)
-            ServiceActionIcon(isBlocked = isBlocked)
+            // Parte 3: La flecha (Acción)
+            ServiceActionIcon()
         }
 
         HorizontalDivider(
@@ -72,7 +68,7 @@ fun ItemFacturaElectronica(
     }
 }
 @Composable
-private fun ServiceIcon(tipo: Tipo, isBlocked: Boolean) {
+private fun ServiceIcon(tipo: Tipo) {
     val icon = when (tipo) {
         Tipo.Luz -> Icons.Outlined.Lightbulb
         Tipo.Gas -> Icons.Default.Whatshot
@@ -81,14 +77,13 @@ private fun ServiceIcon(tipo: Tipo, isBlocked: Boolean) {
         imageVector = icon,
         contentDescription = null,
         modifier = Modifier.size(32.dp),
-        tint = if (isBlocked) Color.LightGray else GreenAplication
+        tint = GreenAplication
     )
 }
 @Composable
 private fun ServiceInfo(
     tipo: Tipo,
     estaActiva: Boolean,
-    isBlocked: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -96,28 +91,18 @@ private fun ServiceInfo(
             text = if (tipo == Tipo.Luz) "Contrato de Luz" else "Contrato de Gas",
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
-            color = if (isBlocked) Color.Gray else Color.Black
+            color = Color.Black
         )
-
-        if (isBlocked) {
-            Text(
-                text = "Servicio no disponible",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFFD32F2F), // Rojo suave
-                fontWeight = FontWeight.Medium
-            )
-        } else {
-            BadgeEstadoElectronico(estaActiva)
-        }
+        BadgeEstadoElectronico(estaActiva)
     }
 }
 @Composable
-private fun ServiceActionIcon(isBlocked: Boolean) {
+private fun ServiceActionIcon() {
     Icon(
-        imageVector = if (isBlocked) Icons.Default.Lock else Icons.Default.ChevronRight,
+        imageVector = Icons.Default.ChevronRight,
         contentDescription = null,
-        tint = if (isBlocked) Color.LightGray else Color.Gray,
-        modifier = Modifier.size(if (isBlocked) 20.dp else 28.dp)
+        tint = Color.Gray,
+        modifier = Modifier.size(28.dp)
     )
 }
 @Composable
@@ -145,7 +130,6 @@ fun ItemFacturaElectronicaPreview(){
     ItemFacturaElectronica(
         tipo = Tipo.Luz,
         estaActiva = true,
-        onClick = {},
-        isBlocked = true
+        onClick = {}
     )
 }

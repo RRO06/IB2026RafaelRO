@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
+import com.iberdrola.practicas2026.RafaelRO.data.remote.RemoteConfigManager
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
 import com.iberdrola.practicas2026.RafaelRO.domain.network.InvokeException
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class ListadoFacturasViewModel @Inject constructor(
     private val getFacturasUseCase: GetFacturasUseCase,
     private val analyticsManager: AnalyticsManager,
+    private val remoteConfig: RemoteConfigManager
 ) : ViewModel() {
     var stateData by mutableStateOf<ListadoFacturasState>(ListadoFacturasState.Loading)
         private set
@@ -27,18 +29,33 @@ class ListadoFacturasViewModel @Inject constructor(
     private var filtrosAvanzadosActuales = FiltUiState()
 
     init {
-        cargarDatosIniciales()
+        determinarTipoInicialYLoguear()
+    }
+    private fun determinarTipoInicialYLoguear() {
+        val tipoInicial = when {
+            remoteConfig.isContratosLuzEnabled() -> Tipo.Luz
+            remoteConfig.isContratosGasEnabled() -> Tipo.Gas
+            else -> null // Caso en el que ambos están desactivados
+        }
+
+        if (tipoInicial != null) {
+            cargarDatosIniciales(tipoInicial)
+        } else {
+            // Si Firebase ha desactivado, mostramos un error directo
+            stateData = ListadoFacturasState.Error("No hay servicios disponibles actualmente")
+        }
     }
 
-    private fun cargarDatosIniciales() {
+    private fun cargarDatosIniciales(tipoInicial: Tipo) {
         viewModelScope.launch {
             when (val result = getFacturasUseCase()) {
                 is BaseResult.Sucess -> {
                     stateData = ListadoFacturasState.Success(result.data)
                     stateUI = stateUI.copy(
-                        facturasBase = result.data
+                        facturasBase = result.data,
+                        filtroTipoActual = tipoInicial
                     )
-                    actualizarInterfaz(Tipo.Luz)
+                    actualizarInterfaz(tipoInicial)
                 }
 
                 is BaseResult.Error -> {
@@ -54,6 +71,8 @@ class ListadoFacturasViewModel @Inject constructor(
             }
         }
     }
+    fun isLuzVisible(): Boolean = remoteConfig.isContratosLuzEnabled()
+    fun isGasVisible(): Boolean = remoteConfig.isContratosGasEnabled()
     fun limpiarFiltros() {
         actualizarInterfaz(
             tipo = stateUI.filtroTipoActual,
