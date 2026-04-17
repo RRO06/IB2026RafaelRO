@@ -46,21 +46,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemList
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.LoadingScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightGreen
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightRed
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.RedAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 
-// Agrupamos las acciones de navegación y eventos de UI en un objeto para mantener
-// la firma de los componentes limpia y facilitar el testing.
 data class ListadoFacturasActions(
     val onFilter: () -> Unit,
     val onFacturaClick: () -> Unit,
@@ -325,16 +329,33 @@ fun UltimaFacturaCard(factura: Factura) {
             }
             Spacer(modifier = Modifier.weight(1f))
             Column {
-                Text(
-                    text = "${"%.2f".format(factura.valor)} €",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text(
+                        text = "%.2f".format(factura.valor),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = CustomTypography
+                        )
+                    )
+                    Text(
+                        text = " €",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = CustomTypography
+                        )
+                    )
+                }
                 Text(
                     text = UtilyClass.toSpanishMediumDate(fecha = factura.fechaInicio) +
                             " - " +
                             UtilyClass.toSpanishMediumDate(fecha = factura.fechaFinal),
                     style = MaterialTheme.typography.titleSmall,
+                    fontFamily = CustomTypography,
                     color = Color.Gray
                 )
             }
@@ -349,28 +370,6 @@ fun UltimaFacturaCard(factura: Factura) {
             Spacer(modifier = Modifier.weight(1f))
             FacturaStatusBadge(factura.estado)
         }
-    }
-}
-// Etiqueta visual que adapta color y texto según el estado administrativo de la factura.sexo
-@Composable
-fun FacturaStatusBadge(estado: Estado) {
-    val (text, color) = when (estado) {
-        Estado.Pagado -> "Pagada" to GreenAplication
-        Estado.PendientePago -> "Pendiente de pago" to Color.Red
-        Estado.Tramite -> "En trámite" to Color.Gray
-        Estado.Anulado -> "Anulada" to Color.DarkGray
-        Estado.CuotaFija -> "Cuota fija" to Color.Blue
-    }
-    Box(
-        modifier = Modifier
-            .background(color.copy(0.1f), RoundedCornerShape(24.dp))
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-    ) {
-        Text(
-            text = text,
-            color = color,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 

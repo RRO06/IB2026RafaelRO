@@ -83,11 +83,11 @@ class ListadoFacturasViewModel @Inject constructor(
         if (resultado.isEmpty()) {
             stateUI = stateUI.copy(filtroTipoActual = tipo)
             // Si 'todasLasFacturas' NO está vacía, pero 'resultado' SÍ, es culpa de los filtros
-            if (stateUI.facturasBase.isNotEmpty()) {
-                stateData = ListadoFacturasState.Error("No existen facturas con estos filtros")
+            stateData = if (stateUI.facturasBase.isNotEmpty()) {
+                ListadoFacturasState.Error("No existen facturas con estos filtros")
             } else {
                 // Error real: la base de datos no trajo nada
-                stateData = ListadoFacturasState.Error("No se han encontrado facturas en su cuenta")
+                ListadoFacturasState.Error("No se han encontrado facturas en su cuenta")
             }
             return
         }
@@ -95,11 +95,8 @@ class ListadoFacturasViewModel @Inject constructor(
         // 2. Identificamos la última factura (la primera de la lista filtrada)
         val ultima = resultado.first()
 
-        // 3. Creamos una lista para el histórico excluyendo la última
-        val historicoRestante = resultado.drop(1)
-
-        // 4. Agrupamos solo el histórico restante por año
-        val agrupada = historicoRestante.groupBy { it.fechaFinal.year }
+        // 3. Agrupamos solo el histórico restante por año
+        val agrupada = resultado.groupBy { it.fechaFinal.year }
 
         stateUI = stateUI.copy(
             filtroTipoActual = tipo,

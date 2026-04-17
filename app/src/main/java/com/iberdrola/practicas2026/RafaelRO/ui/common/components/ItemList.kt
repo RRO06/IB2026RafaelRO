@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import java.time.LocalDate
 
@@ -41,9 +40,9 @@ private val example = Factura(
 @Composable
 fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
     val fechaFormateada = UtilyClass.toLongSpanishDate(factura.fechaFinal)
-    val importe = "${UtilyClass.toCurrencyFormat(factura.valor)}"
+    val importe = UtilyClass.toCurrencyFormat(factura.valor)
 
-    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -64,35 +63,11 @@ fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
 private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
     Column {
         Text(text = fecha, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        Text(text = "Factura $tipo", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Text(text = "Factura $tipo", style = MaterialTheme.typography.bodySmall, fontFamily = CustomTypography, color = Color.Gray)
         Spacer(modifier = Modifier.height(8.dp))
 
         // Reutilizamos la lógica del Badge que definimos antes
         FacturaStatusBadge(estado = estado)
-    }
-}
-
-@Composable
-fun FacturaStatusBadge(estado: Estado) {
-    val (text, color) = when (estado) {
-        Estado.Pagado -> "Pagada" to GreenAplication
-        Estado.PendientePago -> "Pendiente de pago" to Color.Red
-        Estado.Tramite -> "En trámite de cobro" to Color.Gray
-        Estado.Anulado -> "Anulada" to Color.DarkGray
-        Estado.CuotaFija -> "Cuota fija" to Color.Blue
-    }
-
-    Surface(
-        color = color.copy(alpha = 0.1f),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = color
-        )
     }
 }
 @Composable
@@ -100,10 +75,10 @@ private fun ImporteFactura(importe: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = importe, color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
         Icon(
-            imageVector = Icons.Default.ChevronRight,
+            imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
             tint = Color.Gray,
-            modifier = Modifier.size(30.dp)
+            modifier = Modifier.size(38.dp)
         )
     }
 }

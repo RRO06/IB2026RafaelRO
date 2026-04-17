@@ -1,10 +1,13 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.common.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.iberdrola.practicas2026.RafaelRO.R
 
 // Set of Material typography styles to start with
 val Typography = Typography(
@@ -31,4 +34,9 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     )
     */
+)
+val CustomTypography = FontFamily(
+    Font(resId = R.font.iber_pangea, weight = FontWeight.Normal),
+    Font(resId = R.font.pangea_afrikan_trial_medium, weight = FontWeight.Medium),
+    Font(resId = R.font.pangea_afrikan_trial_bold, weight = FontWeight.Bold),
 )

@@ -12,7 +12,7 @@ class UtilyClass {
     companion object {
         // --- Formateadores existentes ---
         fun toSpanishMediumDate(fecha: LocalDate): String {
-            val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "ES"))
+            val formatter = DateTimeFormatter.ofPattern("dd MMM. yyyy", Locale("es", "ES"))
             return fecha.format(formatter).lowercase()
         }
 
