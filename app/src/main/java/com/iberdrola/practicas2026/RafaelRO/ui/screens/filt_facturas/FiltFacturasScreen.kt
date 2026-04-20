@@ -54,7 +54,7 @@ import java.time.format.DateTimeFormatter
 data class FiltUiActions(
     val onDateFromClick: () -> Unit = {},
     val onDateToClick: () -> Unit = {},
-    val onDateFromSelected: (LocalDate?) -> Unit = {}, // Nueva
+    val onDateFromSelected: (LocalDate?) -> Unit = {}, // Vieja
     val onDateToSelected: (LocalDate?) -> Unit = {},   // Nueva
     val onDismissDate: () -> Unit = {},                // Nueva
     val onPriceChange: (ClosedFloatingPointRange<Float>) -> Unit = {},
