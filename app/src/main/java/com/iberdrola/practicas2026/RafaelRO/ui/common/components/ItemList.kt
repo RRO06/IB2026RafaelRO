@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,13 +20,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import java.time.LocalDate
 
 private val example = Factura(
@@ -68,13 +63,11 @@ private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
         Text(
             text = fecha,
             style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            fontFamily = CustomTypography
+            fontWeight = FontWeight.Bold
         )
         Text(
             text = "Factura $tipo",
-            style = MaterialTheme.typography.bodyMedium,
-            fontFamily = CustomTypography
+            style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -88,8 +81,7 @@ private fun ImporteFactura(importe: String) {
         Text(
             text = importe,
             color = Color.Gray,
-            style = MaterialTheme.typography.bodyLarge,
-            fontFamily = CustomTypography
+            style = MaterialTheme.typography.bodyLarge
         )
         Icon(
             painter = painterResource(R.drawable.chevron_right),

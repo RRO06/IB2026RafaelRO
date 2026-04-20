@@ -51,7 +51,6 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBa
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemList
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.LoadingScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
@@ -187,8 +186,7 @@ fun ListadoFacturasSuccessContent(
             Text(
                 text = "Historico de facturas",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                fontFamily = CustomTypography
+                fontWeight = FontWeight.Bold
             )
             Button(
                 onClick = actions.onFilter,
@@ -250,8 +248,7 @@ fun LazyColumFacturas(
                 ) {
                     Text(
                         text = "$anio",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = CustomTypography
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -354,16 +351,14 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
                         text = "%.2f".format(factura.valor),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = CustomTypography
+                            fontWeight = FontWeight.Bold
                         )
                     )
                     Text(
                         text = " €",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = CustomTypography
+                            fontWeight = FontWeight.Bold
                         )
                     )
                 }
@@ -372,7 +367,6 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
                             " - " +
                             UtilyClass.toSpanishMediumDate(fecha = factura.fechaFinal),
                     style = MaterialTheme.typography.titleSmall,
-                    fontFamily = CustomTypography,
                     color = Color.Gray
                 )
             }
