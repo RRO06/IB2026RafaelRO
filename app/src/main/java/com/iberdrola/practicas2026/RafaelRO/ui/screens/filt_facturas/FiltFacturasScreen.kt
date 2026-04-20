@@ -1,5 +1,7 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,21 +14,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RangeSlider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,13 +36,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FilterDatePickerDialog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -112,25 +117,11 @@ fun FilterContent(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        // Cabecera: Botón Atrás
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(bottom = 20.dp)
-                .clickable { actions.onBack() }
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
-                contentDescription = "Atrás",
-                modifier = Modifier.size(18.dp),
-                tint = Color(0xFF005944)
-            )
-            Text(
-                text = "Atrás",
-                color = Color(0xFF005944),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        // Cabecera: Botón Atrás (Centralizado)
+        BotonAtras(
+            onBack = actions.onBack,
+            modifier = Modifier.padding(bottom = 20.dp)
+        )
 
         Text(
             text = "Filtrar",
@@ -225,49 +216,115 @@ fun FilterContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PriceRangeSelector(
     priceRangeStart: Float,
     priceRangeEnd : Float,
     onRangeChange: (ClosedFloatingPointRange<Float>) -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Indicador de rango (Cajita gris)
+    val activeColor = Color(0xFF005944) // Verde oscuro de la imagen
+    val inactiveColor = Color.LightGray.copy(alpha = 0.3f)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Indicador de rango (Burbuja superior)
         Surface(
             color = Color(0xFFE0ECE9),
             shape = RoundedCornerShape(4.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 12.dp)
         ) {
             Text(
                 text = "${priceRangeStart.toInt()} € - ${priceRangeEnd.toInt()} €",
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF002E1C)
             )
         }
 
-        // Slider de rango
+        // Slider de rango personalizado
         RangeSlider(
             value = priceRangeStart..priceRangeEnd,
             onValueChange = onRangeChange,
             valueRange = 0f..500f,
-            colors = SliderDefaults.colors(
-                thumbColor = Color(0xFF005944),
-                activeTrackColor = Color(0xFF005944),
-                inactiveTrackColor = Color.LightGray.copy(alpha = 0.5f)
-            )
-        )
+            startThumb = {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp) // Círculos un poco más grandes para mayor presencia
+                        .background(activeColor, CircleShape)
+                )
+            },
+            endThumb = {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(activeColor, CircleShape)
+                )
+            },
+            track = { rangeSliderState ->
+                val start = rangeSliderState.valueRange.start
+                val end = rangeSliderState.valueRange.endInclusive
+                val fractionStart = (rangeSliderState.activeRangeStart - start) / (end - start)
+                val fractionEnd = (rangeSliderState.activeRangeEnd - start) / (end - start)
 
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp) // Línea un poco más gruesa como en la imagen
+                ) {
+                    val width = size.width
+                    val height = size.height
+                    val centerY = height / 2
+
+                    // 1. Línea inactiva (el fondo gris continuo)
+                    drawLine(
+                        color = inactiveColor,
+                        start = Offset(0f, centerY),
+                        end = Offset(width, centerY),
+                        strokeWidth = height,
+                        cap = StrokeCap.Round
+                    )
+
+                    // 2. Línea activa (el tramo verde)
+                    // Usamos StrokeCap.Butt para que los bordes sean rectos y
+                    // se "claven" perfectamente en el centro de los círculos
+                    drawLine(
+                        color = activeColor,
+                        start = Offset(width * fractionStart, centerY),
+                        end = Offset(width * fractionEnd, centerY),
+                        strokeWidth = height,
+                        cap = StrokeCap.Butt
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
         // Etiquetas de los extremos
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "0 €", style = MaterialTheme.typography.bodySmall)
-            Text(text = "500 €", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "${priceRangeStart.toInt()} €",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "${priceRangeEnd.toInt()} €",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
+
 
 @Composable
 fun StateRow(label: String, isSelected: Boolean, onToggle: () -> Unit) {
