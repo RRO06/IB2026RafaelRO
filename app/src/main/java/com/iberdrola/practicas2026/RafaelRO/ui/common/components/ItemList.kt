@@ -18,9 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
@@ -62,8 +65,17 @@ fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
 @Composable
 private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
     Column {
-        Text(text = fecha, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        Text(text = "Factura $tipo", style = MaterialTheme.typography.bodySmall, fontFamily = CustomTypography, color = Color.Gray)
+        Text(
+            text = fecha,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            fontFamily = CustomTypography
+        )
+        Text(
+            text = "Factura $tipo",
+            style = MaterialTheme.typography.bodyMedium,
+            fontFamily = CustomTypography
+        )
         Spacer(modifier = Modifier.height(8.dp))
 
         // Reutilizamos la lógica del Badge que definimos antes
@@ -73,12 +85,17 @@ private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
 @Composable
 private fun ImporteFactura(importe: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = importe, color = Color.Gray, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = importe,
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodyLarge,
+            fontFamily = CustomTypography
+        )
         Icon(
-            imageVector = Icons.Outlined.ChevronRight,
+            painter = painterResource(R.drawable.chevron_right),
             contentDescription = null,
             tint = Color.Gray,
-            modifier = Modifier.size(38.dp)
+            modifier = Modifier.size(34.dp)
         )
     }
 }

@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,7 +49,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.R
-import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
@@ -60,9 +60,6 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightGreen
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightRed
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.RedAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 
 data class ListadoFacturasActions(
@@ -84,6 +81,39 @@ fun ListadoFacturasScreen(
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
     }
+
+    ListadoFacturasContent(
+        stateData = viewModel.stateData,
+        stateUI = viewModel.stateUI,
+        onBack = onBack,
+        onFilter = onFilter,
+        onFilterLuz = { viewModel.onFilterLuz() },
+        onFilterGas = { viewModel.onFilterGas() },
+        onFacturaClick = { viewModel.onFacturaClick() },
+        onDismissDialog = { viewModel.dismissDialog() },
+        onClearFilters = if (viewModel.tieneFiltrosActivos()) {
+            { viewModel.limpiarFiltros() }
+        } else null,
+        modifier = modifier
+    )
+}
+
+/**
+ * Versión stateless de la pantalla para facilitar la previsualización y el testeo.
+ */
+@Composable
+fun ListadoFacturasContent(
+    stateData: ListadoFacturasState,
+    stateUI: ListadoFacturasUiState,
+    onBack: () -> Unit,
+    onFilter: () -> Unit,
+    onFilterLuz: () -> Unit,
+    onFilterGas: () -> Unit,
+    onFacturaClick: () -> Unit,
+    onDismissDialog: () -> Unit,
+    onClearFilters: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -92,52 +122,58 @@ fun ListadoFacturasScreen(
         FacturasHeader(onBack = onBack)
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row {
-            BotonFiltroFocuseado(
-                text = "Luz",
-                onClick = { viewModel.onFilterLuz() },
-                modifier = Modifier,
-                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Luz
-            )
-            BotonFiltroFocuseado(
-                text = "Gas",
-                onClick = { viewModel.onFilterGas() },
-                modifier = Modifier,
-                isSelected = viewModel.stateUI.filtroTipoActual == Tipo.Gas
-            )
-        }
+
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(Divider)
-        )
-        // Implementación de State Hoisting: la Screen es "tonta" y se limita a renderizar
-        // el estado que emite el ViewModel (Carga, Error o Éxito).
-        when (val state = viewModel.stateData) {
-            // La pantalla de error se muestra de una forma u otra dependiendo de si se han realizado o no filtrados.
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(Divider)
+            )
+
+            // Botones con su barra de selección (se superpondrán a la línea gris)
+            Row {
+                BotonFiltroFocuseado(
+                    text = "Luz",
+                    onClick = onFilterLuz,
+                    modifier = Modifier,
+                    isSelected = stateUI.filtroTipoActual == Tipo.Luz
+                )
+                BotonFiltroFocuseado(
+                    text = "Gas",
+                    onClick = onFilterGas,
+                    modifier = Modifier,
+                    isSelected = stateUI.filtroTipoActual == Tipo.Gas
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when (stateData) {
             is ListadoFacturasState.Error -> ErrorScreen(
-                mensaje = state.message,
-                onClearFilters = if (viewModel.tieneFiltrosActivos()) {
-                    { viewModel.limpiarFiltros() }
-                } else null
+                mensaje = stateData.message,
+                onClearFilters = onClearFilters
             )
 
             is ListadoFacturasState.Loading -> LoadingScreen()
-            is ListadoFacturasState.Success -> ListadoFacturasContent(
+            is ListadoFacturasState.Success -> ListadoFacturasSuccessContent(
                 actions = ListadoFacturasActions(
                     onFilter = onFilter,
-                    onFacturaClick = viewModel::onFacturaClick,
-                    dismissDialog = viewModel::dismissDialog
+                    onFacturaClick = onFacturaClick,
+                    dismissDialog = onDismissDialog
                 ),
-                stateUI = viewModel.stateUI
+                stateUI = stateUI
             )
         }
     }
 }
 
 @Composable
-fun ListadoFacturasContent(
+fun ListadoFacturasSuccessContent(
     actions: ListadoFacturasActions,
     stateUI: ListadoFacturasUiState,
 ) {
@@ -156,7 +192,8 @@ fun ListadoFacturasContent(
             Text(
                 text = "Historico de facturas",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontFamily = CustomTypography
             )
             Button(
                 onClick = actions.onFilter,
@@ -179,7 +216,8 @@ fun ListadoFacturasContent(
                 Text(
                     text = "Filtrar",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp),
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -218,7 +256,11 @@ fun LazyColumFacturas(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Text(text = "$anio", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "$anio",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = CustomTypography
+                    )
                 }
             }
             // Renderizado de las facturas pertenecientes a dicho año mediante componentes reutilizables.
@@ -248,18 +290,18 @@ fun FacturasHeader(onBack: () -> Unit) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.padding(bottom = 18.dp)
+            modifier = Modifier
+                .padding(bottom = 18.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onBack)
+                .padding(vertical = 4.dp, horizontal = 8.dp)
         ) {
-            IconButton(
-                onClick = { onBack() },
+            Icon(
+                painter = painterResource(R.drawable.chevron_left),
+                contentDescription = stringResource(R.string.icon_back_listado_facturas),
+                tint = GreenAplication,
                 modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.chevron_icon),
-                    contentDescription = stringResource(R.string.icon_back_listado_facturas)
-                )
-            }
+            )
             Text(
                 text = "Atrás",
                 fontWeight = FontWeight.Bold,
@@ -282,6 +324,7 @@ fun FacturasHeader(onBack: () -> Unit) {
         )
     }
 }
+
 // Representación visual destacada de la última factura recibida tras el filtrado.
 @Composable
 fun UltimaFacturaCard(factura: Factura) {
@@ -329,10 +372,10 @@ fun UltimaFacturaCard(factura: Factura) {
             }
             Spacer(modifier = Modifier.weight(1f))
             Column {
-                Row (
+                Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                ) {
                     Text(
                         text = "%.2f".format(factura.valor),
                         style = MaterialTheme.typography.titleLarge.copy(
@@ -377,11 +420,14 @@ fun UltimaFacturaCard(factura: Factura) {
 @Composable
 fun ListadoFacturasContentPreview() {
     ListadoFacturasContent(
-        ListadoFacturasActions(
-            onFilter = { },
-            onFacturaClick = {},
-            dismissDialog = {}
-        ),
-        stateUI = ListadoFacturasUiState()
+        stateData = ListadoFacturasState.Success(emptyList()),
+        stateUI = ListadoFacturasUiState(),
+        onBack = {},
+        onFilter = {},
+        onFilterLuz = {},
+        onFilterGas = {},
+        onFacturaClick = {},
+        onDismissDialog = {},
+        onClearFilters = {}
     )
 }

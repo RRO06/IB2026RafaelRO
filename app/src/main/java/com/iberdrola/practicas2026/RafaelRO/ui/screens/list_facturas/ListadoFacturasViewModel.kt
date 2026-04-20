@@ -11,6 +11,7 @@ import com.iberdrola.practicas2026.RafaelRO.domain.network.InvokeException
 import com.iberdrola.practicas2026.RafaelRO.domain.usercase.GetFacturasUseCase
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,12 +31,20 @@ class ListadoFacturasViewModel @Inject constructor(
 
     private fun cargarDatosIniciales() {
         viewModelScope.launch {
-            when (val result = getFacturasUseCase()) {
+            stateData = ListadoFacturasState.Loading
+            
+            // Obtenemos los datos de la fuente (Local o Remota)
+            val result = getFacturasUseCase()
+            
+            // Forzamos un retraso de 1 segundo para asegurar que se vea el skeleton (según petición)
+            delay(1000)
+            
+            when (result) {
                 is BaseResult.Sucess -> {
-                    stateData = ListadoFacturasState.Success(result.data)
                     stateUI = stateUI.copy(
                         facturasBase = result.data
                     )
+                    // Procesamos los datos para mostrarlos (pasa a Success o Error si está vacío)
                     actualizarInterfaz(Tipo.Luz)
                 }
 
@@ -52,6 +61,7 @@ class ListadoFacturasViewModel @Inject constructor(
             }
         }
     }
+
     fun limpiarFiltros() {
         actualizarInterfaz(
             tipo = stateUI.filtroTipoActual,
@@ -61,10 +71,18 @@ class ListadoFacturasViewModel @Inject constructor(
 
     fun onFilterLuz() = actualizarInterfaz(Tipo.Luz)
     fun onFilterGas() = actualizarInterfaz(Tipo.Gas)
+
     fun actualizarInterfaz(
         tipo: Tipo = stateUI.filtroTipoActual,
         filtrosExtra: FiltUiState = filtrosAvanzadosActuales
     ) {
+        // PROTECCIÓN CONTRA ERROR PREMATURO:
+        // Si el LaunchedEffect de la Screen llama aquí antes de que cargarDatosIniciales termine,
+        // ignoramos la llamada para que no se muestre "No se han encontrado facturas" en lugar del Skeleton.
+        if (stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading) {
+            return
+        }
+
         filtrosAvanzadosActuales = filtrosExtra
 
         val resultado = stateUI.facturasBase.filter { factura ->
@@ -82,11 +100,10 @@ class ListadoFacturasViewModel @Inject constructor(
 
         if (resultado.isEmpty()) {
             stateUI = stateUI.copy(filtroTipoActual = tipo)
-            // Si 'todasLasFacturas' NO está vacía, pero 'resultado' SÍ, es culpa de los filtros
+            // Solo mostramos error si realmente hemos terminado de cargar la base de datos
             stateData = if (stateUI.facturasBase.isNotEmpty()) {
                 ListadoFacturasState.Error("No existen facturas con estos filtros")
             } else {
-                // Error real: la base de datos no trajo nada
                 ListadoFacturasState.Error("No se han encontrado facturas en su cuenta")
             }
             return
@@ -100,12 +117,14 @@ class ListadoFacturasViewModel @Inject constructor(
 
         stateUI = stateUI.copy(
             filtroTipoActual = tipo,
-            facturasAMostrar = resultado, // Mantenemos la filtrada completa por si la necesitas
-            facturasPorAnio = agrupada, // Esta ahora no tiene la "última"
+            facturasAMostrar = resultado,
+            facturasPorAnio = agrupada,
             ultimaFactura = ultima
         )
+        // Transición definitiva a Success
         stateData = ListadoFacturasState.Success(stateUI.facturasBase)
     }
+
     fun tieneFiltrosActivos(): Boolean = filtrosAvanzadosActuales != FiltUiState()
     fun onFacturaClick() {
         stateUI = stateUI.copy(showDialog = true)
