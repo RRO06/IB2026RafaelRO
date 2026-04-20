@@ -18,16 +18,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,12 +34,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -125,7 +126,7 @@ fun FilterContent(
 
         Text(
             text = "Filtrar",
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
@@ -146,7 +147,7 @@ fun FilterContent(
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val dateFromStr =
                 state.dateFrom?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
@@ -180,7 +181,7 @@ fun FilterContent(
         Spacer(modifier = Modifier.height(8.dp))
         Estado.entries.forEach { estado ->
             StateRow(
-                label = estado.name,
+                label = estado,
                 isSelected = state.selectedStates.contains(estado.name),
                 onToggle = { actions.onStateToggle(estado.name) }
             )
@@ -194,7 +195,7 @@ fun FilterContent(
             onClick = { actions.onApply(state) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D4E)),
             shape = RoundedCornerShape(28.dp),
             // Opcional: deshabilitar si hay error de fecha
@@ -239,7 +240,7 @@ fun PriceRangeSelector(
             Text(
                 text = "${priceRangeStart.toInt()} € - ${priceRangeEnd.toInt()} €",
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF002E1C)
             )
@@ -253,14 +254,14 @@ fun PriceRangeSelector(
             startThumb = {
                 Box(
                     modifier = Modifier
-                        .size(24.dp) // Círculos un poco más grandes para mayor presencia
+                        .size(22.dp) // Círculos un poco más grandes para mayor presencia
                         .background(activeColor, CircleShape)
                 )
             },
             endThumb = {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(22.dp)
                         .background(activeColor, CircleShape)
                 )
             },
@@ -273,7 +274,7 @@ fun PriceRangeSelector(
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(5.dp) // Línea un poco más gruesa como en la imagen
+                        .height(4.dp) // Línea un poco más gruesa como en la imagen
                 ) {
                     val width = size.width
                     val height = size.height
@@ -300,7 +301,7 @@ fun PriceRangeSelector(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
         )
         // Etiquetas de los extremos
         Row(
@@ -327,7 +328,14 @@ fun PriceRangeSelector(
 
 
 @Composable
-fun StateRow(label: String, isSelected: Boolean, onToggle: () -> Unit) {
+fun StateRow(label: Estado, isSelected: Boolean, onToggle: () -> Unit) {
+    val text = when(label){
+        Estado.Pagado -> "Pagadas"
+        Estado.PendientePago -> "Pendiente de Pago"
+        Estado.Anulado -> "Anuladas"
+        Estado.CuotaFija -> "Cuota Fija"
+        Estado.Tramite -> "En trámite de cobro"
+    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -339,41 +347,48 @@ fun StateRow(label: String, isSelected: Boolean, onToggle: () -> Unit) {
             onCheckedChange = { onToggle() },
             colors = CheckboxDefaults.colors(checkedColor = Color(0xFF005944))
         )
-        Text(label)
+        Text(text)
     }
 }
 
 @Composable
 fun ReadOnlyTextField(value: String, label: String, modifier: Modifier, onClick: () -> Unit) {
-    // Usamos Box para capturar el clic de forma global sobre el componente
-    Box(modifier = modifier) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            enabled = false, // <--- Importante: evita que el teclado intente subir
-            label = { Text(label) },
-            modifier = Modifier.fillMaxWidth(),
-            // Aplicamos colores para que no parezca "deshabilitado" (gris)
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.CalendarMonth,
-                    contentDescription = null
-                )
-            }
-        )
-        // Capa invisible encima que detecta el clic
-        Box(
+    Column(
+        modifier = modifier
+            .clickable { onClick() }
+    ) {
+        Row(
             modifier = Modifier
-                .matchParentSize()
-                .alpha(0f)
-                .clickable { onClick() }
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = Color.Gray)) {
+                        append("* ")
+                    }
+                    if (value.isEmpty()) {
+                        append(label)
+                    } else {
+                        append(value)
+                    }
+                },
+                color = if (value.isEmpty()) Color.Gray else Color.Black,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Icon(
+                imageVector = Icons.Outlined.CalendarToday,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
+            color = Color.Gray
         )
     }
 }
