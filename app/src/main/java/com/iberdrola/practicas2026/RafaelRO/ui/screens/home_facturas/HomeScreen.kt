@@ -151,12 +151,14 @@ fun HomeContent(
 
 @Composable
 fun FacturaElectronicaCard(onClick: () -> Unit) {
+    val cardShape = RoundedCornerShape(16.dp)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
+            .clip(cardShape) // Aplicamos clip antes de clickable para el ripple
             .clickable { onClick() }, // Interacción
-        shape = RoundedCornerShape(16.dp),
+        shape = cardShape,
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFF1F8E9) // Un verde muy suave de fondo
         ),
@@ -225,7 +227,7 @@ fun UserCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (!state.foto.isNullOrEmpty()) {
+                if (state.foto.isNotEmpty()) {
                     AsyncImage(
                         model = state.foto,
                         contentDescription = "Foto de perfil",
