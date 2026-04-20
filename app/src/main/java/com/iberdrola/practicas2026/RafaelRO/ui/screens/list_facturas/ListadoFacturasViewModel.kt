@@ -31,12 +31,13 @@ class ListadoFacturasViewModel @Inject constructor(
 
     private fun cargarDatosIniciales() {
         viewModelScope.launch {
+            // Limpiamos cualquier estado de diálogo previo al iniciar
+            stateUI = stateUI.copy(showDialog = false)
             stateData = ListadoFacturasState.Loading
             
-            // Obtenemos los datos de la fuente (Local o Remota)
             val result = getFacturasUseCase()
             
-            // Forzamos un retraso de 1 segundo para asegurar que se vea el skeleton (según petición)
+            // Forzamos un retraso de 1 segundo para asegurar que se vea el skeleton
             delay(1000)
             
             when (result) {
@@ -44,7 +45,6 @@ class ListadoFacturasViewModel @Inject constructor(
                     stateUI = stateUI.copy(
                         facturasBase = result.data
                     )
-                    // Procesamos los datos para mostrarlos (pasa a Success o Error si está vacío)
                     actualizarInterfaz(Tipo.Luz)
                 }
 
@@ -76,9 +76,6 @@ class ListadoFacturasViewModel @Inject constructor(
         tipo: Tipo = stateUI.filtroTipoActual,
         filtrosExtra: FiltUiState = filtrosAvanzadosActuales
     ) {
-        // PROTECCIÓN CONTRA ERROR PREMATURO:
-        // Si el LaunchedEffect de la Screen llama aquí antes de que cargarDatosIniciales termine,
-        // ignoramos la llamada para que no se muestre "No se han encontrado facturas" en lugar del Skeleton.
         if (stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading) {
             return
         }
@@ -100,7 +97,6 @@ class ListadoFacturasViewModel @Inject constructor(
 
         if (resultado.isEmpty()) {
             stateUI = stateUI.copy(filtroTipoActual = tipo)
-            // Solo mostramos error si realmente hemos terminado de cargar la base de datos
             stateData = if (stateUI.facturasBase.isNotEmpty()) {
                 ListadoFacturasState.Error("No existen facturas con estos filtros")
             } else {
@@ -109,10 +105,7 @@ class ListadoFacturasViewModel @Inject constructor(
             return
         }
 
-        // 2. Identificamos la última factura (la primera de la lista filtrada)
         val ultima = resultado.first()
-
-        // 3. Agrupamos solo el histórico restante por año
         val agrupada = resultado.groupBy { it.fechaFinal.year }
 
         stateUI = stateUI.copy(
@@ -121,13 +114,16 @@ class ListadoFacturasViewModel @Inject constructor(
             facturasPorAnio = agrupada,
             ultimaFactura = ultima
         )
-        // Transición definitiva a Success
         stateData = ListadoFacturasState.Success(stateUI.facturasBase)
     }
 
     fun tieneFiltrosActivos(): Boolean = filtrosAvanzadosActuales != FiltUiState()
+    
     fun onFacturaClick() {
-        stateUI = stateUI.copy(showDialog = true)
+        // Solo permitimos abrir el diálogo si los datos están listos
+        if (stateData is ListadoFacturasState.Success) {
+            stateUI = stateUI.copy(showDialog = true)
+        }
     }
 
     fun dismissDialog() {

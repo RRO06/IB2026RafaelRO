@@ -9,5 +9,6 @@ data class HomeUiState(
     val ultimaConexion: String = "13/03/2026",
     val esModoNube: Boolean = false,
     val esModoAvanzado: Boolean = false,
-    val showBottomSheet : Boolean = false
+    val showBottomSheet : Boolean = false,
+    val showThankYouMessage: Boolean = false
 )

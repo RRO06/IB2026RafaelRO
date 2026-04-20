@@ -1,5 +1,10 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -30,6 +36,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,6 +47,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
@@ -101,50 +109,90 @@ fun HomeContent(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "¡Bienvenido de nuevo!",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.weight(0.5f))
-
-        UserCard(
-            state = uiState,
-            onEditClick = actions.onNavigateToPerfil
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // NUEVA CARD INTERACTIVA
-        FacturaElectronicaCard(
-            onClick = actions.onNavigateToFacturaElectronica
-        )
-
-        Spacer(modifier = Modifier.weight(1.5f))
-
-        SelectorDeOrigen(
-            esNube = uiState.esModoNube,
-            onOptionSelected = actions.onModoNubeChanged
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = actions.onNavigateToFacturas,
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = GreenAplication),
-            shape = RoundedCornerShape(12.dp)
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Ver mis facturas", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(
+                text = "¡Bienvenido de nuevo!",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.weight(0.5f))
+
+            UserCard(
+                state = uiState,
+                onEditClick = actions.onNavigateToPerfil
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            FacturaElectronicaCard(
+                onClick = actions.onNavigateToFacturaElectronica
+            )
+
+            Spacer(modifier = Modifier.weight(1.5f))
+
+            SelectorDeOrigen(
+                esNube = uiState.esModoNube,
+                onOptionSelected = actions.onModoNubeChanged
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = actions.onNavigateToFacturas,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenAplication),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Ver mis facturas", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        AnimatedVisibility(
+            visible = uiState.showThankYouMessage,
+            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 48.dp)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                border = BorderStroke(1.5.dp, GreenAplication),
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = GreenAplication,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "¡Gracias por tu valoración!",
+                        color = GreenAplication,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
         }
     }
 }
@@ -156,11 +204,11 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .clip(cardShape) // Aplicamos clip antes de clickable para el ripple
+            .clip(cardShape)
             .clickable { onClick() }, // Interacción
         shape = cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF1F8E9) // Un verde muy suave de fondo
+            containerColor = Color(0xFFF1F8E9)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -178,7 +226,7 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Description, // O un icono de "hoja/digital"
+                    imageVector = Icons.Default.Description,
                     contentDescription = null,
                     tint = GreenAplication,
                     modifier = Modifier.size(28.dp)

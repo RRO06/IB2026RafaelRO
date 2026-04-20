@@ -2,10 +2,8 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Whatshot
@@ -31,27 +28,23 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
@@ -101,9 +94,6 @@ fun ListadoFacturasScreen(
     )
 }
 
-/**
- * Versión stateless de la pantalla para facilitar la previsualización y el testeo.
- */
 @Composable
 fun ListadoFacturasContent(
     stateData: ListadoFacturasState,
@@ -125,7 +115,6 @@ fun ListadoFacturasContent(
         FacturasHeader(onBack = onBack)
         Spacer(modifier = Modifier.height(24.dp))
 
-
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.BottomStart
@@ -137,7 +126,6 @@ fun ListadoFacturasContent(
                     .background(Divider)
             )
 
-            // Botones con su barra de selección (se superpondrán a la línea gris)
             Row {
                 BotonFiltroFocuseado(
                     text = "Luz",
@@ -183,10 +171,14 @@ fun ListadoFacturasSuccessContent(
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
-        // Componente destacado que muestra la factura más reciente.
-        UltimaFacturaCard(stateUI.ultimaFactura)
-        Spacer(modifier = Modifier.height(24.dp))
-        // Sección del histórico con acceso al panel de filtros avanzados.
+        stateUI.ultimaFactura?.let {
+            UltimaFacturaCard(
+                factura = it,
+                onClick = actions.onFacturaClick
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,10 +216,9 @@ fun ListadoFacturasSuccessContent(
                 )
             }
         }
-        // Listado scrollable de facturas agrupadas por año.
         LazyColumFacturas(stateUI.facturasPorAnio, actions.onFacturaClick)
     }
-    // Diálogo informativo que se activa al intentar visualizar una factura no disponible.
+
     if (stateUI.showDialog) {
         AlertDialog(
             onDismissRequest = { actions.dismissDialog() },
@@ -240,7 +231,6 @@ fun ListadoFacturasSuccessContent(
             text = { Text(text = "Esta factura no está disponible para su visualización.") }
         )
     }
-
 }
 
 @Composable
@@ -252,8 +242,7 @@ fun LazyColumFacturas(
         modifier = Modifier.fillMaxSize()
     ) {
         facturasPorAnio.forEach { (anio, facturas) ->
-            // Cabecera de sección para cada año disponible en el mapa.
-            item {
+            item(key = "header_$anio") {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -266,14 +255,15 @@ fun LazyColumFacturas(
                     )
                 }
             }
-            // Renderizado de las facturas pertenecientes a dicho año mediante componentes reutilizables.
-            items(facturas) { factura ->
+            items(
+                items = facturas,
+                key = { it.fechaInicio.toString() + it.valor.toString() } // Clave única para evitar saltos
+            ) { factura ->
                 ItemList(
                     factura = factura,
                     modifier = Modifier.clickable(
-                        indication = LocalIndication.current,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) { onFacturaClick() }
+                        onClick = onFacturaClick
+                    )
                 )
                 HorizontalDivider(
                     modifier = Modifier
@@ -287,32 +277,13 @@ fun LazyColumFacturas(
     }
 }
 
-// Encabezado con información del punto de suministro y navegación de retorno.
 @Composable
 fun FacturasHeader(onBack: () -> Unit) {
     Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(bottom = 18.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .clickable(onClick = onBack)
-                .padding(vertical = 4.dp, horizontal = 8.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.chevron_left),
-                contentDescription = stringResource(R.string.icon_back_listado_facturas),
-                tint = GreenAplication,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = "Atrás",
-                fontWeight = FontWeight.Bold,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.padding(start = 8.dp),
-                color = GreenAplication
-            )
-        }
+        BotonAtras(
+            onBack = onBack,
+            modifier = Modifier.padding(bottom = 18.dp)
+        )
 
         Text(
             text = stringResource(R.string.title_listado_facturas),
@@ -328,13 +299,13 @@ fun FacturasHeader(onBack: () -> Unit) {
     }
 }
 
-// Representación visual destacada de la última factura recibida tras el filtrado.
 @Composable
-fun UltimaFacturaCard(factura: Factura) {
+fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .height(200.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
