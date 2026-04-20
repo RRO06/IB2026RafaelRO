@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -76,8 +77,10 @@ fun ListadoFacturasScreen(
     onFilter: () -> Unit,
     filtState: FiltUiState
 ) {
-    // Escucha cambios en 'filtState' (provenientes del NavHost) para
-    // actualizar la lógica de filtrado en el ViewModel de forma reactiva.
+    BackHandler {
+        onBack()
+    }
+
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
     }
