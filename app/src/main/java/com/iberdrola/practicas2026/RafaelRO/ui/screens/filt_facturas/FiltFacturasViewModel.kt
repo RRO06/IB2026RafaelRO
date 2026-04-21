@@ -1,75 +1,102 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import java.time.LocalDate
 import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class FilterViewModel @Inject constructor() : ViewModel() {
+@HiltViewModel
+class FilterViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
-    var uiState by mutableStateOf(FiltUiState())
-        private set
+    // Fuente de verdad reactiva conectada al SavedStateHandle
+    val uiState: StateFlow<FiltUiState> = savedStateHandle.getStateFlow("filter_data", FiltUiState())
+
+    private val currentState: FiltUiState get() = uiState.value
+
+    init {
+        val initial = savedStateHandle.get<FiltUiState>("filter_data")
+        Log.d("FilterViewModel", "DEBUG: Initial state from SavedStateHandle: $initial")
+    }
+
+    /**
+     * Inicializa los filtros con los valores recibidos de la pantalla anterior.
+     * Solo se aplica si el estado actual es el por defecto para evitar sobreescrituras accidentales.
+     */
+    fun initFilters(filters: FiltUiState) {
+        if (currentState == FiltUiState() && filters != FiltUiState()) {
+            Log.d("FilterViewModel", "DEBUG: Initializing filters from external source: $filters")
+            updateState(filters)
+        }
+    }
 
     fun onDateFromClick() {
-        uiState = uiState.copy(showDatePickerFrom = true)
+        updateState(currentState.copy(showDatePickerFrom = true))
     }
 
     fun onDateToClick() {
-        uiState = uiState.copy(showDatePickerTo = true)
+        updateState(currentState.copy(showDatePickerTo = true))
     }
 
     fun onDateFromSelected(date: LocalDate?) {
-        uiState = uiState.copy(
+        val error = if (date != null && currentState.dateTo != null && date.isAfter(currentState.dateTo)) {
+            "La fecha de inicio no puede ser posterior"
+        } else null
+        
+        updateState(currentState.copy(
             dateFrom = date,
             showDatePickerFrom = false,
-            dateError = if (date != null && uiState.dateTo != null && date.isAfter(uiState.dateTo)) {
-                "La fecha de inicio no puede ser posterior"
-            } else null
-        )
+            dateError = error
+        ))
     }
 
     fun onDateToSelected(date: LocalDate?) {
-        uiState = uiState.copy(
+        val error = if (date != null && currentState.dateFrom != null && date.isBefore(currentState.dateFrom)) {
+            "La fecha de fin no puede ser anterior"
+        } else null
+
+        updateState(currentState.copy(
             dateTo = date,
             showDatePickerTo = false,
-            // Si la fecha fin es menor que la inicio, marcamos error
-            dateError = if (date != null && uiState.dateFrom != null && date.isBefore(uiState.dateFrom)) {
-                "La fecha de fin no puede ser anterior"
-            } else null
-        )
+            dateError = error
+        ))
+    }
+
+    fun clearError() {
+        updateState(currentState.copy(dateError = null))
     }
 
     fun dismissDatePickers() {
-        uiState = uiState.copy(showDatePickerFrom = false, showDatePickerTo = false)
+        updateState(currentState.copy(showDatePickerFrom = false, showDatePickerTo = false))
     }
 
     fun onPriceRangeChanged(range: ClosedFloatingPointRange<Float>) {
-        uiState = uiState.copy(
+        updateState(currentState.copy(
             priceRangeStart = range.start,
             priceRangeEnd = range.endInclusive
-        )
+        ))
     }
 
     fun onStateToggle(estado: String) {
-        val currentStates = uiState.selectedStates
+        val currentStates = currentState.selectedStates
         val newStates = if (currentStates.contains(estado)) {
             currentStates - estado
         } else {
             currentStates + estado
         }
-
-        uiState = uiState.copy(selectedStates = newStates)
+        updateState(currentState.copy(selectedStates = newStates))
     }
 
     fun onClear() {
-        uiState = FiltUiState()
+        updateState(FiltUiState())
+    }
+
+    private fun updateState(newState: FiltUiState) {
+        Log.d("FilterViewModel", "DEBUG: Updating state in SavedStateHandle: $newState")
+        savedStateHandle["filter_data"] = newState
     }
 }

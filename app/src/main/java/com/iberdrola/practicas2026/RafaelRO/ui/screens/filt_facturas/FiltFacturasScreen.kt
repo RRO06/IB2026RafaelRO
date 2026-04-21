@@ -1,5 +1,10 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,6 +38,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -40,6 +49,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,30 +58,48 @@ import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FilterDatePickerDialog
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightRed
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.RedAplication
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 data class FiltUiActions(
     val onDateFromClick: () -> Unit = {},
     val onDateToClick: () -> Unit = {},
-    val onDateFromSelected: (LocalDate?) -> Unit = {}, // Vieja
-    val onDateToSelected: (LocalDate?) -> Unit = {},   // Nueva
-    val onDismissDate: () -> Unit = {},                // Nueva
+    val onDateFromSelected: (LocalDate?) -> Unit = {},
+    val onDateToSelected: (LocalDate?) -> Unit = {},
+    val onDismissDate: () -> Unit = {},
     val onPriceChange: (ClosedFloatingPointRange<Float>) -> Unit = {},
     val onStateToggle: (String) -> Unit = {},
     val onApply: (FiltUiState) -> Unit = {},
     val onClear: () -> Unit = {},
+    val onClearError: () -> Unit = {},
     val onBack: () -> Unit = {}
 )
 
 @Composable
 fun FilterScreen(
     viewModel: FilterViewModel,
+    initialFilters: FiltUiState? = null,
     onBack: () -> Unit,
     onApply: (FiltUiState?) -> Unit,
+    onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val state = viewModel.uiState
+    LaunchedEffect(initialFilters) {
+        initialFilters?.let { viewModel.initFilters(it) }
+    }
+
+    val state by viewModel.uiState.collectAsState()
+
+    // Temporizador para el error (Toast mono)
+    LaunchedEffect(state.dateError) {
+        if (state.dateError != null) {
+            delay(3000)
+            viewModel.clearError()
+        }
+    }
 
     val actions = FiltUiActions(
         onDateFromClick = viewModel::onDateFromClick,
@@ -82,15 +110,64 @@ fun FilterScreen(
         onPriceChange = viewModel::onPriceRangeChanged,
         onStateToggle = viewModel::onStateToggle,
         onApply = onApply,
-        onClear = viewModel::onClear,
+        onClear = {
+            viewModel.onClear()
+            onClear()
+        },
+        onClearError = viewModel::clearError,
         onBack = onBack
     )
 
-    FilterContent(
-        state = state,
-        actions = actions,
-        modifier = modifier
-    )
+    Box(modifier = modifier.fillMaxSize()) {
+        FilterContent(
+            state = state,
+            actions = actions
+        )
+
+        // Error Toast Mono
+        AnimatedVisibility(
+            visible = state.dateError != null,
+            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 40.dp)
+        ) {
+            ErrorToast(message = state.dateError ?: "")
+        }
+    }
+}
+
+@Composable
+fun ErrorToast(message: String) {
+    Surface(
+        color = LightRed,
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 4.dp,
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ErrorOutline,
+                contentDescription = null,
+                tint = RedAplication,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = message,
+                color = RedAplication,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start
+            )
+        }
+    }
 }
 
 @Composable
@@ -118,7 +195,6 @@ fun FilterContent(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        // Cabecera: Botón Atrás (Centralizado)
         BotonAtras(
             onBack = actions.onBack,
             modifier = Modifier.padding(bottom = 20.dp)
@@ -130,19 +206,8 @@ fun FilterContent(
             fontWeight = FontWeight.Bold
         )
 
-        // Gestión de Errores de Fecha
-        state.dateError?.let { error ->
-            Text(
-                text = error,
-                color = Color.Red,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
         Spacer(modifier = Modifier.height(24.dp))
 
-        // SECCIÓN: FECHA
         Text(text = "Por fecha", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         Row(
@@ -169,14 +234,12 @@ fun FilterContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // SECCIÓN: IMPORTE
         Text(text = "Por un importe", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         PriceRangeSelector(priceRangeStart = state.priceRangeStart, priceRangeEnd = state.priceRangeEnd, actions.onPriceChange)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // SECCIÓN: ESTADO
         Text(text = "Por estado", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
         Estado.entries.forEach { estado ->
@@ -190,7 +253,6 @@ fun FilterContent(
         Spacer(modifier = Modifier.weight(1f))
         Spacer(modifier = Modifier.height(32.dp))
 
-        // BOTONES DE ACCIÓN
         Button(
             onClick = { actions.onApply(state) },
             modifier = Modifier
@@ -198,7 +260,6 @@ fun FilterContent(
                 .height(64.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D4E)),
             shape = RoundedCornerShape(28.dp),
-            // Opcional: deshabilitar si hay error de fecha
             enabled = state.dateError == null
         ) {
             Text("Aplicar filtros", color = Color.White, fontSize = 16.sp)
@@ -224,14 +285,13 @@ fun PriceRangeSelector(
     priceRangeEnd : Float,
     onRangeChange: (ClosedFloatingPointRange<Float>) -> Unit
 ) {
-    val activeColor = Color(0xFF005944) // Verde oscuro de la imagen
+    val activeColor = Color(0xFF005944)
     val inactiveColor = Color.LightGray.copy(alpha = 0.3f)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Indicador de rango (Burbuja superior)
         Surface(
             color = Color(0xFFE0ECE9),
             shape = RoundedCornerShape(4.dp),
@@ -246,7 +306,6 @@ fun PriceRangeSelector(
             )
         }
 
-        // Slider de rango personalizado
         RangeSlider(
             value = priceRangeStart..priceRangeEnd,
             onValueChange = onRangeChange,
@@ -254,7 +313,7 @@ fun PriceRangeSelector(
             startThumb = {
                 Box(
                     modifier = Modifier
-                        .size(22.dp) // Círculos un poco más grandes para mayor presencia
+                        .size(22.dp)
                         .background(activeColor, CircleShape)
                 )
             },
@@ -274,13 +333,12 @@ fun PriceRangeSelector(
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(4.dp) // Línea un poco más gruesa como en la imagen
+                        .height(4.dp)
                 ) {
                     val width = size.width
                     val height = size.height
                     val centerY = height / 2
 
-                    // 1. Línea inactiva (el fondo gris continuo)
                     drawLine(
                         color = inactiveColor,
                         start = Offset(0f, centerY),
@@ -289,9 +347,6 @@ fun PriceRangeSelector(
                         cap = StrokeCap.Round
                     )
 
-                    // 2. Línea activa (el tramo verde)
-                    // Usamos StrokeCap.Butt para que los bordes sean rectos y
-                    // se "claven" perfectamente en el centro de los círculos
                     drawLine(
                         color = activeColor,
                         start = Offset(width * fractionStart, centerY),
@@ -303,7 +358,6 @@ fun PriceRangeSelector(
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
         )
-        // Etiquetas de los extremos
         Row(
             modifier = Modifier
                 .fillMaxWidth()

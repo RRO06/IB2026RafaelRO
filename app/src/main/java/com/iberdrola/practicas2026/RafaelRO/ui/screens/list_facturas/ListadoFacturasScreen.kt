@@ -66,7 +66,7 @@ fun ListadoFacturasScreen(
     viewModel: ListadoFacturasViewModel,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onFilter: () -> Unit,
+    onFilter: (FiltUiState) -> Unit,
     filtState: FiltUiState
 ) {
     BackHandler {
@@ -81,7 +81,7 @@ fun ListadoFacturasScreen(
         stateData = viewModel.stateData,
         stateUI = viewModel.stateUI,
         onBack = onBack,
-        onFilter = onFilter,
+        onFilter = { onFilter(filtState) },
         onFilterLuz = { viewModel.onFilterLuz() },
         onFilterGas = { viewModel.onFilterGas() },
         onFacturaClick = { viewModel.onFacturaClick() },

@@ -3,6 +3,7 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
@@ -17,27 +18,37 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ListadoFacturasViewModel @Inject constructor(
-    private val getFacturasUseCase: GetFacturasUseCase
+    private val getFacturasUseCase: GetFacturasUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     var stateData by mutableStateOf<ListadoFacturasState>(ListadoFacturasState.Loading)
         private set
     var stateUI by mutableStateOf(ListadoFacturasUiState())
         private set
-    private var filtrosAvanzadosActuales = FiltUiState()
+
+    private var filtrosAvanzadosActuales: FiltUiState
+        get() = savedStateHandle.get<FiltUiState>("filter_data") ?: FiltUiState()
+        set(value) {
+            savedStateHandle["filter_data"] = value
+        }
 
     init {
         cargarDatosIniciales()
+        // Observamos cambios en los filtros para actualizar la interfaz automáticamente
+        viewModelScope.launch {
+            savedStateHandle.getStateFlow("filter_data", FiltUiState()).collect {
+                actualizarInterfaz()
+            }
+        }
     }
 
     private fun cargarDatosIniciales() {
         viewModelScope.launch {
-            // Limpiamos cualquier estado de diálogo previo al iniciar
             stateUI = stateUI.copy(showDialog = false)
             stateData = ListadoFacturasState.Loading
             
             val result = getFacturasUseCase()
             
-            // Forzamos un retraso de 1 segundo para asegurar que se vea el skeleton
             delay(1000)
             
             when (result) {
@@ -63,10 +74,7 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun limpiarFiltros() {
-        actualizarInterfaz(
-            tipo = stateUI.filtroTipoActual,
-            filtrosExtra = FiltUiState()
-        )
+        filtrosAvanzadosActuales = FiltUiState()
     }
 
     fun onFilterLuz() = actualizarInterfaz(Tipo.Luz)
@@ -80,17 +88,22 @@ class ListadoFacturasViewModel @Inject constructor(
             return
         }
 
-        filtrosAvanzadosActuales = filtrosExtra
+        // Si se pasan filtrosExtra explícitamente (como desde limpiarFiltros), actualizamos el handle
+        if (filtrosExtra != filtrosAvanzadosActuales) {
+            filtrosAvanzadosActuales = filtrosExtra
+        }
+
+        val filtros = filtrosAvanzadosActuales
 
         val resultado = stateUI.facturasBase.filter { factura ->
             val cumpleTipo = factura.tipo == tipo
             val cumpleFecha =
-                (filtrosExtra.dateFrom == null || !factura.fechaInicio.isBefore(filtrosExtra.dateFrom)) &&
-                        (filtrosExtra.dateTo == null || !factura.fechaFinal.isAfter(filtrosExtra.dateTo))
-            val cumpleImporte = factura.valor >= filtrosExtra.priceRangeStart &&
-                    factura.valor <= filtrosExtra.priceRangeEnd
-            val cumpleEstado = filtrosExtra.selectedStates.isEmpty() ||
-                    filtrosExtra.selectedStates.contains(factura.estado.name)
+                (filtros.dateFrom == null || !factura.fechaInicio.isBefore(filtros.dateFrom)) &&
+                        (filtros.dateTo == null || !factura.fechaFinal.isAfter(filtros.dateTo))
+            val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
+                    factura.valor <= filtros.priceRangeEnd
+            val cumpleEstado = filtros.selectedStates.isEmpty() ||
+                    filtros.selectedStates.contains(factura.estado.name)
 
             cumpleTipo && cumpleFecha && cumpleImporte && cumpleEstado
         }
@@ -120,7 +133,6 @@ class ListadoFacturasViewModel @Inject constructor(
     fun tieneFiltrosActivos(): Boolean = filtrosAvanzadosActuales != FiltUiState()
     
     fun onFacturaClick() {
-        // Solo permitimos abrir el diálogo si los datos están listos
         if (stateData is ListadoFacturasState.Success) {
             stateUI = stateUI.copy(showDialog = true)
         }
