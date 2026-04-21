@@ -1,10 +1,10 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,7 +60,6 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FilterDatePickerDialog
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightRed
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.RedAplication
-import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -93,14 +92,6 @@ fun FilterScreen(
 
     val state by viewModel.uiState.collectAsState()
 
-    // Temporizador para el error (Toast mono)
-    LaunchedEffect(state.dateError) {
-        if (state.dateError != null) {
-            delay(3000)
-            viewModel.clearError()
-        }
-    }
-
     val actions = FiltUiActions(
         onDateFromClick = viewModel::onDateFromClick,
         onDateToClick = viewModel::onDateToClick,
@@ -118,51 +109,36 @@ fun FilterScreen(
         onBack = onBack
     )
 
-    Box(modifier = modifier.fillMaxSize()) {
-        FilterContent(
-            state = state,
-            actions = actions
-        )
-
-        // Error Toast Mono
-        AnimatedVisibility(
-            visible = state.dateError != null,
-            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 40.dp)
-        ) {
-            ErrorToast(message = state.dateError ?: "")
-        }
-    }
+    FilterContent(
+        state = state,
+        actions = actions,
+        modifier = modifier
+    )
 }
 
 @Composable
-fun ErrorToast(message: String) {
+fun ErrorToast(message: String, modifier: Modifier = Modifier) {
     Surface(
         color = LightRed,
         shape = RoundedCornerShape(12.dp),
-        shadowElevation = 4.dp,
-        modifier = Modifier
-            .padding(horizontal = 24.dp)
+        modifier = modifier
             .fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.ErrorOutline,
                 contentDescription = null,
                 tint = RedAplication,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp)
             )
             Text(
                 text = message,
                 color = RedAplication,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Start
             )
@@ -205,6 +181,17 @@ fun FilterContent(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
+
+        AnimatedVisibility(
+            visible = state.dateError != null,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            ErrorToast(
+                message = state.dateError ?: "",
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
