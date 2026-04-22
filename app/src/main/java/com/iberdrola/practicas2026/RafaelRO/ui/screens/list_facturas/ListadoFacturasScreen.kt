@@ -73,6 +73,7 @@ fun ListadoFacturasScreen(
         onBack()
     }
 
+    // Sincronizamos los filtros recibidos de la navegación con el ViewModel
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
     }
@@ -81,7 +82,7 @@ fun ListadoFacturasScreen(
         stateData = viewModel.stateData,
         stateUI = viewModel.stateUI,
         onBack = onBack,
-        onFilter = { onFilter(filtState) },
+        onFilter = { onFilter(viewModel.stateUI.filtros) },
         onFilterLuz = { viewModel.onFilterLuz() },
         onFilterGas = { viewModel.onFilterGas() },
         onFacturaClick = { viewModel.onFacturaClick() },

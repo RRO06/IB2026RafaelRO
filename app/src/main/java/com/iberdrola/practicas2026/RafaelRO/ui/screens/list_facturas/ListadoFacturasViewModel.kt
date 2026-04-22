@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -26,17 +27,14 @@ class ListadoFacturasViewModel @Inject constructor(
     var stateUI by mutableStateOf(ListadoFacturasUiState())
         private set
 
-    private var filtrosAvanzadosActuales: FiltUiState
-        get() = savedStateHandle.get<FiltUiState>("filter_data") ?: FiltUiState()
-        set(value) {
-            savedStateHandle["filter_data"] = value
-        }
-
     init {
         cargarDatosIniciales()
-        // Observamos cambios en los filtros para actualizar la interfaz automáticamente
+        
+        // Observamos cambios en los filtros para actualizar el estado consolidado de la UI
         viewModelScope.launch {
-            savedStateHandle.getStateFlow("filter_data", FiltUiState()).collect {
+            savedStateHandle.getStateFlow("filter_data", FiltUiState()).collect { nuevosFiltros ->
+                // Actualizamos los filtros dentro del objeto de estado de la UI
+                stateUI = stateUI.copy(filtros = nuevosFiltros)
                 actualizarInterfaz()
             }
         }
@@ -74,7 +72,8 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun limpiarFiltros() {
-        filtrosAvanzadosActuales = FiltUiState()
+        Log.d("ListadoFacturasVM", "DEBUG: Limpiando filtros en SavedStateHandle")
+        savedStateHandle["filter_data"] = FiltUiState()
     }
 
     fun onFilterLuz() = actualizarInterfaz(Tipo.Luz)
@@ -82,18 +81,19 @@ class ListadoFacturasViewModel @Inject constructor(
 
     fun actualizarInterfaz(
         tipo: Tipo = stateUI.filtroTipoActual,
-        filtrosExtra: FiltUiState = filtrosAvanzadosActuales
+        filtrosExtra: FiltUiState = stateUI.filtros
     ) {
         if (stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading) {
             return
         }
 
-        // Si se pasan filtrosExtra explícitamente (como desde limpiarFiltros), actualizamos el handle
-        if (filtrosExtra != filtrosAvanzadosActuales) {
-            filtrosAvanzadosActuales = filtrosExtra
+        // Si se pasan filtrosExtra desde fuera (como el NavHost), actualizamos el handle
+        if (filtrosExtra != stateUI.filtros) {
+            savedStateHandle["filter_data"] = filtrosExtra
+            return
         }
 
-        val filtros = filtrosAvanzadosActuales
+        val filtros = stateUI.filtros
 
         val resultado = stateUI.facturasBase.filter { factura ->
             val cumpleTipo = factura.tipo == tipo
@@ -130,7 +130,7 @@ class ListadoFacturasViewModel @Inject constructor(
         stateData = ListadoFacturasState.Success(stateUI.facturasBase)
     }
 
-    fun tieneFiltrosActivos(): Boolean = filtrosAvanzadosActuales != FiltUiState()
+    fun tieneFiltrosActivos(): Boolean = stateUI.filtros != FiltUiState()
     
     fun onFacturaClick() {
         if (stateData is ListadoFacturasState.Success) {

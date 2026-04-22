@@ -25,13 +25,10 @@ class FilterViewModel @Inject constructor(
 
     /**
      * Inicializa los filtros con los valores recibidos de la pantalla anterior.
-     * Solo se aplica si el estado actual es el por defecto para evitar sobreescrituras accidentales.
      */
     fun initFilters(filters: FiltUiState) {
-        if (currentState == FiltUiState() && filters != FiltUiState()) {
-            Log.d("FilterViewModel", "DEBUG: Initializing filters from external source: $filters")
-            updateState(filters)
-        }
+        Log.d("FilterViewModel", "DEBUG: Initializing filters with: $filters")
+        updateState(filters)
     }
 
     fun onDateFromClick() {

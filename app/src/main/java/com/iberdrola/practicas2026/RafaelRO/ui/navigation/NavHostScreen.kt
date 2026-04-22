@@ -3,6 +3,7 @@ package com.iberdrola.practicas2026.RafaelRO.ui.navigation
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -25,6 +26,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion.VerificacionCodig
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas.HomeScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas.HomeViewModel
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFacturasScreen
+import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFacturasViewModel
 
 @Composable
 fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
@@ -141,22 +143,26 @@ private fun HomeRoute(navController: NavHostController, modifier: Modifier) {
 
 @Composable
 private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostController, modifier: Modifier) {
-    val filtrosRecibidos = it.savedStateHandle
+    val viewModel: ListadoFacturasViewModel = hiltViewModel(it)
+    
+    val filtrosRecibidos by it.savedStateHandle
         .getStateFlow("filter_data", FiltUiState())
         .collectAsState()
+
     val parentEntry = remember(it) {
         navController.getBackStackEntry(Screen.Home.route)
     }
     val homeViewModel: HomeViewModel = hiltViewModel(parentEntry)
+
     ListadoFacturasScreen(
-        viewModel = hiltViewModel(),
+        viewModel = viewModel,
         onBack = {
             if (navController.currentBackStackEntry?.destination?.route == Screen.ListadoFacturas.route) {
                 homeViewModel.onBackFromFacturas()
                 navController.popBackStack()
             }
         },
-        onFilter = { currentFilt -> // Recibimos el objeto desde el listado
+        onFilter = { currentFilt ->
             if (navController.currentBackStackEntry?.destination?.route == Screen.ListadoFacturas.route) {
                 navController.navigate(Screen.Filtro.route)
                 navController.getBackStackEntry(Screen.Filtro.route)
@@ -164,7 +170,7 @@ private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostCo
                 Log.d("FilterViewModel", "DEBUG: Filtros enviados al destino: $currentFilt")
             }
         },
-        filtState = filtrosRecibidos.value,
+        filtState = filtrosRecibidos,
         modifier = modifier
     )
 }
