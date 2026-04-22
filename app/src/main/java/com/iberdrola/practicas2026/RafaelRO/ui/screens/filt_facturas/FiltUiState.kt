@@ -29,5 +29,7 @@ data class FiltUiState(
     val dateError: String? = null,
     val priceRangeStart: Float = 0f,
     val priceRangeEnd: Float = 500f,
+    val minPrice: Float = 0f,
+    val maxPrice: Float = 500f,
     val selectedStates: Set<String> = setOf()
 ) : Parcelable

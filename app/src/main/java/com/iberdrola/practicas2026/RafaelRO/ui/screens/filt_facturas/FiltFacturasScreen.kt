@@ -223,7 +223,13 @@ fun FilterContent(
 
         Text(text = "Por un importe", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        PriceRangeSelector(priceRangeStart = state.priceRangeStart, priceRangeEnd = state.priceRangeEnd, actions.onPriceChange)
+        PriceRangeSelector(
+            priceRangeStart = state.priceRangeStart,
+            priceRangeEnd = state.priceRangeEnd,
+            minPrice = state.minPrice,
+            maxPrice = state.maxPrice,
+            onRangeChange = actions.onPriceChange
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -270,6 +276,8 @@ fun FilterContent(
 fun PriceRangeSelector(
     priceRangeStart: Float,
     priceRangeEnd : Float,
+    minPrice: Float,
+    maxPrice: Float,
     onRangeChange: (ClosedFloatingPointRange<Float>) -> Unit
 ) {
     val activeColor = Color(0xFF005944)
@@ -296,7 +304,7 @@ fun PriceRangeSelector(
         RangeSlider(
             value = priceRangeStart..priceRangeEnd,
             onValueChange = onRangeChange,
-            valueRange = 0f..500f,
+            valueRange = minPrice..maxPrice,
             startThumb = {
                 Box(
                     modifier = Modifier
@@ -352,13 +360,13 @@ fun PriceRangeSelector(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "${priceRangeStart.toInt()} €",
+                text = "${minPrice.toInt()} €",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "${priceRangeEnd.toInt()} €",
+                text = "${maxPrice.toInt()} €",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray,
                 fontWeight = FontWeight.Medium
