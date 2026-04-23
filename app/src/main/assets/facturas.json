@@ -2,6 +2,7 @@
   "facturas": [
     {
       "id": 1,
+      "fechaExpedicion": "2024-01-31",
       "fechaInicio": "2024-01-01",
       "fechaFinal": "2024-01-31",
       "tipo": "Luz",
@@ -10,6 +11,7 @@
     },
     {
       "id": 2,
+      "fechaExpedicion": "2024-02-05",
       "fechaInicio": "2024-01-05",
       "fechaFinal": "2024-02-05",
       "tipo": "Gas",
@@ -18,6 +20,7 @@
     },
     {
       "id": 3,
+      "fechaExpedicion": "2024-02-28",
       "fechaInicio": "2024-02-01",
       "fechaFinal": "2024-02-28",
       "tipo": "Luz",
@@ -26,6 +29,7 @@
     },
     {
       "id": 4,
+      "fechaExpedicion": "2024-03-10",
       "fechaInicio": "2024-02-10",
       "fechaFinal": "2024-03-10",
       "tipo": "Gas",
@@ -34,6 +38,7 @@
     },
     {
       "id": 5,
+      "fechaExpedicion": "2024-03-31",
       "fechaInicio": "2024-03-01",
       "fechaFinal": "2024-03-31",
       "tipo": "Luz",
@@ -42,6 +47,7 @@
     },
     {
       "id": 6,
+      "fechaExpedicion": "2024-04-15",
       "fechaInicio": "2024-03-15",
       "fechaFinal": "2024-04-15",
       "tipo": "Gas",
@@ -50,6 +56,7 @@
     },
     {
       "id": 7,
+      "fechaExpedicion": "2024-04-30",
       "fechaInicio": "2024-04-01",
       "fechaFinal": "2024-04-30",
       "tipo": "Luz",
@@ -58,6 +65,7 @@
     },
     {
       "id": 8,
+      "fechaExpedicion": "2024-05-20",
       "fechaInicio": "2024-04-20",
       "fechaFinal": "2024-05-20",
       "tipo": "Gas",
@@ -66,6 +74,7 @@
     },
     {
       "id": 9,
+      "fechaExpedicion": "2024-05-31",
       "fechaInicio": "2024-05-01",
       "fechaFinal": "2024-05-31",
       "tipo": "Luz",
@@ -74,6 +83,7 @@
     },
     {
       "id": 10,
+      "fechaExpedicion": "2024-06-15",
       "fechaInicio": "2024-05-15",
       "fechaFinal": "2024-06-15",
       "tipo": "Gas",
@@ -82,6 +92,7 @@
     },
     {
       "id": 11,
+      "fechaExpedicion": "2024-06-30",
       "fechaInicio": "2024-06-01",
       "fechaFinal": "2024-06-30",
       "tipo": "Luz",
@@ -90,6 +101,7 @@
     },
     {
       "id": 12,
+      "fechaExpedicion": "2024-07-10",
       "fechaInicio": "2024-06-10",
       "fechaFinal": "2024-07-10",
       "tipo": "Gas",
@@ -98,6 +110,7 @@
     },
     {
       "id": 13,
+      "fechaExpedicion": "2024-07-31",
       "fechaInicio": "2024-07-01",
       "fechaFinal": "2024-07-31",
       "tipo": "Luz",
@@ -106,6 +119,7 @@
     },
     {
       "id": 14,
+      "fechaExpedicion": "2024-08-15",
       "fechaInicio": "2024-07-15",
       "fechaFinal": "2024-08-15",
       "tipo": "Gas",
@@ -114,6 +128,7 @@
     },
     {
       "id": 15,
+      "fechaExpedicion": "2024-08-31",
       "fechaInicio": "2024-08-01",
       "fechaFinal": "2024-08-31",
       "tipo": "Luz",
@@ -122,3 +137,5 @@
     }
   ]
 }
+
+

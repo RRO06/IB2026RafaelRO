@@ -12,7 +12,7 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 
 @Database(
     entities = [Factura::class, Contrato::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -5,6 +5,7 @@
 
     <application
         android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security"
         android:name=".Hilt"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

@@ -10,10 +10,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDate
-import java.time.LocalDate.parse
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import kotlin.jvm.java
 
@@ -36,11 +38,22 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    // 1. Recibe el gson que creaste arriba como parámetro
-    fun provideRetrofit(gson: Gson): Retrofit {
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(gson: Gson, okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://localhost:3000/")
-            // 2. Pásalo a la factoría de conversión
+            .baseUrl("http://10.0.2.2:3000/")
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }

@@ -19,6 +19,7 @@ enum class Estado{
 data class Factura(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val fechaExpedicion: LocalDate,
     val fechaInicio : LocalDate,
     val fechaFinal : LocalDate,
     val tipo : Tipo,

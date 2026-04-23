@@ -27,6 +27,7 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import java.time.LocalDate
 
 private val example = Factura(
+    fechaExpedicion = LocalDate.now(),
     fechaInicio = LocalDate.now(),
     fechaFinal = LocalDate.now(),
     tipo = Tipo.Luz,
@@ -37,7 +38,7 @@ private val example = Factura(
 @Preview(showBackground = true)
 @Composable
 fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
-    val fechaFormateada = UtilyClass.toLongSpanishDate(factura.fechaFinal)
+    val fechaFormateada = UtilyClass.toLongSpanishDate(factura.fechaExpedicion)
     val importe = UtilyClass.toCurrencyFormat(factura.valor)
 
     Column(modifier = modifier.fillMaxWidth()) {
