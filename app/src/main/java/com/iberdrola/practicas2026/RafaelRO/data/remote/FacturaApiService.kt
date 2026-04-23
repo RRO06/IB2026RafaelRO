@@ -4,6 +4,6 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import retrofit2.http.GET
 
 interface FacturasApiService {
-    @GET("")
+    @GET("facturas")
     suspend fun getFacturas(): List<Factura>
 }

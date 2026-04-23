@@ -93,7 +93,8 @@ fun DetalleFacturaActivaScreen(
                             TextButton(onClick = { showDialog = false }) {
                                 Text("CANCELAR", color = Color.Gray)
                             }
-                        }
+                        },
+                        containerColor = Color.White
                     )
                 }
             }

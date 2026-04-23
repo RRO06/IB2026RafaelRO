@@ -9,12 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.Color
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 import com.iberdrola.practicas2026.RafaelRO.ui.navigation.NavHostScreen
-import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFacturasScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -23,10 +20,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
             IB2026RafaelROTheme {
-                Scaffold (modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavHostScreen(navController, Modifier.padding(innerPadding))
+                // Surface asegura que el fondo base de la app sea el definido en el tema (Blanco puro)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.White
+                ) {
+                    val navController = androidx.navigation.compose.rememberNavController()
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        NavHostScreen(navController, Modifier.padding(innerPadding))
+                    }
                 }
             }
         }

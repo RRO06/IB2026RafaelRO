@@ -29,7 +29,7 @@ class ListadoFacturasViewModel @Inject constructor(
         private set
 
     init {
-        cargarDatosIniciales()
+        cargarDatos()
 
         // Observamos cambios en los filtros para actualizar el estado consolidado de la UI
         viewModelScope.launch {
@@ -41,33 +41,47 @@ class ListadoFacturasViewModel @Inject constructor(
         }
     }
 
-    private fun cargarDatosIniciales() {
+    fun refreshData() {
         viewModelScope.launch {
-            stateUI = stateUI.copy(showDialog = false)
+            stateUI = stateUI.copy(isRefreshing = true)
+            cargarDatosInternal()
+            stateUI = stateUI.copy(isRefreshing = false)
+        }
+    }
+
+    private fun cargarDatos() {
+        viewModelScope.launch {
+            cargarDatosInternal()
+        }
+    }
+
+    private suspend fun cargarDatosInternal() {
+        stateUI = stateUI.copy(showDialog = false)
+        if (!stateUI.isRefreshing) {
             stateData = ListadoFacturasState.Loading
+        }
 
-            val result = getFacturasUseCase()
+        val result = getFacturasUseCase()
 
-            delay(1000)
+        delay(1000)
 
-            when (result) {
-                is BaseResult.Sucess -> {
-                    stateUI = stateUI.copy(
-                        facturasBase = result.data
-                    )
-                    actualizarInterfaz(Tipo.Luz)
+        when (result) {
+            is BaseResult.Sucess -> {
+                stateUI = stateUI.copy(
+                    facturasBase = result.data
+                )
+                actualizarInterfaz(stateUI.filtroTipoActual)
+            }
+
+            is BaseResult.Error -> {
+                val mensaje = when (result.exception) {
+                    InvokeException.DatabaseError -> "La base de datos no responde"
+                    InvokeException.FileError -> "Error al cargar el archivo de facturas."
+                    InvokeException.NetworkError -> "No tienes conexión a internet."
+                    InvokeException.ServerError -> "El servidor de Iberdrola no responde."
+                    is InvokeException.UnknownError -> "Error desconocido"
                 }
-
-                is BaseResult.Error -> {
-                    val mensaje = when (result.exception) {
-                        InvokeException.DatabaseError -> "La base de datos no responde"
-                        InvokeException.FileError -> "Error al cargar el archivo de facturas."
-                        InvokeException.NetworkError -> "No tienes conexión a internet."
-                        InvokeException.ServerError -> "El servidor de Iberdrola no responde."
-                        is InvokeException.UnknownError -> "Error desconocido"
-                    }
-                    stateData = ListadoFacturasState.Error(mensaje)
-                }
+                stateData = ListadoFacturasState.Error(mensaje)
             }
         }
     }
@@ -134,8 +148,8 @@ class ListadoFacturasViewModel @Inject constructor(
     private fun filtrarFacturas(tipo: Tipo, filtros: FiltUiState): List<Factura> {
         return stateUI.facturasBase.filter { factura ->
             val cumpleTipo = factura.tipo == tipo
-            val cumpleFecha = (filtros.dateFrom == null || !factura.fechaInicio.isBefore(filtros.dateFrom)) &&
-                    (filtros.dateTo == null || !factura.fechaFinal.isAfter(filtros.dateTo))
+            val cumpleFecha = (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
+                    (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
             val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
                     factura.valor <= filtros.priceRangeEnd
             val cumpleEstado = filtros.selectedStates.isEmpty() ||
@@ -155,7 +169,7 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     private fun actualizarEstadoExito(tipo: Tipo, facturas: List<Factura>) {
-        val agrupada = facturas.groupBy { it.fechaFinal.year }
+        val agrupada = facturas.groupBy { it.fechaExpedicion.year }
         stateUI = stateUI.copy(
             filtroTipoActual = tipo,
             facturasAMostrar = facturas,

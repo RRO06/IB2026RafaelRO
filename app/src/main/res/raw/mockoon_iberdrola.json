@@ -1,31 +1,67 @@
 {
   "uuid": "d5d9001b-80e8-49c9-989d-a5c16e077e32",
-  "type": "http",
-  "documentation": "",
-  "method": "get",
-  "endpoint": "facturas",
-  "responses": [
+  "lastMigration": 33,
+  "name": "New environment",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3000,
+  "hostname": "0.0.0.0",
+  "rootChildren": [
     {
-      "uuid": "29024ea2-0122-4f67-85c6-044fa6c7edb9",
-      "body": "[\r\n  {\r\n    \"id\": 1,\r\n    \"fechaExpedicion\": \"2026-01-15\",\r\n    \"fechaInicio\": \"2025-12-01\",\r\n    \"fechaFinal\": \"2025-12-31\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 45.20\r\n  },\r\n  {\r\n    \"id\": 2,\r\n    \"fechaExpedicion\": \"2026-01-20\",\r\n    \"fechaInicio\": \"2025-12-15\",\r\n    \"fechaFinal\": \"2026-01-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 82.50\r\n  },\r\n  {\r\n    \"id\": 3,\r\n    \"fechaExpedicion\": \"2026-02-10\",\r\n    \"fechaInicio\": \"2026-01-01\",\r\n    \"fechaFinal\": \"2026-01-31\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"PendientePago\",\r\n    \"valor\": 120.40\r\n  },\r\n  {\r\n    \"id\": 4,\r\n    \"fechaExpedicion\": \"2026-02-15\",\r\n    \"fechaInicio\": \"2026-01-15\",\r\n    \"fechaFinal\": \"2026-02-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Tramite\",\r\n    \"valor\": 35.00\r\n  },\r\n  {\r\n    \"id\": 5,\r\n    \"fechaExpedicion\": \"2026-03-05\",\r\n    \"fechaInicio\": \"2026-02-01\",\r\n    \"fechaFinal\": \"2026-02-28\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"CuotaFija\",\r\n    \"valor\": 50.00\r\n  },\r\n  {\r\n    \"id\": 6,\r\n    \"fechaExpedicion\": \"2026-03-12\",\r\n    \"fechaInicio\": \"2026-02-15\",\r\n    \"fechaFinal\": \"2026-03-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Anulado\",\r\n    \"valor\": 0.00\r\n  },\r\n  {\r\n    \"id\": 7,\r\n    \"fechaExpedicion\": \"2026-04-01\",\r\n    \"fechaInicio\": \"2026-03-01\",\r\n    \"fechaFinal\": \"2026-03-31\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 65.15\r\n  },\r\n  {\r\n    \"id\": 8,\r\n    \"fechaExpedicion\": \"2026-04-05\",\r\n    \"fechaInicio\": \"2026-03-15\",\r\n    \"fechaFinal\": \"2026-04-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 95.80\r\n  },\r\n  {\r\n    \"id\": 9,\r\n    \"fechaExpedicion\": \"2026-05-10\",\r\n    \"fechaInicio\": \"2026-04-01\",\r\n    \"fechaFinal\": \"2026-04-30\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"PendientePago\",\r\n    \"valor\": 110.00\r\n  },\r\n  {\r\n    \"id\": 10,\r\n    \"fechaExpedicion\": \"2026-05-20\",\r\n    \"fechaInicio\": \"2026-04-15\",\r\n    \"fechaFinal\": \"2026-05-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Tramite\",\r\n    \"valor\": 42.30\r\n  },\r\n  {\r\n    \"id\": 11,\r\n    \"fechaExpedicion\": \"2026-06-05\",\r\n    \"fechaInicio\": \"2026-05-01\",\r\n    \"fechaFinal\": \"2026-05-31\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 58.90\r\n  },\r\n  {\r\n    \"id\": 12,\r\n    \"fechaExpedicion\": \"2026-06-15\",\r\n    \"fechaInicio\": \"2026-05-15\",\r\n    \"fechaFinal\": \"2026-06-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 25.00\r\n  },\r\n  {\r\n    \"id\": 13,\r\n    \"fechaExpedicion\": \"2026-07-01\",\r\n    \"fechaInicio\": \"2026-06-01\",\r\n    \"fechaFinal\": \"2026-06-30\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"CuotaFija\",\r\n    \"valor\": 50.00\r\n  },\r\n  {\r\n    \"id\": 14,\r\n    \"fechaExpedicion\": \"2026-07-10\",\r\n    \"fechaInicio\": \"2026-06-15\",\r\n    \"fechaFinal\": \"2026-07-15\",\r\n    \"tipo\": \"Gas\",\r\n    \"estado\": \"PendientePago\",\r\n    \"valor\": 88.20\r\n  },\r\n  {\r\n    \"id\": 15,\r\n    \"fechaExpedicion\": \"2026-08-05\",\r\n    \"fechaInicio\": \"2026-07-01\",\r\n    \"fechaFinal\": \"2026-07-31\",\r\n    \"tipo\": \"Luz\",\r\n    \"estado\": \"Pagado\",\r\n    \"valor\": 74.45\r\n  }\r\n]",
-      "latency": 0,
-      "statusCode": 200,
-      "label": "",
-      "headers": [],
-      "bodyType": "INLINE",
-      "filePath": "",
-      "databucketID": "",
-      "sendFileAsBody": false,
-      "rules": [],
-      "rulesOperator": "OR",
-      "disableTemplating": false,
-      "fallbackTo404": false,
-      "default": true,
-      "crudKey": "id",
-      "callbacks": []
+      "type": "route",
+      "uuid": "241d26d8-5e41-44f7-bb6b-9574be2b5c2a"
     }
   ],
-  "responseMode": null,
-  "streamingMode": null,
-  "streamingInterval": 0
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "241d26d8-5e41-44f7-bb6b-9574be2b5c2a",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "facturas",
+      "responses": [
+        {
+          "uuid": "8824c5d3-55e9-4437-bef5-2dcb463a355f",
+          "body": "[\r\n    {\r\n      \"id\": 1,\r\n      \"fechaExpedicion\": \"2026-01-15\",\r\n      \"fechaInicio\": \"2025-12-01\",\r\n      \"fechaFinal\": \"2025-12-31\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 45.20\r\n    },\r\n    {\r\n      \"id\": 2,\r\n      \"fechaExpedicion\": \"2026-01-20\",\r\n      \"fechaInicio\": \"2025-12-15\",\r\n      \"fechaFinal\": \"2026-01-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 82.50\r\n    },\r\n    {\r\n      \"id\": 3,\r\n      \"fechaExpedicion\": \"2026-02-10\",\r\n      \"fechaInicio\": \"2026-01-01\",\r\n      \"fechaFinal\": \"2026-01-31\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"PendientePago\",\r\n      \"valor\": 120.40\r\n    },\r\n    {\r\n      \"id\": 4,\r\n      \"fechaExpedicion\": \"2026-02-15\",\r\n      \"fechaInicio\": \"2026-01-15\",\r\n      \"fechaFinal\": \"2026-02-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Tramite\",\r\n      \"valor\": 35.00\r\n    },\r\n    {\r\n      \"id\": 5,\r\n      \"fechaExpedicion\": \"2026-03-05\",\r\n      \"fechaInicio\": \"2026-02-01\",\r\n      \"fechaFinal\": \"2026-02-28\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"CuotaFija\",\r\n      \"valor\": 50.00\r\n    },\r\n    {\r\n      \"id\": 6,\r\n      \"fechaExpedicion\": \"2026-03-12\",\r\n      \"fechaInicio\": \"2026-02-15\",\r\n      \"fechaFinal\": \"2026-03-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Anulado\",\r\n      \"valor\": 0.00\r\n    },\r\n    {\r\n      \"id\": 7,\r\n      \"fechaExpedicion\": \"2026-04-01\",\r\n      \"fechaInicio\": \"2026-03-01\",\r\n      \"fechaFinal\": \"2026-03-31\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 65.15\r\n    },\r\n    {\r\n      \"id\": 8,\r\n      \"fechaExpedicion\": \"2026-04-05\",\r\n      \"fechaInicio\": \"2026-03-15\",\r\n      \"fechaFinal\": \"2026-04-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 95.80\r\n    },\r\n    {\r\n      \"id\": 9,\r\n      \"fechaExpedicion\": \"2026-05-10\",\r\n      \"fechaInicio\": \"2026-04-01\",\r\n      \"fechaFinal\": \"2026-04-30\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"PendientePago\",\r\n      \"valor\": 110.00\r\n    },\r\n    {\r\n      \"id\": 10,\r\n      \"fechaExpedicion\": \"2026-05-20\",\r\n      \"fechaInicio\": \"2026-04-15\",\r\n      \"fechaFinal\": \"2026-05-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Tramite\",\r\n      \"valor\": 42.30\r\n    },\r\n    {\r\n      \"id\": 11,\r\n      \"fechaExpedicion\": \"2026-06-05\",\r\n      \"fechaInicio\": \"2026-05-01\",\r\n      \"fechaFinal\": \"2026-05-31\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 58.90\r\n    },\r\n    {\r\n      \"id\": 12,\r\n      \"fechaExpedicion\": \"2026-06-15\",\r\n      \"fechaInicio\": \"2026-05-15\",\r\n      \"fechaFinal\": \"2026-06-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 25.00\r\n    },\r\n    {\r\n      \"id\": 13,\r\n      \"fechaExpedicion\": \"2026-07-01\",\r\n      \"fechaInicio\": \"2026-06-01\",\r\n      \"fechaFinal\": \"2026-06-30\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"CuotaFija\",\r\n      \"valor\": 50.00\r\n    },\r\n    {\r\n      \"id\": 14,\r\n      \"fechaExpedicion\": \"2026-07-10\",\r\n      \"fechaInicio\": \"2026-06-15\",\r\n      \"fechaFinal\": \"2026-07-15\",\r\n      \"tipo\": \"Gas\",\r\n      \"estado\": \"PendientePago\",\r\n      \"valor\": 88.20\r\n    },\r\n    {\r\n      \"id\": 15,\r\n      \"fechaExpedicion\": \"2026-08-05\",\r\n      \"fechaInicio\": \"2026-07-01\",\r\n      \"fechaFinal\": \"2026-07-31\",\r\n      \"tipo\": \"Luz\",\r\n      \"estado\": \"Pagado\",\r\n      \"valor\": 74.45\r\n    }\r\n  ]\r\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": true,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": ".\\certificado.crt",
+    "keyPath": ".\\clave.key",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": []
 }

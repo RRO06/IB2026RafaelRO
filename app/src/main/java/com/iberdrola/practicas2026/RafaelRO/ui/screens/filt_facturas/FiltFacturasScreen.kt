@@ -250,12 +250,17 @@ fun FilterContent(
             onClick = { actions.onApply(state) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(54.dp)
+                .padding(horizontal = 30.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D4E)),
             shape = RoundedCornerShape(28.dp),
             enabled = state.dateError == null
         ) {
-            Text("Aplicar filtros", color = Color.White, fontSize = 16.sp)
+            Text(
+                "Aplicar filtros",
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
 
         TextButton(
@@ -275,7 +280,7 @@ fun FilterContent(
 @Composable
 fun PriceRangeSelector(
     priceRangeStart: Float,
-    priceRangeEnd : Float,
+    priceRangeEnd: Float,
     minPrice: Float,
     maxPrice: Float,
     onRangeChange: (ClosedFloatingPointRange<Float>) -> Unit
@@ -285,7 +290,7 @@ fun PriceRangeSelector(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
         Surface(
             color = Color(0xFFE0ECE9),
@@ -351,7 +356,9 @@ fun PriceRangeSelector(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp)
         )
         Row(
             modifier = Modifier
@@ -378,7 +385,7 @@ fun PriceRangeSelector(
 
 @Composable
 fun StateRow(label: Estado, isSelected: Boolean, onToggle: () -> Unit) {
-    val text = when(label){
+    val text = when (label) {
         Estado.Pagado -> "Pagadas"
         Estado.PendientePago -> "Pendiente de Pago"
         Estado.Anulado -> "Anuladas"
@@ -389,12 +396,17 @@ fun StateRow(label: Estado, isSelected: Boolean, onToggle: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 8.dp)
             .clickable { onToggle() }
     ) {
         Checkbox(
             checked = isSelected,
             onCheckedChange = { onToggle() },
-            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF005944))
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color(0xFF005944),
+                uncheckedColor = Color(0xFF005944), // Color del borde cuando NO está marcado
+                checkmarkColor = Color.White
+            )
         )
         Text(text)
     }
@@ -425,7 +437,7 @@ fun ReadOnlyTextField(value: String, label: String, modifier: Modifier, onClick:
                     }
                 },
                 color = if (value.isEmpty()) Color.Gray else Color.Black,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyMedium
             )
             Icon(
                 imageVector = Icons.Outlined.CalendarToday,

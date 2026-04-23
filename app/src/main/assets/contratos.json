@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "tipo": "Luz",
+    "telefono": "600123456",
+    "direccion": "C/ PALMA - ARTA KM 49,5, 4ºA -PINTO- MADRID",
+    "estado": true,
+    "email": "usuario.luz@ejemplo.com"
+  },
+  {
+    "id": 2,
+    "tipo": "Gas",
+    "telefono": "600987654",
+    "direccion": "C/ PALMA - ARTA KM 49,5, 4ºA -PINTO- MADRID",
+    "estado": false,
+    "email": "usuario.gas@ejemplo.com"
+  }
+]
