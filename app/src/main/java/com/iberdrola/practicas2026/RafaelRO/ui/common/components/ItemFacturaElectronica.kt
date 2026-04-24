@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightGreen
 
 @Composable
 fun ItemFacturaElectronica(
@@ -43,10 +43,10 @@ fun ItemFacturaElectronica(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(vertical = 16.dp, horizontal = 8.dp), // Alineado con el BotonAtras (16+8=24dp desde el borde)
+            verticalAlignment = Alignment.Top
         ) {
-            // Parte 1: El Icono del servicio
+            // Parte 1: El Icono del servicio (38dp)
             ServiceIcon(tipo = tipo)
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -58,12 +58,11 @@ fun ItemFacturaElectronica(
                 modifier = Modifier.weight(1f)
             )
 
-            // Parte 3: La flecha (Acción)
-            ServiceActionIcon()
+            ServiceActionIcon(modifier = Modifier.align(Alignment.CenterVertically))
         }
 
         HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 8.dp),
             thickness = 1.dp,
             color = Color.LightGray.copy(alpha = 0.3f)
         )
@@ -71,10 +70,12 @@ fun ItemFacturaElectronica(
 }
 
 @Composable
-private fun ServiceIcon(tipo: Tipo) {
-    // Usamos un Box para asegurar el centrado absoluto del dibujo
+private fun ServiceIcon(
+    tipo: Tipo,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier.size(36.dp),
+        modifier = modifier.size(38.dp),
         contentAlignment = Alignment.Center
     ) {
         when (tipo) {
@@ -104,7 +105,7 @@ private fun ServiceInfo(
     estaActiva: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.padding(top = 2.dp)) {
         Text(
             text = if (tipo == Tipo.Luz) "Contrato de Luz" else "Contrato de Gas",
             style = MaterialTheme.typography.bodyLarge,
@@ -116,25 +117,26 @@ private fun ServiceInfo(
 }
 
 @Composable
-private fun ServiceActionIcon() {
+private fun ServiceActionIcon(modifier: Modifier = Modifier) {
     Icon(
-        imageVector = Icons.Default.ChevronRight,
+        painter = painterResource(R.drawable.chevron_right),
         contentDescription = null,
         tint = Color.Gray,
-        modifier = Modifier.size(28.dp)
+        modifier = modifier.size(28.dp)
     )
 }
 
 @Composable
 private fun BadgeEstadoElectronico(activa: Boolean) {
-    val color = if (activa) GreenAplication else Color.LightGray
+    val color = if (activa) GreenAplication else Color.DarkGray
     val texto = if (activa) "Activa" else "Sin Activar"
+    val backgroundColor = if (activa) LightGreen else Color.DarkGray.copy(alpha = 0.1f)
 
     Box(
         modifier = Modifier
-            .padding(top = 4.dp)
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 2.dp)
+            .padding(top = 8.dp) // Alineado con la base del icono de 38dp
+            .background(backgroundColor, RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             text = texto,

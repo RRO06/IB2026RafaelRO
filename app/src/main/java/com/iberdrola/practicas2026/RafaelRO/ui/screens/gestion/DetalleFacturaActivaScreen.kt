@@ -3,7 +3,6 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.Edit
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
@@ -40,10 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iberdrola.practicas2026.RafaelRO.R
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 @Composable
 fun DetalleFacturaActivaScreen(
@@ -153,7 +155,8 @@ fun DetalleFacturaContent(
         Text(
             text = contrato.direccion,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier.padding(top = 4.dp),
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -161,7 +164,7 @@ fun DetalleFacturaContent(
         // Texto informativo
         Text(
             text = "Actualmente recibes las facturas electrónicas de este contrato al:",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodySmall
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -171,6 +174,7 @@ fun DetalleFacturaContent(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = contrato.email,
             style = MaterialTheme.typography.bodyMedium,
@@ -252,7 +256,7 @@ fun DetalleFacturaContent(
             shape = RoundedCornerShape(24.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Edit,
+                painter = painterResource(id = R.drawable.ic_edit_iberdrola),
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )
@@ -265,15 +269,17 @@ fun DetalleFacturaContent(
 @Preview(showBackground = true)
 @Composable
 fun DetalleFacturaActivaScreenPreview() {
-    DetalleFacturaContent(
-        contrato = Contrato(
-            tipo = Tipo.Luz,
-            telefono = "+34 600 000 000",
-            direccion = "Calle Falsa 123",
-            estado = true,
-            email = "contacto@ejemplo.com"
-        ),
-        onModificarClick = {},
-        onDesactivarClick = {}
-    )
+    IB2026RafaelROTheme {
+        DetalleFacturaContent(
+            contrato = Contrato(
+                tipo = Tipo.Luz,
+                telefono = "+34 600 000 000",
+                direccion = "Calle Falsa 123",
+                estado = true,
+                email = "contacto@ejemplo.com"
+            ),
+            onModificarClick = {},
+            onDesactivarClick = {}
+        )
+    }
 }

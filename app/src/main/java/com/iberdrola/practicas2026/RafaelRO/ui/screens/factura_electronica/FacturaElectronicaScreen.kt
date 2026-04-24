@@ -18,75 +18,127 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemFacturaElectronica
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FacturaElectronicaScreen(
-    viewModel: FacturasElectronicasViewModel, // Datos que vendrán del ViewModel
+    viewModel: FacturasElectronicasViewModel,
+    onBack: () -> Unit,
+    onContratoClick: (Contrato) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val state = viewModel.state
+
+    FacturaElectronicaStatelessContent(
+        isRefreshing = state.isRefreshing,
+        contratos = state.contratos,
+        onRefresh = { viewModel.refreshData() },
+        onBack = onBack,
+        onContratoClick = onContratoClick,
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FacturaElectronicaStatelessContent(
+    isRefreshing: Boolean,
+    contratos: List<Contrato>,
+    onRefresh: () -> Unit,
     onBack: () -> Unit,
     onContratoClick: (Contrato) -> Unit,
     modifier: Modifier = Modifier
 ) {
     PullToRefreshBox(
-        isRefreshing = viewModel.state.isRefreshing,
-        onRefresh = { viewModel.refreshData() },
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
         modifier = modifier.fillMaxSize().background(Color.White)
-    ){
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()) // IMPORTANTE: Debe ser scrollable para que el gesto funcione
+                .verticalScroll(rememberScrollState())
         ) {
             BotonAtras(onBack = onBack)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Factura electrónica",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+            HeaderSeccion(
+                titulo = "Factura electrónica",
+                modifier = Modifier.padding(start = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Invocación del contenido separado (State Hoisting)
-            FacturaElectronicaContent(
-                state = viewModel.state,
+            ListaContratos(
+                contratos = contratos,
                 onContratoClick = onContratoClick
             )
         }
     }
 }
 @Composable
-fun FacturaElectronicaContent(
-    state: FacturasElectronicasUiState,
-    onContratoClick: (Contrato) -> Unit,
+fun HeaderSeccion(
+    titulo: String,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        state.contratos.forEach { contrato ->
+    Text(
+        text = titulo,
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun ListaContratos(
+    contratos: List<Contrato>,
+    onContratoClick: (Contrato) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        contratos.forEach { contrato ->
             ItemFacturaElectronica(
                 tipo = contrato.tipo,
                 estaActiva = contrato.estado,
                 onClick = { onContratoClick(contrato) }
             )
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
-
+            FacturaDivider()
         }
-        // Divisor de cierre al final de la lista
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = Color.LightGray.copy(alpha = 0.5f)
+    }
+}
+
+@Composable
+fun FacturaDivider() {
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth(),
+        thickness = 1.dp,
+        color = Color.LightGray.copy(alpha = 0.5f)
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FacturaElectronicaPreview() {
+    val mockContratos = listOf(
+        Contrato(tipo = Tipo.Luz, estado = true),
+        Contrato(tipo = Tipo.Gas, estado = false)
+    )
+
+    IB2026RafaelROTheme {
+        FacturaElectronicaStatelessContent(
+            isRefreshing = false,
+            contratos = mockContratos,
+            onRefresh = {},
+            onBack = {},
+            onContratoClick = {}
         )
     }
 }

@@ -2,7 +2,6 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -35,16 +33,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 data class ActivarFacturaActions(
     val onEmailChanged: (String) -> Unit = {},
     val onTermsAccepted: (Boolean) -> Unit = {},
-    val obfuscateEmail: (String?) -> String,
-    val guardarCambios: (() -> Unit) -> Unit,
+    val obfuscateEmail: (String?) -> String = {""},
+    val guardarCambios: (() -> Unit) -> Unit = {},
     val onBack: () -> Unit = {},
     val onNext: (Int) -> Unit = {},
-    val onClose: () -> Unit
+    val onClose: () -> Unit = {}
 )
 
 @Composable
@@ -188,7 +188,7 @@ fun ActivarFacturaContent(
             )
             Text(
                 text = "He leído y acepto la Política de privacidad, acepto las Condiciones Generales y Particulares...",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 12.dp)
             )
         }
@@ -262,5 +262,15 @@ fun InfoRow(label: String) {
                 color = Color(0xFF006644) // El verde de tu app
             )
         }
+    }
+}
+@Preview(showBackground = true)
+@Composable
+fun ActivarFacturaPreview(){
+    IB2026RafaelROTheme {
+        ActivarFacturaContent(
+            state = GestionUiState(),
+            actions = ActivarFacturaActions()
+        )
     }
 }
