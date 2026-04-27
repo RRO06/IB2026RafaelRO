@@ -137,7 +137,7 @@ fun DetalleFacturaContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 12.dp)
     ) {
 
         Text(
@@ -243,6 +243,14 @@ fun DetalleFacturaContent(
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 0.5.dp,
+            color = Color.LightGray.copy(alpha = 0.5f)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onModificarClick,

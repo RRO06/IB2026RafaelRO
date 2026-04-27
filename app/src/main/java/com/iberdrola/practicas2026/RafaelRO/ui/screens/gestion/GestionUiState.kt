@@ -3,7 +3,9 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 
 data class GestionUiState(
-    val contrato: Contrato? = null,
+    val contrato: Contrato? = Contrato(
+        email = "hola@gmail.com"
+    ),
     val isLoading: Boolean = false,
     val isVerifying: Boolean = false,
     val mostrarBannerExito: Boolean = false,

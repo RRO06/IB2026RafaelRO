@@ -35,13 +35,13 @@ class GestionViewModel @Inject constructor(
         viewModelScope.launch {
             state = state.copy(isLoading = true)
             getContratosUseCase().collect { result ->
-                when (result ) {
+                when (result) {
                     is BaseResult.Sucess -> {
                         val encontrado = result.data.find { it.id == id }
                         state = state.copy(
                             contrato = encontrado,
-                            emailFormulario = encontrado?.email ?: "",
-                            isEmailValido = isEmailValid(encontrado?.email ?: ""),
+                            emailFormulario = "", // Empezamos vacío por diseño
+                            isEmailValido = false,
                             isLoading = false
                         )
                     }
@@ -56,9 +56,9 @@ class GestionViewModel @Inject constructor(
             }
         }
     }
+
     fun obfuscatePhone(phone: String?): String {
         if (phone.isNullOrBlank()) return "desconocido"
-        // Limpiamos espacios por si el string viene con formato
         val cleanPhone = phone.replace(" ", "")
 
         return if (cleanPhone.length > 3) {
@@ -67,9 +67,11 @@ class GestionViewModel @Inject constructor(
             "***$cleanPhone"
         }
     }
+
     fun esFlujoActivacion(): Boolean {
         return state.contrato?.estado == false
     }
+
     fun desactivarFacturaElectronica(onSuccess: () -> Unit) {
         val id = contratoId ?: return
         viewModelScope.launch {
@@ -79,7 +81,7 @@ class GestionViewModel @Inject constructor(
 
             if (success) {
                 state = state.copy(isVerifying = false)
-                onSuccess() // Esto debería navegar de vuelta al Home o a una pantalla de éxito
+                onSuccess()
             } else {
                 state = state.copy(isVerifying = false, error = "No se pudo desactivar")
             }
@@ -105,14 +107,10 @@ class GestionViewModel @Inject constructor(
             state = state.copy(isVerifying = true, errorCodigo = false)
 
             val codigoCorrecto = state.codigoVerificacion == CODIGO_CORRECTO
-
-            // CORRECCIÓN: Solo validamos el código si 'validarCodigo' es true.
-            // Quitamos el chequeo del estado del contrato aquí porque genera ambigüedad.
             val puedeProceder = if (validarCodigo) codigoCorrecto else true
 
             if (puedeProceder) {
                 delay(1500)
-                // Aquí enviamos 'true' para asegurar que la factura se activa al guardar
                 val success = updateContratoUseCase(id, state.emailFormulario, true)
 
                 if (success) {
@@ -122,11 +120,9 @@ class GestionViewModel @Inject constructor(
                     state = state.copy(isVerifying = false, error = "Error de base de datos")
                 }
             } else {
-                // Ahora sí entrará aquí si validarCodigo es true y el código es erróneo
                 state = state.copy(isVerifying = false, errorCodigo = true)
                 delay(4000)
                 state = state.copy(errorCodigo = false)
-
             }
         }
     }
@@ -167,23 +163,15 @@ class GestionViewModel @Inject constructor(
 
     fun reenviarCodigo() {
         viewModelScope.launch {
-            // 1. Mostramos el overlay de carga
             state = state.copy(isVerifying = true, mostrarBannerExito = false)
-
-            // 2. Retardo para simular el envío
             delay(1500)
-
-            // 3. Quitamos carga y mostramos banner verde
             state = state.copy(isVerifying = false, mostrarBannerExito = true)
-
-            // 4. (Opcional) El banner desaparece solo tras 4 segundos
             delay(4000)
             state = state.copy(mostrarBannerExito = false)
         }
     }
+
     fun dismissBanner() {
         state = state.copy(mostrarBannerExito = false, mostrarBannerError = false)
     }
 }
-
-
