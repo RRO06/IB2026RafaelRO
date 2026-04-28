@@ -137,12 +137,13 @@ fun VerificacionCodigoContent(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState)
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .padding(horizontal = 10.dp, vertical = 16.dp)
             ) {
                 VerificacionForm(
                     codigoValue = state.codigoVerificacion,
                     phone = actions.obfuscatePhone(state.contrato?.telefono ?: ""),
-                    onCodigoChanged = actions.onCodigoChanged
+                    onCodigoChanged = actions.onCodigoChanged,
+                    isError = state.errorCodigo
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -170,7 +171,7 @@ fun VerificacionCodigoContent(
 
 @Composable
 private fun VerificacionHeader(onClose: () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)) {
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) {
             Icon(Icons.Default.Close, contentDescription = null, tint = Color(0xFF006644))
         }
@@ -202,7 +203,8 @@ private fun SolidProgressBar(progressValue: Float) {
 private fun VerificacionForm(
     codigoValue: String,
     phone: String,
-    onCodigoChanged: (String) -> Unit
+    onCodigoChanged: (String) -> Unit,
+    isError: Boolean = false
 ) {
     Text(
         text = "Introduce tu código de verificación",
@@ -212,8 +214,7 @@ private fun VerificacionForm(
     Text(
         text = "Para verificar tu identidad, hemos enviado un código al teléfono $phone. Por favor, introdúcelo a continuación:",
         style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(vertical = 12.dp),
-        color = Color.Gray
+        modifier = Modifier.padding(vertical = 12.dp)
     )
     TextField(
         value = codigoValue,
@@ -221,10 +222,18 @@ private fun VerificacionForm(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         label = { Text("* Código de verificación", style = MaterialTheme.typography.bodySmall) },
         modifier = Modifier.fillMaxWidth(),
+        isError = isError,
         colors = TextFieldDefaults.colors(
             unfocusedContainerColor = Color.Transparent,
             focusedContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color(0xFF006644)
+            errorContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color(0xFF006644),
+            unfocusedIndicatorColor = Color.Gray,
+            errorIndicatorColor = Color.Red,
+            cursorColor = Color(0xFF006644),
+            errorCursorColor = Color.Red,
+            focusedLabelColor = Color(0xFF006644),
+            errorLabelColor = Color.Red
         ),
         singleLine = true
     )
@@ -312,7 +321,7 @@ private fun VerificacionBottomSection(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
@@ -342,6 +351,12 @@ private fun VerificacionBottomSection(
                 Text("Siguiente", fontWeight = FontWeight.Bold, color = if (codigoValid) Color.White else Color.Gray)
             }
         }
+        Spacer(modifier = Modifier.height(36.dp))
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 0.5.dp,
+            color = Color.LightGray.copy(alpha = 0.5f)
+        )
     }
 }
 

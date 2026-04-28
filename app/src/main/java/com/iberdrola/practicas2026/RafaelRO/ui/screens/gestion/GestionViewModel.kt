@@ -24,6 +24,7 @@ class GestionViewModel @Inject constructor(
         private set
     private val contratoId: Int? = savedStateHandle["contratoId"]
     private val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
+    private var isFirstLoad = true
 
     init {
         cargarDatos()
@@ -37,20 +38,20 @@ class GestionViewModel @Inject constructor(
                 when (result) {
                     is BaseResult.Sucess -> {
                         val encontrado = result.data.find { it.id == id }
+                        val currentEmail = encontrado?.email ?: ""
                         state = state.copy(
                             contrato = encontrado,
-                            emailFormulario = "",
-                            isEmailValido = false,
+                            emailFormulario = if (isFirstLoad) currentEmail else state.emailFormulario,
+                            isEmailValido = if (isFirstLoad) currentEmail.matches(emailPattern) else state.isEmailValido,
                             isLoading = false
                         )
-                        // Al entrar por primera vez generamos el código inicial
-                        generarNuevoCodigo()
+                        if (isFirstLoad) {
+                            generarNuevoCodigo()
+                            isFirstLoad = false
+                        }
                     }
                     is BaseResult.Error -> {
-                        state = state.copy(
-                            error = "Error al cargar contrato",
-                            isLoading = false
-                        )
+                        state = state.copy(error = "Error al cargar contrato", isLoading = false)
                     }
                 }
             }
@@ -59,10 +60,7 @@ class GestionViewModel @Inject constructor(
 
     private fun generarNuevoCodigo() {
         val nuevoCodigo = (100000..999999).random().toString()
-        state = state.copy(
-            codigoGenerado = nuevoCodigo,
-            ultimoCodigoEnviado = nuevoCodigo
-        )
+        state = state.copy(codigoGenerado = nuevoCodigo, ultimoCodigoEnviado = nuevoCodigo)
     }
 
     fun toastMostrado() {
@@ -87,7 +85,7 @@ class GestionViewModel @Inject constructor(
                 state = state.copy(isVerifying = false)
                 onSuccess()
             } else {
-                state = state.copy(isVerifying = false, error = "No se pudo desactivar")
+                state = state.copy(isVerifying = false)
             }
         }
     }
@@ -97,7 +95,7 @@ class GestionViewModel @Inject constructor(
     }
 
     fun guardarCambiosSinCodigo(onSuccess: () -> Unit) {
-        ejecutarProcesoGuardado(validarCodigo = false, onSuccess = onSuccess)
+        onSuccess()
     }
 
     private fun ejecutarProcesoGuardado(validarCodigo: Boolean, onSuccess: () -> Unit) {
@@ -106,15 +104,19 @@ class GestionViewModel @Inject constructor(
             state = state.copy(isVerifying = true, errorCodigo = false)
             val codigoCorrecto = state.codigoVerificacion == state.codigoGenerado
             val puedeProceder = if (validarCodigo) codigoCorrecto else true
-
             if (puedeProceder) {
                 delay(1500)
-                val success = updateContratoUseCase(id, state.emailFormulario, true)
+                val emailFinal = state.emailFormulario
+                val estadoFinal = if (esFlujoActivacion()) true else (state.contrato?.estado ?: true)
+                val success = updateContratoUseCase(id, emailFinal, estadoFinal)
                 if (success) {
-                    state = state.copy(isVerifying = false)
+                    state = state.copy(
+                        contrato = state.contrato?.copy(email = emailFinal, estado = estadoFinal),
+                        isVerifying = false
+                    )
                     onSuccess()
                 } else {
-                    state = state.copy(isVerifying = false, error = "Error de base de datos")
+                    state = state.copy(isVerifying = false)
                 }
             } else {
                 state = state.copy(isVerifying = false, errorCodigo = true)
@@ -144,13 +146,10 @@ class GestionViewModel @Inject constructor(
     }
 
     fun reenviarCodigo() {
-        // Bloqueo para evitar spam y números negativos
         if (state.isVerifying || state.intentosRestantes <= 0) return
-
         viewModelScope.launch {
             state = state.copy(isVerifying = true, mostrarBannerExito = false)
             delay(1500)
-            
             if (state.intentosRestantes > 0) {
                 val nuevoCodigo = (100000..999999).random().toString()
                 state = state.copy(

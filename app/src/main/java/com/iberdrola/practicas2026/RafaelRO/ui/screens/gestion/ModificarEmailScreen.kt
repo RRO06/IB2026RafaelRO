@@ -23,8 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 
 data class ModificarEmailActions(
     val onEmailChanged: (String) -> Unit = {},
@@ -77,13 +77,10 @@ fun ModificarEmailContent(
         modifier = modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(vertical = 16.dp)
     ) {
-        // Cabecera con padding
         Column(modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp)) {
-            // Botón Cerrar
+            .padding(horizontal = 10.dp)) {
             IconButton(
                 onClick = actions.onClose,
                 modifier = Modifier.align(Alignment.End)
@@ -93,14 +90,14 @@ fun ModificarEmailContent(
 
             Text(
                 text = "Modificar email",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                color = Color.Black
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.Black,
+                fontFamily = CustomTypography
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Barra de progreso sólida y continua de ancho completo
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,12 +112,11 @@ fun ModificarEmailContent(
             )
         }
 
-        // Cuerpo con padding
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = 10.dp)
         ) {
 
             Text(
@@ -130,28 +126,20 @@ fun ModificarEmailContent(
                 modifier = Modifier.padding(top = 8.dp)
             )
 
-            // Input de Email
-            TextField(
+            IberdrolaTextField(
                 value = state.emailFormulario,
                 onValueChange = actions.onEmailChanged,
                 label = { Text("* Nuevo email") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color(0xFF006644),
-                    cursorColor = Color(0xFF006644)
-                ),
-                isError = state.emailFormulario.isNotEmpty() && !state.isEmailValido,
-                singleLine = true
+                isError = state.emailFormulario.isNotEmpty() && !state.isEmailValido
             )
 
             if (state.emailFormulario.isNotEmpty() && !state.isEmailValido) {
                 Text(
                     text = "El formato del email no es válido",
-                    color = MaterialTheme.colorScheme.error,
+                    color = Color.Red,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -170,12 +158,11 @@ fun ModificarEmailContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botones de navegación inferior
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
@@ -210,6 +197,12 @@ fun ModificarEmailContent(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(36.dp))
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 0.5.dp,
+                color = Color.LightGray.copy(alpha = 0.5f)
+            )
         }
     }
 }

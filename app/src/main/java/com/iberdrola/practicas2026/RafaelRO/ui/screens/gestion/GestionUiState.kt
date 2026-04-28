@@ -18,5 +18,5 @@ data class GestionUiState(
     val errorCodigo: Boolean = false,
     val codigoGenerado: String = "",
     val intentosRestantes: Int = 3,
-    val ultimoCodigoEnviado: String? = null // Para disparar el Toast en la UI
+    val ultimoCodigoEnviado: String? = null
 )

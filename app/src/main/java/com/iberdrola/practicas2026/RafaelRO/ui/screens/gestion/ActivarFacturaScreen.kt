@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 data class ActivarFacturaActions(
@@ -120,7 +121,6 @@ fun ActivarFacturaContent(
         modifier = modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(vertical = 16.dp)
     ) {
         // Cabecera con padding
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
@@ -138,7 +138,7 @@ fun ActivarFacturaContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Barra de progreso sólida
         Box(
@@ -161,9 +161,9 @@ fun ActivarFacturaContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = 12.dp)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "Email vinculado a tu cuenta:",
@@ -172,15 +172,17 @@ fun ActivarFacturaContent(
             Text(
                 text = actions.obfuscateEmail(state.contrato?.email),
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "¿En qué email deseas recibir tus facturas?",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 18.sp
+                ),
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
@@ -193,8 +195,14 @@ fun ActivarFacturaContent(
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = Color.Transparent,
                     focusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color(0xFF006644),
-                    focusedLabelColor = Color.Gray
+                    unfocusedIndicatorColor = Color.Gray,
+                    errorIndicatorColor = Color.Red,
+                    cursorColor = Color(0xFF006644),
+                    errorCursorColor = Color.Red,
+                    focusedLabelColor = Color(0xFF006644),
+                    errorLabelColor = Color.Red
                 ),
                 isError = state.emailFormulario.isNotEmpty() && !state.isEmailValido,
                 singleLine = true
@@ -203,21 +211,23 @@ fun ActivarFacturaContent(
             if (state.emailFormulario.isNotEmpty() && !state.isEmailValido) {
                 Text(
                     "El formato del email no es válido",
-                    color = MaterialTheme.colorScheme.error,
+                    color = Color.Red,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Column(modifier = Modifier.padding(vertical = 10.dp)) {
                 Text(
                     text = "Información básica sobre protección de datos",
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 18.sp
+                    ),
                     color = Color.Black,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 5.dp)
                 )
 
                 InfoRow(
@@ -235,8 +245,6 @@ fun ActivarFacturaContent(
                     onMoreInfoClick = { actions.onMoreInfo("Derechos") }
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             Row(verticalAlignment = Alignment.Top) {
                 Checkbox(
@@ -270,12 +278,15 @@ fun ActivarFacturaContent(
 
                 Text(
                     text = annotatedTerms,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                    modifier = Modifier.padding(top = 12.dp, start = 8.dp)
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = Color.Black,
+                        fontSize = 14.sp
+                    ),
+                    modifier = Modifier.padding(top = 10.dp, start = 8.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
 
         // Horizontal Divider y Botones
@@ -292,7 +303,7 @@ fun ActivarFacturaContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
@@ -325,6 +336,13 @@ fun ActivarFacturaContent(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(36.dp))
+
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 0.5.dp,
+                color = Color.LightGray.copy(alpha = 0.5f)
+            )
         }
     }
 }
@@ -356,10 +374,13 @@ fun InfoRow(
 
     Text(
         text = annotatedString,
-        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+        style = MaterialTheme.typography.bodyLarge.copy(
+            color = Color.Black,
+            fontSize = 14.sp
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 8.dp)
     )
 }
 
