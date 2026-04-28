@@ -1,6 +1,5 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.navigation
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,32 +28,37 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
         composable(Screen.Perfil.route) {
             PerfilScreen(
                 viewModel = hiltViewModel(),
-                onNavigateBack = {
-                    if (navController.currentBackStackEntry?.destination?.route == Screen.Perfil.route) {
-                        navController.popBackStack()
-                    }
-                }
+                onNavigateBack = { navController.safePopBackStack(Screen.Perfil.route) }
             )
         }
         
-        composable(Screen.Home.route) {
-            HomeRoute(navController, modifier)
-        }
+        composable(Screen.Home.route) { HomeRoute(navController, modifier) }
         
-        composable(Screen.ListadoFacturas.route) {
-            ListadoFacturasRoute(it, navController, modifier)
-        }
+        composable(Screen.ListadoFacturas.route) { ListadoFacturasRoute(it, navController, modifier) }
         
-        composable(Screen.Filtro.route) {
-            FiltroRoute(it, navController, modifier)
-        }
+        composable(Screen.Filtro.route) { FiltroRoute(it, navController, modifier) }
         
-        composable(Screen.FacturaElectronica.route) {
-            FacturaElectronicaRoute(navController, modifier)
-        }
+        composable(Screen.FacturaElectronica.route) { FacturaElectronicaRoute(navController, modifier) }
 
-        // Flujo de gestión modularizado
         gestionNavGraph(navController, modifier)
+    }
+}
+
+fun NavHostController.safePopBackStack(expectedRoute: String) {
+    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
+        this.popBackStack()
+    }
+}
+
+fun NavHostController.safePopBackStackTo(expectedRoute: String, targetRoute: String, inclusive: Boolean = false) {
+    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
+        this.popBackStack(targetRoute, inclusive)
+    }
+}
+
+fun NavHostController.safeNavigate(expectedRoute: String, targetRoute: String) {
+    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
+        this.navigate(targetRoute)
     }
 }
 
@@ -64,19 +68,13 @@ private fun HomeRoute(navController: NavHostController, modifier: Modifier) {
     HomeScreen(
         viewModel = homeViewModel,
         onNavigateToFacturas = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.Home.route) {
-                navController.navigate(Screen.ListadoFacturas.route)
-            }
+            navController.safeNavigate(Screen.Home.route, Screen.ListadoFacturas.route)
         },
         onNavigateToFacturaElectronica = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.Home.route) {
-                navController.navigate(Screen.FacturaElectronica.route)
-            }
+            navController.safeNavigate(Screen.Home.route, Screen.FacturaElectronica.route)
         },
         onNavigateToPerfil = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.Home.route) {
-                navController.navigate(Screen.Perfil.route)
-            }
+            navController.safeNavigate(Screen.Home.route, Screen.Perfil.route)
         },
         modifier = modifier
     )
@@ -85,26 +83,14 @@ private fun HomeRoute(navController: NavHostController, modifier: Modifier) {
 @Composable
 private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostController, modifier: Modifier) {
     val viewModel: ListadoFacturasViewModel = hiltViewModel(it)
-    val filtrosRecibidos by it.savedStateHandle
-        .getStateFlow("filter_data", FiltUiState())
-        .collectAsState()
-    val parentEntry = remember(it) {
-        navController.getBackStackEntry(Screen.Home.route)
-    }
-    val homeViewModel: HomeViewModel = hiltViewModel(parentEntry)
+    val filtrosRecibidos by it.savedStateHandle.getStateFlow("filter_data", FiltUiState()).collectAsState()
     ListadoFacturasScreen(
         viewModel = viewModel,
-        onBack = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.ListadoFacturas.route) {
-                homeViewModel.onBackFromFacturas()
-                navController.popBackStack()
-            }
-        },
+        onBack = { navController.safePopBackStack(Screen.ListadoFacturas.route) },
         onFilter = { currentFilt ->
             if (navController.currentBackStackEntry?.destination?.route == Screen.ListadoFacturas.route) {
                 navController.navigate(Screen.Filtro.route)
-                navController.getBackStackEntry(Screen.Filtro.route)
-                    .savedStateHandle["filter_data"] = currentFilt
+                navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] = currentFilt
             }
         },
         filtState = filtrosRecibidos,
@@ -118,24 +104,16 @@ private fun FiltroRoute(it: NavBackStackEntry, navController: NavHostController,
     FilterScreen(
         viewModel = hiltViewModel(),
         initialFilters = initialFilters,
-        onBack = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.Filtro.route) {
-                navController.popBackStack()
-            }
-        },
+        onBack = { navController.safePopBackStack(Screen.Filtro.route) },
         onApply = { filtState ->
             if (navController.currentBackStackEntry?.destination?.route == Screen.Filtro.route) {
-                navController.previousBackStackEntry
-                    ?.savedStateHandle
-                    ?.set("filter_data", filtState)
+                navController.previousBackStackEntry?.savedStateHandle?.set("filter_data", filtState)
                 navController.popBackStack()
             }
         },
         modifier = modifier,
         onClear = {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set("filter_data", FiltUiState())
+            navController.previousBackStackEntry?.savedStateHandle?.set("filter_data", FiltUiState())
         }
     )
 }
@@ -144,20 +122,12 @@ private fun FiltroRoute(it: NavBackStackEntry, navController: NavHostController,
 private fun FacturaElectronicaRoute(navController: NavHostController, modifier: Modifier) {
     FacturaElectronicaScreen(
         viewModel = hiltViewModel(),
-        onBack = {
-            if (navController.currentBackStackEntry?.destination?.route == Screen.FacturaElectronica.route) {
-                navController.popBackStack()
-            }
-        },
+        onBack = { navController.safePopBackStack(Screen.FacturaElectronica.route) },
         modifier = modifier,
         onContratoClick = { contrato ->
-            if (navController.currentBackStackEntry?.destination?.route == Screen.FacturaElectronica.route) {
-                if (contrato.estado) {
-                    navController.navigate(Screen.DetalleFacturaActiva.createRoute(contrato.id))
-                } else {
-                    navController.navigate(Screen.ActivarFactura.createRoute(contrato.id))
-                }
-            }
+            val targetRoute = if (contrato.estado) Screen.DetalleFacturaActiva.createRoute(contrato.id)
+                        else Screen.ActivarFactura.createRoute(contrato.id)
+            navController.safeNavigate(Screen.FacturaElectronica.route, targetRoute)
         }
     )
 }

@@ -29,8 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +47,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 data class ActivarFacturaActions(
@@ -93,7 +92,6 @@ fun ActivarFacturaScreen(
             actions = actions
         )
 
-        // Diálogo para mostrar que el botón "Más info" funciona
         if (infoDialogTitle != null) {
             AlertDialog(
                 onDismissRequest = { infoDialogTitle = null },
@@ -122,7 +120,6 @@ fun ActivarFacturaContent(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Cabecera con padding
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
             IconButton(
                 onClick = actions.onClose,
@@ -140,7 +137,6 @@ fun ActivarFacturaContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Barra de progreso sólida
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -155,7 +151,6 @@ fun ActivarFacturaContent(
             )
         }
 
-        // Cuerpo desplazable
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -163,7 +158,7 @@ fun ActivarFacturaContent(
                 .verticalScroll(scrollState)
                 .padding(horizontal = 12.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Email vinculado a tu cuenta:",
@@ -187,25 +182,12 @@ fun ActivarFacturaContent(
                 color = Color.Black
             )
 
-            TextField(
+            IberdrolaTextField(
                 value = state.emailFormulario,
                 onValueChange = actions.onEmailChanged,
                 label = { Text("* Email") },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color(0xFF006644),
-                    unfocusedIndicatorColor = Color.Gray,
-                    errorIndicatorColor = Color.Red,
-                    cursorColor = Color(0xFF006644),
-                    errorCursorColor = Color.Red,
-                    focusedLabelColor = Color(0xFF006644),
-                    errorLabelColor = Color.Red
-                ),
-                isError = state.emailFormulario.isNotEmpty() && !state.isEmailValido,
-                singleLine = true
+                isError = state.emailFormulario.isNotEmpty() && !state.isEmailValido
             )
 
             if (state.emailFormulario.isNotEmpty() && !state.isEmailValido) {
@@ -289,7 +271,6 @@ fun ActivarFacturaContent(
             Spacer(modifier = Modifier.height(28.dp))
         }
 
-        // Horizontal Divider y Botones
         Column(modifier = Modifier.fillMaxWidth()) {
             HorizontalDivider(
                 modifier = Modifier.fillMaxWidth(),

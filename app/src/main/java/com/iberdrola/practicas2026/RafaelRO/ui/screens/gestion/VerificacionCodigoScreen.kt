@@ -44,8 +44,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +59,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import kotlinx.coroutines.delay
 
 data class VerificacionActions(
@@ -149,7 +148,7 @@ fun VerificacionCodigoContent(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 ReenvioInfoCard(
-                    intentos = state.intentosRestantes,
+                    estado = state.reenvioEstado,
                     onReenviar = actions.onVolverAEnviar
                 )
             }
@@ -157,13 +156,12 @@ fun VerificacionCodigoContent(
             VerificacionBottomSection(
                 codigoValid = state.codigoVerificacion.length == 6,
                 mostrarBanner = state.mostrarBannerExito,
+                mostrarError = state.errorCodigo,
                 onDismissBanner = actions.onDismissBanner,
                 onBack = actions.onBack,
-                onNext = { actions.onGuardarCambios { actions.onNext(state.contrato!!.email) } }
+                onNext = { actions.onGuardarCambios { actions.onNext(state.emailFormulario) } }
             )
         }
-
-        ErrorBanner(visible = state.errorCodigo)
 
         LoadingOverlay(visible = state.isVerifying)
     }
@@ -216,86 +214,104 @@ private fun VerificacionForm(
         style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.padding(vertical = 12.dp)
     )
-    TextField(
+    IberdrolaTextField(
         value = codigoValue,
         onValueChange = onCodigoChanged,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         label = { Text("* Código de verificación", style = MaterialTheme.typography.bodySmall) },
         modifier = Modifier.fillMaxWidth(),
-        isError = isError,
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color.Transparent,
-            focusedContainerColor = Color.Transparent,
-            errorContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color(0xFF006644),
-            unfocusedIndicatorColor = Color.Gray,
-            errorIndicatorColor = Color.Red,
-            cursorColor = Color(0xFF006644),
-            errorCursorColor = Color.Red,
-            focusedLabelColor = Color(0xFF006644),
-            errorLabelColor = Color.Red
-        ),
-        singleLine = true
+        isError = isError
     )
 }
 
 @Composable
-private fun ReenvioInfoCard(intentos: Int, onReenviar: () -> Unit) {
-    val agotado = intentos == 0
-    val bocadilloShape = RoundedCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
-    
+private fun ReenvioInfoCard(
+    estado: ReenvioEstado,
+    onReenviar: () -> Unit
+) {
+    val agotado = estado is ReenvioEstado.Agotado
+    val cardBackground = if (agotado) Color(0xFFFFE0B2) else Color(0xFFE3F2FD)
+    val cardShape = RoundedCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = if (agotado) Color(0xFFFFE0B2) else Color(0xFFE3F2FD),
-                shape = bocadilloShape
-            )
+            .background(color = cardBackground, shape = cardShape)
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
-            Icon(
-                imageVector = if (agotado) Icons.Outlined.Warning else Icons.Outlined.Info,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
+            ReenvioIcon(agotado = agotado)
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = if (agotado) "Intentos agotados" else "¿No has recibido el código?",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black
-                )
-                Text(
-                    text = if (agotado) {
-                        "Has superado el límite de reenvíos para hoy. Por favor, inténtalo de nuevo más tarde."
-                    } else {
-                        "Si no lo encuentras, podemos volver a enviar el SMS. Recuerda que hoy te quedan $intentos intentos."
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black
-                )
-                if (!agotado) {
-                    Text(
-                        text = "Volver a enviar",
-                        fontWeight = FontWeight.Bold,
-                        textDecoration = TextDecoration.Underline,
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .clickable { onReenviar() },
-                        color = Color.Black
-                    )
-                }
-            }
+            ReenvioContent(
+                estado = estado,
+                onReenviar = onReenviar
+            )
         }
     }
+}
+
+@Composable
+private fun ReenvioIcon(agotado: Boolean) {
+    Icon(
+        imageVector = if (agotado) Icons.Outlined.Warning else Icons.Outlined.Info,
+        contentDescription = null,
+        modifier = Modifier.size(24.dp)
+    )
+}
+
+@Composable
+private fun ReenvioContent(
+    estado: ReenvioEstado,
+    onReenviar: () -> Unit
+) {
+    val agotado = estado is ReenvioEstado.Agotado
+    Column {
+        Text(
+            text = if (agotado) "Intentos agotados" else "¿No has recibido el código?",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Black
+        )
+        ReenvioMessage(estado = estado)
+        if (!agotado) {
+            ReenvioActionLink(onClick = onReenviar)
+        }
+    }
+}
+
+@Composable
+private fun ReenvioMessage(estado: ReenvioEstado) {
+    val mensaje = when (estado) {
+        is ReenvioEstado.Inicial -> "Si no lo encuentras, podemos volver a enviar el SMS."
+        is ReenvioEstado.ConIntentos -> "Si no lo encuentras, podemos volver a enviar el SMS. Recuerda que hoy te quedan ${estado.restantes} intentos."
+        is ReenvioEstado.Agotado -> "Has superado el límite de reenvíos para hoy. Por favor, inténtalo de nuevo más tarde."
+    }
+
+    Text(
+        text = mensaje,
+        style = MaterialTheme.typography.bodySmall,
+        color = Color.Black
+    )
+}
+
+@Composable
+private fun ReenvioActionLink(onClick: () -> Unit) {
+    Text(
+        text = "Volver a enviar",
+        fontWeight = FontWeight.Bold,
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .clickable { onClick() },
+        color = Color.Black
+    )
 }
 
 @Composable
 private fun VerificacionBottomSection(
     codigoValid: Boolean,
     mostrarBanner: Boolean,
+    mostrarError: Boolean,
     onDismissBanner: () -> Unit,
     onBack: () -> Unit,
     onNext: () -> Unit
@@ -310,7 +326,15 @@ private fun VerificacionBottomSection(
         }
 
         AnimatedVisibility(
-            visible = !mostrarBanner,
+            visible = mostrarError,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+        ) {
+            ErrorBanner(onDismiss = onDismissBanner)
+        }
+
+        AnimatedVisibility(
+            visible = !mostrarBanner && !mostrarError,
             enter = expandVertically() + fadeIn(),
             exit = shrinkVertically() + fadeOut()
         ) {
@@ -390,6 +414,35 @@ private fun SuccessBanner(onDismiss: () -> Unit) {
 }
 
 @Composable
+private fun ErrorBanner(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF8D7DA))
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = Color.Red,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "El código introducido no es correcto",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Red
+            )
+            IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Red)
+            }
+        }
+    }
+}
+
+@Composable
 private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit) {
     AnimatedVisibility(
         visible = visible,
@@ -411,28 +464,6 @@ private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit)
                 }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Default.Close, contentDescription = null, tint = Color.White)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ErrorBanner(visible: Boolean) {
-    if (visible) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(bottom = 100.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D7DA))
-            ) {
-                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Red)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("El código introducido no es correcto", style = MaterialTheme.typography.bodySmall, color = Color.Red)
                 }
             }
         }

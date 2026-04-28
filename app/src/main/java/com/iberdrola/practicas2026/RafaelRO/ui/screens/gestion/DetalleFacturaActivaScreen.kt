@@ -2,7 +2,6 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.material.icons.filled.ChevronLeft
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
@@ -41,10 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.R
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 @Composable
@@ -60,10 +59,10 @@ fun DetalleFacturaActivaScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .padding(horizontal = 10.dp)
             .background(Color.White)
     ) {
-        // Header con botón atrás (Reutilizado)
-        FacturasElectronicasHeader(onBack = onBack, modifier = Modifier.padding(16.dp))
+        FacturasElectronicasHeader(onBack = onBack)
 
         when {
             uiState.isLoading -> {
@@ -106,25 +105,9 @@ fun DetalleFacturaActivaScreen(
 
 @Composable
 fun FacturasElectronicasHeader(
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    onBack: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.clickable { onBack() }
-    ) {
-        Icon(
-            imageVector = Icons.Default.ChevronLeft,
-            contentDescription = null,
-            tint = GreenAplication
-        )
-        Text(
-            text = "Atrás",
-            color = GreenAplication,
-            textDecoration = TextDecoration.Underline,
-            fontWeight = FontWeight.Bold
-        )
-    }
+    BotonAtras(onBack = onBack)
 }
 
 @Composable
@@ -137,7 +120,7 @@ fun DetalleFacturaContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(16.dp)
     ) {
 
         Text(
@@ -150,6 +133,7 @@ fun DetalleFacturaContent(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Dirección del contrato
         Text(
@@ -167,7 +151,7 @@ fun DetalleFacturaContent(
             style = MaterialTheme.typography.bodySmall
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "Recibes tus facturas en este email",
@@ -187,6 +171,9 @@ fun DetalleFacturaContent(
             thickness = 1.dp,
             color = Color.LightGray.copy(alpha = 0.5f)
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
 
         // Nota con icono informativo
         Row(verticalAlignment = Alignment.Top) {

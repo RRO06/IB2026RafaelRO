@@ -64,7 +64,7 @@ fun FacturaElectronicaStatelessContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 10.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             BotonAtras(onBack = onBack)

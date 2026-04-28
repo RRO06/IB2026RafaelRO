@@ -38,11 +38,16 @@ class GestionViewModel @Inject constructor(
                 when (result) {
                     is BaseResult.Sucess -> {
                         val encontrado = result.data.find { it.id == id }
-                        val currentEmail = encontrado?.email ?: ""
+                        val isActivacion = encontrado?.estado == false
                         state = state.copy(
                             contrato = encontrado,
-                            emailFormulario = if (isFirstLoad) currentEmail else state.emailFormulario,
-                            isEmailValido = if (isFirstLoad) currentEmail.matches(emailPattern) else state.isEmailValido,
+                            esFlujoActivacion = isActivacion,
+                            emailFormulario = if (isFirstLoad) {
+                                ""
+                            } else state.emailFormulario,
+                            isEmailValido = if (isFirstLoad) {
+                                if (isActivacion) false else (encontrado?.email?.matches(emailPattern) ?: false)
+                            } else state.isEmailValido,
                             isLoading = false
                         )
                         if (isFirstLoad) {
@@ -73,7 +78,7 @@ class GestionViewModel @Inject constructor(
         return if (cleanPhone.length > 3) "******${cleanPhone.takeLast(3)}" else "***$cleanPhone"
     }
 
-    fun esFlujoActivacion(): Boolean = state.contrato?.estado == false
+    fun esFlujoActivacion(): Boolean = state.esFlujoActivacion
 
     fun desactivarFacturaElectronica(onSuccess: () -> Unit) {
         val id = contratoId ?: return
@@ -107,7 +112,8 @@ class GestionViewModel @Inject constructor(
             if (puedeProceder) {
                 delay(1500)
                 val emailFinal = state.emailFormulario
-                val estadoFinal = if (esFlujoActivacion()) true else (state.contrato?.estado ?: true)
+                val esActivacion = state.esFlujoActivacion
+                val estadoFinal = if (esActivacion) true else (state.contrato?.estado ?: true)
                 val success = updateContratoUseCase(id, emailFinal, estadoFinal)
                 if (success) {
                     state = state.copy(
@@ -146,24 +152,23 @@ class GestionViewModel @Inject constructor(
     }
 
     fun reenviarCodigo() {
-        if (state.isVerifying || state.intentosRestantes <= 0) return
+        if (state.isVerifying || state.reenvioEstado is ReenvioEstado.Agotado) return
         viewModelScope.launch {
             state = state.copy(isVerifying = true, mostrarBannerExito = false)
             delay(1500)
-            if (state.intentosRestantes > 0) {
-                val nuevoCodigo = (100000..999999).random().toString()
-                state = state.copy(
-                    isVerifying = false,
-                    mostrarBannerExito = true,
-                    intentosRestantes = state.intentosRestantes - 1,
-                    codigoGenerado = nuevoCodigo,
-                    ultimoCodigoEnviado = nuevoCodigo
-                )
-                delay(4000)
-                state = state.copy(mostrarBannerExito = false)
-            } else {
-                state = state.copy(isVerifying = false)
-            }
+            val nuevosIntentos = state.intentosRestantes - 1
+            val nuevoEstado = if (nuevosIntentos <= 0) ReenvioEstado.Agotado else ReenvioEstado.ConIntentos(nuevosIntentos)
+            val nuevoCodigo = (100000..999999).random().toString()
+            state = state.copy(
+                isVerifying = false,
+                mostrarBannerExito = true,
+                intentosRestantes = nuevosIntentos,
+                reenvioEstado = nuevoEstado,
+                codigoGenerado = nuevoCodigo,
+                ultimoCodigoEnviado = nuevoCodigo
+            )
+            delay(4000)
+            state = state.copy(mostrarBannerExito = false)
         }
     }
 
