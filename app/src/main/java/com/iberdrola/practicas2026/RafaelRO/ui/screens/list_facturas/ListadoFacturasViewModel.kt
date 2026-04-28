@@ -63,7 +63,7 @@ class ListadoFacturasViewModel @Inject constructor(
 
         val result = getFacturasUseCase()
 
-        delay(1000)
+        delay((1000L..3000L).random())
 
         when (result) {
             is BaseResult.Sucess -> {
