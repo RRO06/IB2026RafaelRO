@@ -3,7 +3,6 @@ package com.iberdrola.practicas2026.RafaelRO.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
@@ -16,6 +15,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FilterScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas.HomeScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas.HomeViewModel
+import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.DetalleFacturaScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFacturasScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFacturasViewModel
 
@@ -39,6 +39,13 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
         composable(Screen.Filtro.route) { FiltroRoute(it, navController, modifier) }
         
         composable(Screen.FacturaElectronica.route) { FacturaElectronicaRoute(navController, modifier) }
+
+        composable(Screen.DetalleFactura.route) {
+            DetalleFacturaScreen(
+                viewModel = hiltViewModel(),
+                onBack = { navController.popBackStack() }
+            )
+        }
 
         gestionNavGraph(navController, modifier)
     }
@@ -92,6 +99,9 @@ private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostCo
                 navController.navigate(Screen.Filtro.route)
                 navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] = currentFilt
             }
+        },
+        onFacturaClick = { facturaId ->
+            navController.navigate(Screen.DetalleFactura.createRoute(facturaId))
         },
         filtState = filtrosRecibidos,
         modifier = modifier

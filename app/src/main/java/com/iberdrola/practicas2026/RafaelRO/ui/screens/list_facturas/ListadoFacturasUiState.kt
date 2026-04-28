@@ -10,7 +10,6 @@ data class ListadoFacturasUiState(
     val filtroTipoActual: Tipo = Tipo.Luz,           
     val facturasPorAnio: Map<Int, List<Factura>> = emptyMap(),
     val ultimaFactura: Factura? = null,
-    val showDialog: Boolean = false,
     val isRefreshing: Boolean = false,
-    val filtros: FiltUiState = FiltUiState() // Los filtros ahora son parte del estado oficial
+    val filtros: FiltUiState = FiltUiState()
 )

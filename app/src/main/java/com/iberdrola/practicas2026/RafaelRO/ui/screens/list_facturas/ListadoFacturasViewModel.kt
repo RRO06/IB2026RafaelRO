@@ -56,7 +56,6 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     private suspend fun cargarDatosInternal() {
-        stateUI = stateUI.copy(showDialog = false)
         if (!stateUI.isRefreshing) {
             stateData = ListadoFacturasState.Loading
         }
@@ -185,15 +184,4 @@ class ListadoFacturasViewModel @Inject constructor(
         return stateUI.filtros.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null) !=
                 base.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null)
     }
-
-    fun onFacturaClick() {
-        if (stateData is ListadoFacturasState.Success) {
-            stateUI = stateUI.copy(showDialog = true)
-        }
-    }
-
-    fun dismissDialog() {
-        stateUI = stateUI.copy(showDialog = false)
-    }
-
 }

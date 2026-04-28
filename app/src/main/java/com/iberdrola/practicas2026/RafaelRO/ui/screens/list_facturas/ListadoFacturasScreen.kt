@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Lightbulb
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,7 +29,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,8 +57,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
 
 data class ListadoFacturasActions(
     val onFilter: () -> Unit,
-    val onFacturaClick: () -> Unit,
-    val dismissDialog: () -> Unit,
+    val onFacturaClick: (Int) -> Unit,
     val onRefresh: () -> Unit
 )
 
@@ -70,6 +67,7 @@ fun ListadoFacturasScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onFilter: (FiltUiState) -> Unit,
+    onFacturaClick: (Int) -> Unit,
     filtState: FiltUiState
 ) {
     BackHandler {
@@ -87,8 +85,7 @@ fun ListadoFacturasScreen(
         onFilter = { onFilter(viewModel.stateUI.filtros) },
         onFilterLuz = { viewModel.onFilterLuz() },
         onFilterGas = { viewModel.onFilterGas() },
-        onFacturaClick = { viewModel.onFacturaClick() },
-        onDismissDialog = { viewModel.dismissDialog() },
+        onFacturaClick = onFacturaClick,
         onRefresh = { viewModel.refreshData() },
         onClearFilters = if (viewModel.tieneFiltrosActivos()) {
             { viewModel.limpiarFiltros() }
@@ -106,8 +103,7 @@ fun ListadoFacturasContent(
     onFilter: () -> Unit,
     onFilterLuz: () -> Unit,
     onFilterGas: () -> Unit,
-    onFacturaClick: () -> Unit,
-    onDismissDialog: () -> Unit,
+    onFacturaClick: (Int) -> Unit,
     onRefresh: () -> Unit,
     onClearFilters: (() -> Unit)?,
     modifier: Modifier = Modifier
@@ -149,7 +145,6 @@ fun ListadoFacturasContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // PullToRefreshBox debe envolver el contenido para detectar el scroll
         PullToRefreshBox(
             isRefreshing = stateUI.isRefreshing,
             onRefresh = onRefresh,
@@ -157,12 +152,10 @@ fun ListadoFacturasContent(
         ) {
             when (stateData) {
                 is ListadoFacturasState.Loading -> {
-                    // Si estamos cargando inicialmente (no refrescando)
                     LoadingScreen()
                 }
                 
                 is ListadoFacturasState.Error -> {
-                    // Contenedor scrollable para el error
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         item {
                             ErrorScreen(
@@ -178,7 +171,6 @@ fun ListadoFacturasContent(
                         actions = ListadoFacturasActions(
                             onFilter = onFilter,
                             onFacturaClick = onFacturaClick,
-                            dismissDialog = onDismissDialog,
                             onRefresh = onRefresh
                         ),
                         stateUI = stateUI
@@ -197,18 +189,16 @@ fun ListadoFacturasSuccessContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        // 1. Tarjeta de última factura
         stateUI.ultimaFactura?.let { factura ->
             item {
                 UltimaFacturaCard(
                     factura = factura,
-                    onClick = actions.onFacturaClick
+                    onClick = { actions.onFacturaClick(factura.id) }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
 
-        // 2. Cabecera del histórico y botón filtrar
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -244,7 +234,6 @@ fun ListadoFacturasSuccessContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // 3. Grupos de facturas por año
         stateUI.facturasPorAnio.forEach { (anio, facturas) ->
             item(key = "header_$anio") {
                 Box(
@@ -264,7 +253,7 @@ fun ListadoFacturasSuccessContent(
             ) { factura ->
                 ItemList(
                     factura = factura,
-                    modifier = Modifier.clickable(onClick = actions.onFacturaClick)
+                    modifier = Modifier.clickable { actions.onFacturaClick(factura.id) }
                 )
                 HorizontalDivider(
                     modifier = Modifier.fillMaxWidth().height(1.dp),
@@ -273,20 +262,6 @@ fun ListadoFacturasSuccessContent(
                 )
             }
         }
-    }
-
-    if (stateUI.showDialog) {
-        AlertDialog(
-            onDismissRequest = { actions.dismissDialog() },
-            confirmButton = {
-                TextButton(onClick = { actions.dismissDialog() }) {
-                    Text("Aceptar", color = GreenAplication)
-                }
-            },
-            title = { Text(text = "Aviso") },
-            text = { Text(text = "Esta factura no está disponible para su visualización.") },
-            containerColor = Color.White
-        )
     }
 }
 
@@ -406,7 +381,6 @@ fun ListadoFacturasContentPreview() {
         onFilterLuz = {},
         onFilterGas = {},
         onFacturaClick = {},
-        onDismissDialog = {},
         onRefresh = {},
         onClearFilters = {}
     )
