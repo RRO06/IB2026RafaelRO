@@ -24,7 +24,6 @@ class GestionViewModel @Inject constructor(
         private set
     private val contratoId: Int? = savedStateHandle["contratoId"]
     private val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
-    private val CODIGO_CORRECTO = "123456"
 
     init {
         cargarDatos()
@@ -40,12 +39,13 @@ class GestionViewModel @Inject constructor(
                         val encontrado = result.data.find { it.id == id }
                         state = state.copy(
                             contrato = encontrado,
-                            emailFormulario = "", // Empezamos vacío por diseño
+                            emailFormulario = "",
                             isEmailValido = false,
                             isLoading = false
                         )
+                        // Al entrar por primera vez generamos el código inicial
+                        generarNuevoCodigo()
                     }
-
                     is BaseResult.Error -> {
                         state = state.copy(
                             error = "Error al cargar contrato",
@@ -57,28 +57,32 @@ class GestionViewModel @Inject constructor(
         }
     }
 
+    private fun generarNuevoCodigo() {
+        val nuevoCodigo = (100000..999999).random().toString()
+        state = state.copy(
+            codigoGenerado = nuevoCodigo,
+            ultimoCodigoEnviado = nuevoCodigo
+        )
+    }
+
+    fun toastMostrado() {
+        state = state.copy(ultimoCodigoEnviado = null)
+    }
+
     fun obfuscatePhone(phone: String?): String {
         if (phone.isNullOrBlank()) return "desconocido"
         val cleanPhone = phone.replace(" ", "")
-
-        return if (cleanPhone.length > 3) {
-            "******${cleanPhone.takeLast(3)}"
-        } else {
-            "***$cleanPhone"
-        }
+        return if (cleanPhone.length > 3) "******${cleanPhone.takeLast(3)}" else "***$cleanPhone"
     }
 
-    fun esFlujoActivacion(): Boolean {
-        return state.contrato?.estado == false
-    }
+    fun esFlujoActivacion(): Boolean = state.contrato?.estado == false
 
     fun desactivarFacturaElectronica(onSuccess: () -> Unit) {
         val id = contratoId ?: return
         viewModelScope.launch {
             state = state.copy(isVerifying = true)
-
-            val success = updateContratoUseCase(id, state.emailFormulario, false)
-
+            val email = if (state.emailFormulario.isBlank()) state.contrato?.email ?: "" else state.emailFormulario
+            val success = updateContratoUseCase(id, email, false)
             if (success) {
                 state = state.copy(isVerifying = false)
                 onSuccess()
@@ -88,31 +92,24 @@ class GestionViewModel @Inject constructor(
         }
     }
 
-    fun verificarCodigo(codigo: String): Boolean {
-        return codigo.length == 6
+    fun guardarCambiosConCodigo(onSuccess: () -> Unit) {
+        ejecutarProcesoGuardado(validarCodigo = true, onSuccess = onSuccess)
     }
 
     fun guardarCambiosSinCodigo(onSuccess: () -> Unit) {
         ejecutarProcesoGuardado(validarCodigo = false, onSuccess = onSuccess)
     }
 
-    fun guardarCambiosConCodigo(onSuccess: () -> Unit) {
-        ejecutarProcesoGuardado(validarCodigo = true, onSuccess = onSuccess)
-    }
-
     private fun ejecutarProcesoGuardado(validarCodigo: Boolean, onSuccess: () -> Unit) {
         val id = contratoId ?: return
-
         viewModelScope.launch {
             state = state.copy(isVerifying = true, errorCodigo = false)
-
-            val codigoCorrecto = state.codigoVerificacion == CODIGO_CORRECTO
+            val codigoCorrecto = state.codigoVerificacion == state.codigoGenerado
             val puedeProceder = if (validarCodigo) codigoCorrecto else true
 
             if (puedeProceder) {
                 delay(1500)
                 val success = updateContratoUseCase(id, state.emailFormulario, true)
-
                 if (success) {
                     state = state.copy(isVerifying = false)
                     onSuccess()
@@ -128,20 +125,11 @@ class GestionViewModel @Inject constructor(
     }
 
     fun onEmailChanged(email: String) {
-        state = state.copy(
-            emailFormulario = email,
-            isEmailValido = isEmailValid(email)
-        )
-    }
-
-    private fun isEmailValid(email: String): Boolean {
-        return email.matches(emailPattern)
+        state = state.copy(emailFormulario = email, isEmailValido = email.matches(emailPattern))
     }
 
     fun onCodigoChanged(codigo: String) {
-        if (codigo.length <= 6) {
-            state = state.copy(codigoVerificacion = codigo, errorCodigo = false)
-        }
+        if (codigo.length <= 6) state = state.copy(codigoVerificacion = codigo, errorCodigo = false)
     }
 
     fun onTermsAccepted(aceptado: Boolean) {
@@ -152,26 +140,37 @@ class GestionViewModel @Inject constructor(
         if (email.isNullOrBlank() || !email.contains("@")) return ""
         val parts = email.split("@")
         val name = parts[0]
-        val domain = parts[1]
-
-        return if (name.length > 1) {
-            "${name.first()}*****${name.last()}@$domain"
-        } else {
-            "*@$domain"
-        }
+        return if (name.length > 1) "${name.first()}*****${name.last()}@${parts[1]}" else "*@${parts[1]}"
     }
 
     fun reenviarCodigo() {
+        // Bloqueo para evitar spam y números negativos
+        if (state.isVerifying || state.intentosRestantes <= 0) return
+
         viewModelScope.launch {
             state = state.copy(isVerifying = true, mostrarBannerExito = false)
             delay(1500)
-            state = state.copy(isVerifying = false, mostrarBannerExito = true)
-            delay(4000)
-            state = state.copy(mostrarBannerExito = false)
+            
+            if (state.intentosRestantes > 0) {
+                val nuevoCodigo = (100000..999999).random().toString()
+                state = state.copy(
+                    isVerifying = false,
+                    mostrarBannerExito = true,
+                    intentosRestantes = state.intentosRestantes - 1,
+                    codigoGenerado = nuevoCodigo,
+                    ultimoCodigoEnviado = nuevoCodigo
+                )
+                delay(4000)
+                state = state.copy(mostrarBannerExito = false)
+            } else {
+                state = state.copy(isVerifying = false)
+            }
         }
     }
 
     fun dismissBanner() {
         state = state.copy(mostrarBannerExito = false, mostrarBannerError = false)
     }
+
+    fun verificarCodigo(codigo: String): Boolean = codigo.length == 6
 }

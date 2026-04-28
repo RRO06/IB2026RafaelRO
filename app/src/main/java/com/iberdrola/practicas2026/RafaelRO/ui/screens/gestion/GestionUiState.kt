@@ -15,5 +15,8 @@ data class GestionUiState(
     val emailFormulario: String = "",
     val terminosAceptados: Boolean = false,
     val codigoVerificacion: String = "",
-    val errorCodigo: Boolean = false
+    val errorCodigo: Boolean = false,
+    val codigoGenerado: String = "",
+    val intentosRestantes: Int = 3,
+    val ultimoCodigoEnviado: String? = null // Para disparar el Toast en la UI
 )

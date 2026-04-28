@@ -85,14 +85,11 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
             arguments = listOf(navArgument("email") { type = NavType.StringType })
         ) { backStackEntry ->
             val email = backStackEntry.arguments?.getString("email") ?: ""
-            val route = Screen.ExitoActivacion.createRoute(email)
             GestionExitoScreen(
                 titulo = "¡Has activado correctamente tu factura electrónica!",
                 email = email,
                 onContinuar = {
-                    if (navController.currentBackStackEntry?.destination?.route == route) {
-                        navController.popBackStack(Screen.Home.route, inclusive = false)
-                    }
+                    navController.popBackStack(Screen.FacturaElectronica.route, inclusive = false)
                 },
                 modifier = modifier
             )
@@ -102,14 +99,11 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
             arguments = listOf(navArgument("email") { type = NavType.StringType })
         ) { backStackEntry ->
             val email = backStackEntry.arguments?.getString("email") ?: ""
-            val route = Screen.ExitoModificacion.createRoute(email)
             GestionExitoScreen(
                 titulo = "¡Has modificado correctamente tu email!",
                 email = email,
                 onContinuar = {
-                    if (navController.currentBackStackEntry?.destination?.route == route) {
-                        navController.popBackStack(Screen.Home.route, inclusive = false)
-                    }
+                    navController.popBackStack(Screen.FacturaElectronica.route, inclusive = false)
                 },
                 modifier = modifier
             )
@@ -304,9 +298,13 @@ private fun VerificarCodigoRoute(navController: NavHostController, modifier: Mod
             if (navController.currentBackStackEntry?.destination?.route == currentRoute) {
                 val emailOfuscado = viewModel.obfuscateEmail(email)
                 if (viewModel.esFlujoActivacion()) {
-                    navController.navigate(Screen.ExitoActivacion.createRoute(emailOfuscado))
+                    navController.navigate(Screen.ExitoActivacion.createRoute(emailOfuscado)) {
+                        popUpTo(Screen.FacturaElectronica.route)
+                    }
                 } else {
-                    navController.navigate(Screen.ExitoModificacion.createRoute(emailOfuscado))
+                    navController.navigate(Screen.ExitoModificacion.createRoute(emailOfuscado)) {
+                        popUpTo(Screen.FacturaElectronica.route)
+                    }
                 }
             }
         },

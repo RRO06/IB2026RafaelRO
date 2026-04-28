@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -23,11 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.iberdrola.practicas2026.RafaelRO.R
 
 @Composable
 fun GestionExitoScreen(
@@ -56,9 +57,9 @@ fun GestionExitoScreen(
         Box(contentAlignment = Alignment.Center) {
             // Aquí puedes poner el Icon de Material o un Image con tu recurso R.drawable.thumb_up
             Icon(
-                imageVector = Icons.Default.ThumbUp,
+                painter = painterResource(id = R.drawable.ic_success_thumbs_up),
                 contentDescription = null,
-                modifier = Modifier.size(140.dp),
+                modifier = Modifier.size(180.dp),
                 tint = Color.White
             )
         }
@@ -93,7 +94,8 @@ fun GestionExitoScreen(
             onClick = onContinuar,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(56.dp)
+                .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
