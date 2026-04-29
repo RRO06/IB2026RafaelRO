@@ -1,7 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.filled.Euro
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,14 +30,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
@@ -47,12 +58,18 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 @Composable
 fun DetalleFacturaScreen(
     viewModel: DetalleFacturaViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    modifier: Modifier
 ) {
     val state = viewModel.state
+    var showDownloadDialog by remember { mutableStateOf(false) }
+
+    if (showDownloadDialog) {
+        DownloadSuccessDialog(onDismiss = { showDownloadDialog = false })
+    }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(16.dp)
@@ -67,7 +84,10 @@ fun DetalleFacturaScreen(
                 }
             }
             is DetalleFacturaState.Success -> {
-                DetalleFacturaContent(factura = currentState.factura)
+                DetalleFacturaContent(
+                    factura = currentState.factura,
+                    onDownloadClick = { showDownloadDialog = true }
+                )
             }
             is DetalleFacturaState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -79,7 +99,10 @@ fun DetalleFacturaScreen(
 }
 
 @Composable
-fun DetalleFacturaContent(factura: Factura) {
+fun DetalleFacturaContent(
+    factura: Factura,
+    onDownloadClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,7 +122,6 @@ fun DetalleFacturaContent(factura: Factura) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Card de Importe (Psicología: Ruda por el tamaño, Mona por el diseño limpio)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -140,7 +162,6 @@ fun DetalleFacturaContent(factura: Factura) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Sección de Información Detallada
         Text(
             text = "Información de facturación",
             style = MaterialTheme.typography.titleMedium,
@@ -155,7 +176,6 @@ fun DetalleFacturaContent(factura: Factura) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Aviso (Psicología: Sensación de que tienes que pagar pero con apoyo)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -184,7 +204,7 @@ fun DetalleFacturaContent(factura: Factura) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { /* Descargar PDF */ },
+            onClick = onDownloadClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -194,6 +214,51 @@ fun DetalleFacturaContent(factura: Factura) {
             Text(text = "Descargar factura en PDF", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
+}
+
+@Composable
+fun DownloadSuccessDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("¡Genial!", color = GreenAplication, fontWeight = FontWeight.Bold)
+            }
+        },
+        title = {
+            Text(
+                text = "¡Descarga completada!",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // He cambiado a una URL que funciona directamente con el motor de Lottie (JSON crudo)
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_download_sucess))
+                
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(150.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Tu factura ya está a salvo en tu dispositivo. ✨\n¡Ya puedes revisarla cuando quieras!",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = Color.White
+    )
 }
 
 @Composable
