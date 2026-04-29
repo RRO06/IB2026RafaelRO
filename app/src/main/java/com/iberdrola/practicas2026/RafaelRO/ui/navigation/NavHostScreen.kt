@@ -7,8 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.Perfil.PerfilScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.factura_electronica.FacturaElectronicaScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas.FiltUiState
@@ -40,10 +42,16 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
         
         composable(Screen.FacturaElectronica.route) { FacturaElectronicaRoute(navController, modifier) }
 
-        composable(Screen.DetalleFactura.route) {
+        composable(
+            route = Screen.DetalleFactura.route,
+            arguments = listOf(navArgument("facturaId") { type = NavType.IntType })
+        ) {
             DetalleFacturaScreen(
                 viewModel = hiltViewModel(),
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    navController.safePopBackStack(Screen.DetalleFactura.route)
+                         },
+                modifier = modifier
             )
         }
 
