@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,11 +66,12 @@ fun DetalleFacturaScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
 
     if (showDownloadDialog) {
-        DownloadSuccessDialog(onDismiss = { showDownloadDialog = false })
+        DownloadSuccessDialog(onDismiss = { })
     }
 
     Column(
         modifier = modifier
+            .systemBarsPadding()
             .fillMaxSize()
             .background(Color.White)
             .padding(16.dp)
@@ -86,7 +88,7 @@ fun DetalleFacturaScreen(
             is DetalleFacturaState.Success -> {
                 DetalleFacturaContent(
                     factura = currentState.factura,
-                    onDownloadClick = { showDownloadDialog = true }
+                    onDownloadClick = { }
                 )
             }
             is DetalleFacturaState.Error -> {
@@ -229,7 +231,7 @@ fun DownloadSuccessDialog(onDismiss: () -> Unit) {
             Text(
                 text = "¡Descarga completada!",
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().systemBarsPadding(),
                 fontWeight = FontWeight.Bold
             )
         },

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -126,8 +127,16 @@ fun VerificacionCodigoContent(
 ) {
     val scrollState = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+        ) {
             VerificacionHeader(onClose = actions.onClose)
 
             SolidProgressBar(progressValue = 0.75f)
@@ -448,7 +457,7 @@ private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit)
         visible = visible,
         enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-        modifier = Modifier.padding(top = 40.dp, start = 16.dp, end = 16.dp)
+        modifier = Modifier.padding(top = 40.dp, start = 16.dp, end = 16.dp).systemBarsPadding()
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -474,10 +483,16 @@ private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit)
 private fun LoadingOverlay(visible: Boolean) {
     if (visible) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color(0xFF006644), strokeWidth = 6.dp, modifier = Modifier.size(80.dp))
+            CircularProgressIndicator(
+                color = Color(0xFF006644),
+                strokeWidth = 6.dp,
+                modifier = Modifier.size(80.dp)
+            )
         }
     }
 }

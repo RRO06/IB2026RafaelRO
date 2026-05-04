@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -37,81 +38,98 @@ fun GestionExitoScreen(
     onContinuar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    // Box para fondo verde total incluyendo status bar
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF006644)) // Verde Iberdrola exacto
-            .padding(horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color(0xFF006644))
     ) {
-        // Botón cerrar superior
-        Box(modifier = Modifier.fillMaxWidth().padding(top = 16.dp), contentAlignment = Alignment.TopEnd) {
-            IconButton(onClick = onContinuar) {
-                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Icono Thumbs Up (Si tienes el SVG con rayitas mejor, si no, lo rodeamos de estilo)
-        Box(contentAlignment = Alignment.Center) {
-            // Aquí puedes poner el Icon de Material o un Image con tu recurso R.drawable.thumb_up
-            Icon(
-                painter = painterResource(id = R.drawable.ic_success_thumbs_up),
-                contentDescription = null,
-                modifier = Modifier.size(180.dp),
-                tint = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // Título exacto de la imagen
-        Text(
-            text = titulo,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.ExtraBold
-            ),
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Mensaje con el email ofuscado
-        Text(
-            text = "Pronto recibirás un correo electrónico de verificación para recibir tus facturas en la dirección $email",
-            style = MaterialTheme.typography.labelMedium.copy(
-                lineHeight = 22.sp,
-            ),
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
-
-        Spacer(modifier = Modifier.weight(1.2f))
-
-        Button(
-            onClick = onContinuar,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
+                .systemBarsPadding()
+                .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = Color(0xFF006644)
-            )
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Aceptar",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+            // Botón cerrar superior (X)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                IconButton(onClick = onContinuar) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cerrar",
+                        tint = Color.White
+                    )
+                }
+            }
 
-        Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.weight(0.8f))
+
+            // Icono éxito
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_success_thumbs_up),
+                    contentDescription = null,
+                    modifier = Modifier.size(200.dp),
+                    tint = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Título
+            Text(
+                text = titulo,
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 19.sp
+                ),
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Subtítulo
+            Text(
+                text = "Pronto recibirás un correo electrónico de verificación para recibir tus facturas en la dirección $email",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    lineHeight = 22.sp,
+                ),
+                color = Color.White.copy(alpha = 0.9f),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.weight(1.4f))
+
+            // Botón Aceptar inferior
+            Button(
+                onClick = onContinuar,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color(0xFF006644)
+                )
+            ) {
+                Text(
+                    text = "Aceptar",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+            Spacer(Modifier.padding(24.dp))
+        }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun GestionExitoScreenPreview(){
