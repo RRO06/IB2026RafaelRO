@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -71,9 +74,7 @@ fun ListadoFacturasScreen(
     onFacturaClick: (Int) -> Unit,
     filtState: FiltUiState
 ) {
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
@@ -109,76 +110,198 @@ fun ListadoFacturasContent(
     onClearFilters: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .systemBarsPadding()
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        FacturasHeader(onBack = onBack)
+    val pagerState = rememberFacturaPagerState(stateUI.filtroTipoActual)
+
+    FacturaPagerSincronizador(
+        pagerState = pagerState,
+        filtroTipoActual = stateUI.filtroTipoActual,
+        onFilterLuz = onFilterLuz,
+        onFilterGas = onFilterGas
+    )
+
+    Column(modifier = modifier.systemBarsPadding().fillMaxSize()) {
+        FacturasHeader(
+            onBack = onBack,
+            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)
+        )
         Spacer(modifier = Modifier.height(24.dp))
 
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(Divider)
-            )
-
-            Row {
-                BotonFiltroFocuseado(
-                    text = "Luz",
-                    onClick = onFilterLuz,
-                    modifier = Modifier,
-                    isSelected = stateUI.filtroTipoActual == Tipo.Luz
-                )
-                BotonFiltroFocuseado(
-                    text = "Gas",
-                    onClick = onFilterGas,
-                    modifier = Modifier,
-                    isSelected = stateUI.filtroTipoActual == Tipo.Gas
-                )
-            }
-        }
+        FacturasTabs(
+            filtroTipoActual = stateUI.filtroTipoActual,
+            onFilterLuz = onFilterLuz,
+            onFilterGas = onFilterGas
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        PullToRefreshBox(
-            isRefreshing = stateUI.isRefreshing,
+        ListadoFacturasPager(
+            pagerState = pagerState,
+            stateUI = stateUI,
+            stateData = stateData,
             onRefresh = onRefresh,
-            modifier = Modifier.weight(1f).fillMaxWidth()
-        ) {
-            when (stateData) {
-                is ListadoFacturasState.Loading -> {
-                    LoadingScreen()
-                }
-                
-                is ListadoFacturasState.Error -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        item {
-                            ErrorScreen(
-                                mensaje = stateData.message,
-                                onClearFilters = onClearFilters
-                            )
-                        }
-                    }
-                }
+            onFilter = onFilter,
+            onFacturaClick = onFacturaClick,
+            onClearFilters = onClearFilters,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
 
-                is ListadoFacturasState.Success -> {
-                    ListadoFacturasSuccessContent(
-                        actions = ListadoFacturasActions(
-                            onFilter = onFilter,
-                            onFacturaClick = onFacturaClick,
-                            onRefresh = onRefresh
-                        ),
-                        stateUI = stateUI
+@Composable
+private fun rememberFacturaPagerState(filtroTipoActual: Tipo): PagerState {
+    val initialPage = if (filtroTipoActual == Tipo.Luz) 0 else 1
+    return rememberPagerState(initialPage = initialPage, pageCount = { 2 })
+}
+
+@Composable
+private fun FacturaPagerSincronizador(
+    pagerState: PagerState,
+    filtroTipoActual: Tipo,
+    onFilterLuz: () -> Unit,
+    onFilterGas: () -> Unit
+) {
+    LaunchedEffect(pagerState.currentPage) {
+        val targetTipo = if (pagerState.currentPage == 0) Tipo.Luz else Tipo.Gas
+        if (filtroTipoActual != targetTipo) {
+            if (targetTipo == Tipo.Luz) onFilterLuz() else onFilterGas()
+        }
+    }
+
+    LaunchedEffect(filtroTipoActual) {
+        val targetPage = if (filtroTipoActual == Tipo.Luz) 0 else 1
+        if (pagerState.currentPage != targetPage) {
+            pagerState.animateScrollToPage(targetPage)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ListadoFacturasPager(
+    pagerState: PagerState,
+    stateUI: ListadoFacturasUiState,
+    stateData: ListadoFacturasState,
+    onRefresh: () -> Unit,
+    onFilter: () -> Unit,
+    onFacturaClick: (Int) -> Unit,
+    onClearFilters: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier.fillMaxWidth()
+    ) { page ->
+        FacturaPagerItem(
+            page = page,
+            stateUI = stateUI,
+            stateData = stateData,
+            onRefresh = onRefresh,
+            onFilter = onFilter,
+            onFacturaClick = onFacturaClick,
+            onClearFilters = onClearFilters
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FacturaPagerItem(
+    page: Int,
+    stateUI: ListadoFacturasUiState,
+    stateData: ListadoFacturasState,
+    onRefresh: () -> Unit,
+    onFilter: () -> Unit,
+    onFacturaClick: (Int) -> Unit,
+    onClearFilters: (() -> Unit)?
+) {
+    val typeForPage = if (page == 0) Tipo.Luz else Tipo.Gas
+    val isRefreshing = stateUI.isRefreshing && stateUI.filtroTipoActual == typeForPage
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+    ) {
+        if (stateUI.filtroTipoActual == typeForPage) {
+            FacturaDataStateWrapper(
+                stateData = stateData,
+                stateUI = stateUI,
+                onFilter = onFilter,
+                onFacturaClick = onFacturaClick,
+                onRefresh = onRefresh,
+                onClearFilters = onClearFilters
+            )
+        } else {
+            LoadingScreen()
+        }
+    }
+}
+
+@Composable
+fun FacturasTabs(
+    filtroTipoActual: Tipo,
+    onFilterLuz: () -> Unit,
+    onFilterGas: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Divider)
+        )
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BotonFiltroFocuseado(
+                text = "Luz",
+                onClick = onFilterLuz,
+                modifier = Modifier,
+                isSelected = filtroTipoActual == Tipo.Luz
+            )
+            BotonFiltroFocuseado(
+                text = "Gas",
+                onClick = onFilterGas,
+                modifier = Modifier,
+                isSelected = filtroTipoActual == Tipo.Gas
+            )
+        }
+    }
+}
+
+@Composable
+fun FacturaDataStateWrapper(
+    stateData: ListadoFacturasState,
+    stateUI: ListadoFacturasUiState,
+    onFilter: () -> Unit,
+    onFacturaClick: (Int) -> Unit,
+    onRefresh: () -> Unit,
+    onClearFilters: (() -> Unit)?
+) {
+    when (stateData) {
+        is ListadoFacturasState.Loading -> LoadingScreen()
+        is ListadoFacturasState.Error -> {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    ErrorScreen(
+                        mensaje = stateData.message,
+                        onClearFilters = onClearFilters
                     )
                 }
             }
+        }
+        is ListadoFacturasState.Success -> {
+            ListadoFacturasSuccessContent(
+                actions = ListadoFacturasActions(
+                    onFilter = onFilter,
+                    onFacturaClick = onFacturaClick,
+                    onRefresh = onRefresh
+                ),
+                stateUI = stateUI
+            )
         }
     }
 }
@@ -188,9 +311,7 @@ fun ListadoFacturasSuccessContent(
     actions: ListadoFacturasActions,
     stateUI: ListadoFacturasUiState,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         stateUI.ultimaFactura?.let { factura ->
             item {
                 UltimaFacturaCard(
@@ -202,65 +323,21 @@ fun ListadoFacturasSuccessContent(
         }
 
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Historico de facturas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Button(
-                    onClick = actions.onFilter,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = GreenAplication
-                    ),
-                    border = BorderStroke(2.dp, GreenAplication)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Tune,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp).padding(end = 4.dp)
-                    )
-                    Text(
-                        text = "Filtrar",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(start = 4.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            HistoricoSectionHeader(onFilter = actions.onFilter)
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         stateUI.facturasPorAnio.forEach { (anio, facturas) ->
             item(key = "header_$anio") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "$anio",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                AnioHeader(anio.toString())
             }
             items(
                 items = facturas,
                 key = { it.id }
             ) { factura ->
-                ItemList(
+                FacturaListEntry(
                     factura = factura,
-                    modifier = Modifier.clickable { actions.onFacturaClick(factura.id) }
-                )
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth().height(1.dp),
-                    thickness = DividerDefaults.Thickness,
-                    color = DividerDefaults.color
+                    onClick = { actions.onFacturaClick(factura.id) }
                 )
             }
         }
@@ -268,8 +345,72 @@ fun ListadoFacturasSuccessContent(
 }
 
 @Composable
-fun FacturasHeader(onBack: () -> Unit) {
+private fun HistoricoSectionHeader(onFilter: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Historico de facturas",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Button(
+            onClick = onFilter,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = GreenAplication
+            ),
+            border = BorderStroke(2.dp, GreenAplication)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Tune,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp).padding(end = 4.dp)
+            )
+            Text(
+                text = "Filtrar",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 4.dp),
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun AnioHeader(anio: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Text(
+            text = anio,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun FacturaListEntry(factura: Factura, onClick: () -> Unit) {
     Column {
+        ItemList(
+            factura = factura,
+            modifier = Modifier.clickable(onClick = onClick)
+        )
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth().height(1.dp),
+            thickness = DividerDefaults.Thickness,
+            color = DividerDefaults.color
+        )
+    }
+}
+
+@Composable
+fun FacturasHeader(onBack: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         BotonAtras(
             onBack = onBack,
             modifier = Modifier.padding(bottom = 18.dp)
@@ -300,66 +441,9 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
         border = BorderStroke(1.5.dp, GreenAplication)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "Última factura",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Factura ${factura.tipo}",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-                when (factura.tipo) {
-                    Tipo.Luz -> Icon(
-                        imageVector = Icons.Outlined.Lightbulb,
-                        contentDescription = "",
-                        modifier = Modifier.size(34.dp),
-                        tint = GreenAplication
-                    )
-                    Tipo.Gas -> Icon(
-                        painter = painterResource(id = R.drawable.ic_gas_iberdrola),
-                        contentDescription = "",
-                        modifier = Modifier.size(34.dp),
-                        tint = GreenAplication
-                    )
-                }
-            }
+            UltimaFacturaCardHeader(tipo = factura.tipo)
             Spacer(modifier = Modifier.weight(1f))
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "%.2f".format(factura.valor),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Text(
-                        text = " €",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                }
-                Text(
-                    text = UtilyClass.toSpanishMediumDate(fecha = factura.fechaInicio) +
-                            " - " +
-                            UtilyClass.toSpanishMediumDate(fecha = factura.fechaFinal),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = Color.Gray
-                )
-            }
+            UltimaFacturaCardBody(factura = factura)
             Spacer(modifier = Modifier.weight(1f))
             HorizontalDivider(
                 modifier = Modifier.fillMaxWidth().height(1.dp),
@@ -369,6 +453,75 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
             Spacer(modifier = Modifier.weight(1f))
             FacturaStatusBadge(factura.estado)
         }
+    }
+}
+
+@Composable
+private fun UltimaFacturaCardHeader(tipo: Tipo) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = "Última factura",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.padding(vertical = 2.dp))
+            Text(
+                text = "Factura $tipo",
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+        if (tipo == Tipo.Luz) {
+            Icon(
+                imageVector = Icons.Outlined.Lightbulb,
+                contentDescription = "",
+                modifier = Modifier.size(34.dp),
+                tint = GreenAplication
+            )
+        } else {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_gas_iberdrola),
+                contentDescription = "",
+                modifier = Modifier.size(34.dp),
+                tint = GreenAplication
+            )
+        }
+    }
+}
+
+@Composable
+private fun UltimaFacturaCardBody(factura: Factura) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "%.2f".format(factura.valor),
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Text(
+                text = " €",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+        Text(
+            text = UtilyClass.toSpanishMediumDate(fecha = factura.fechaInicio) +
+                    " - " +
+                    UtilyClass.toSpanishMediumDate(fecha = factura.fechaFinal),
+            style = MaterialTheme.typography.titleSmall,
+            color = Color.Gray
+        )
     }
 }
 

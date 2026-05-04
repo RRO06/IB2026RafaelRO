@@ -28,15 +28,6 @@
       "valor": 32.50
     },
     {
-      "id": 4,
-      "fechaExpedicion": "2024-03-10",
-      "fechaInicio": "2024-02-10",
-      "fechaFinal": "2024-03-10",
-      "tipo": "Gas",
-      "estado": "Anulado",
-      "valor": 0.00
-    },
-    {
       "id": 5,
       "fechaExpedicion": "2024-03-31",
       "fechaInicio": "2024-03-01",
@@ -106,7 +97,7 @@
       "fechaFinal": "2024-07-10",
       "tipo": "Gas",
       "estado": "Anulado",
-      "valor": 12.00
+      "valor": 12.70
     },
     {
       "id": 13,
