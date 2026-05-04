@@ -72,9 +72,26 @@ class FilterViewModel @Inject constructor(
     }
 
     fun onPriceRangeChanged(range: ClosedFloatingPointRange<Float>) {
+        val minGap = 1f
+        var newStart = range.start
+        var newEnd = range.endInclusive
+
+        // Si la distancia es menor a 1, aplicamos el bloqueo
+        if (newEnd - newStart < minGap) {
+            if (newStart != currentState.priceRangeStart) {
+                // El usuario mueve el de la IZQUIERDA: lo bloqueamos en (Derecha_Actual - 1)
+                newStart = (currentState.priceRangeEnd - minGap).coerceAtLeast(currentState.minPrice)
+                newEnd = currentState.priceRangeEnd
+            } else {
+                // El usuario mueve el de la DERECHA: lo bloqueamos en (Izquierda_Actual + 1)
+                newEnd = (currentState.priceRangeStart + minGap).coerceAtMost(currentState.maxPrice)
+                newStart = currentState.priceRangeStart
+            }
+        }
+
         updateState(currentState.copy(
-            priceRangeStart = range.start,
-            priceRangeEnd = range.endInclusive
+            priceRangeStart = newStart,
+            priceRangeEnd = newEnd
         ))
     }
 
@@ -89,7 +106,17 @@ class FilterViewModel @Inject constructor(
     }
 
     fun onClear() {
-        updateState(FiltUiState())
+        // Al limpiar, mantenemos los límites minPrice/maxPrice de los datos actuales
+        updateState(currentState.copy(
+            dateFrom = null,
+            dateTo = null,
+            priceRangeStart = currentState.minPrice,
+            priceRangeEnd = currentState.maxPrice,
+            selectedStates = setOf(),
+            dateError = null,
+            showDatePickerFrom = false,
+            showDatePickerTo = false
+        ))
     }
 
     private fun updateState(newState: FiltUiState) {

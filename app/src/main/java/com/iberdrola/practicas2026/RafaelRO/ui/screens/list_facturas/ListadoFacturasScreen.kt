@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -36,6 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -300,7 +305,8 @@ fun FacturaDataStateWrapper(
                     onFacturaClick = onFacturaClick,
                     onRefresh = onRefresh
                 ),
-                stateUI = stateUI
+                stateUI = stateUI,
+                filtrosActivos = onClearFilters != null
             )
         }
     }
@@ -310,10 +316,35 @@ fun FacturaDataStateWrapper(
 fun ListadoFacturasSuccessContent(
     actions: ListadoFacturasActions,
     stateUI: ListadoFacturasUiState,
+    filtrosActivos: Boolean
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+
+    // Estado para controlar la visibilidad del hueco blanco (spacer)
+    var showExtraSpacer by remember { mutableStateOf(false) }
+
+    LaunchedEffect(filtrosActivos, stateUI.filtros, stateUI.filtroTipoActual) {
+        if (filtrosActivos && stateUI.ultimaFactura != null) {
+            showExtraSpacer = true
+            listState.animateScrollToItem(1)
+        } else {
+            showExtraSpacer = false
+        }
+    }
+
+    // Detectar cuando el usuario vuelve arriba para quitar el hueco blanco
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+        if (listState.firstVisibleItemIndex == 0 && !listState.isScrollInProgress) {
+            showExtraSpacer = false
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize()
+    ) {
         stateUI.ultimaFactura?.let { factura ->
-            item {
+            item(key = "ultima_factura") {
                 UltimaFacturaCard(
                     factura = factura,
                     onClick = { actions.onFacturaClick(factura.id) }
@@ -322,7 +353,7 @@ fun ListadoFacturasSuccessContent(
             }
         }
 
-        item {
+        item(key = "header_historico") {
             HistoricoSectionHeader(onFilter = actions.onFilter)
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -339,6 +370,13 @@ fun ListadoFacturasSuccessContent(
                     factura = factura,
                     onClick = { actions.onFacturaClick(factura.id) }
                 )
+            }
+        }
+
+        // El spacer ahora solo aparece si showExtraSpacer es true
+        if (showExtraSpacer) {
+            item {
+                Spacer(modifier = Modifier.fillParentMaxHeight())
             }
         }
     }
@@ -537,6 +575,6 @@ fun ListadoFacturasContentPreview() {
         onFilterGas = {},
         onFacturaClick = {},
         onRefresh = {},
-        onClearFilters = {}
+        onClearFilters = null
     )
 }

@@ -17,6 +17,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.ceil
+import kotlin.math.floor
 
 @HiltViewModel
 class ListadoFacturasViewModel @Inject constructor(
@@ -94,8 +96,12 @@ class ListadoFacturasViewModel @Inject constructor(
     private fun calcularRangoInicial(facturas: List<Factura>): FiltUiState {
         if (facturas.isEmpty()) return FiltUiState()
 
-        val maxVal = facturas.maxOf { it.valor }.toFloat()
-        val minVal = if (facturas.size == 1) 0f else facturas.minOf { it.valor }.toFloat()
+        val maxRaw = facturas.maxOf { it.valor }
+        // Si tiene decimales (ej. 120.70), redondeamos hacia arriba (121) para que el slider permita incluirla
+        val maxVal = if (maxRaw % 1.0 > 0.0) ceil(maxRaw).toFloat() else maxRaw.toFloat()
+        
+        val minRaw = facturas.minOf { it.valor }
+        val minVal = if (facturas.size == 1) 0f else floor(minRaw).toFloat()
 
         return FiltUiState(
             priceRangeStart = minVal,
@@ -149,8 +155,10 @@ class ListadoFacturasViewModel @Inject constructor(
             val cumpleTipo = factura.tipo == tipo
             val cumpleFecha = (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
                     (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
-            val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
-                    factura.valor <= filtros.priceRangeEnd
+
+            val cumpleImporte = factura.valor.toInt() >= filtros.priceRangeStart.toInt() &&
+                    factura.valor.toInt() <= filtros.priceRangeEnd.toInt()
+
             val cumpleEstado = filtros.selectedStates.isEmpty() ||
                     filtros.selectedStates.contains(factura.estado.name)
 

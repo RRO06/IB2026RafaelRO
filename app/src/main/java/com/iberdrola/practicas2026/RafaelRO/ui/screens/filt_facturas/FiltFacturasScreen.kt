@@ -35,6 +35,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -166,114 +167,128 @@ fun FilterContent(
             onDismiss = actions.onDismissDate
         )
     }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .systemBarsPadding()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        BotonAtras(
-            onBack = actions.onBack,
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
+    
+    Scaffold(
+        modifier = modifier.fillMaxSize().systemBarsPadding(),
+        bottomBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(bottom = 16.dp, top = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(
+                    onClick = { actions.onApply(state) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp)
+                        .padding(horizontal = 30.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D4E)),
+                    shape = RoundedCornerShape(28.dp),
+                    enabled = state.dateError == null
+                ) {
+                    Text(
+                        "Aplicar filtros",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
 
-        Text(
-            text = "Filtrar",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        AnimatedVisibility(
-            visible = state.dateError != null,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
-        ) {
-            ErrorToast(
-                message = state.dateError ?: "",
-                modifier = Modifier.padding(top = 16.dp)
-            )
+                TextButton(
+                    onClick = actions.onClear,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Borrar filtros",
+                        color = Color(0xFF005944),
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
+            }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(text = "Por fecha", fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val dateFromStr =
-                state.dateFrom?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
-            val dateToStr = state.dateTo?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
-
-            ReadOnlyTextField(
-                value = dateFromStr,
-                label = "Desde",
-                modifier = Modifier.weight(1f),
-                onClick = actions.onDateFromClick
-            )
-            ReadOnlyTextField(
-                value = dateToStr,
-                label = "Hasta",
-                modifier = Modifier.weight(1f),
-                onClick = actions.onDateToClick
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(text = "Por un importe", fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        PriceRangeSelector(
-            priceRangeStart = state.priceRangeStart,
-            priceRangeEnd = state.priceRangeEnd,
-            minPrice = state.minPrice,
-            maxPrice = state.maxPrice,
-            onRangeChange = actions.onPriceChange
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(text = "Por estado", fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Estado.entries.forEach { estado ->
-            StateRow(
-                label = estado,
-                isSelected = state.selectedStates.contains(estado.name),
-                onToggle = { actions.onStateToggle(estado.name) }
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { actions.onApply(state) },
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .padding(horizontal = 30.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D5D4E)),
-            shape = RoundedCornerShape(28.dp),
-            enabled = state.dateError == null
+                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                "Aplicar filtros",
-                color = Color.White,
-                fontSize = 14.sp
+            BotonAtras(
+                onBack = actions.onBack,
+                modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)
             )
-        }
 
-        TextButton(
-            onClick = actions.onClear,
-            modifier = Modifier.fillMaxWidth()
-        ) {
             Text(
-                text = "Borrar filtros",
-                color = Color(0xFF005944),
-                textDecoration = TextDecoration.Underline
+                text = "Filtrar",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
+
+            AnimatedVisibility(
+                visible = state.dateError != null,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                ErrorToast(
+                    message = state.dateError ?: "",
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(text = "Por fecha", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                val dateFromStr =
+                    state.dateFrom?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
+                val dateToStr = state.dateTo?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) ?: ""
+
+                ReadOnlyTextField(
+                    value = dateFromStr,
+                    label = "Desde",
+                    modifier = Modifier.weight(1f),
+                    onClick = actions.onDateFromClick
+                )
+                ReadOnlyTextField(
+                    value = dateToStr,
+                    label = "Hasta",
+                    modifier = Modifier.weight(1f),
+                    onClick = actions.onDateToClick
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(text = "Por un importe", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            PriceRangeSelector(
+                priceRangeStart = state.priceRangeStart,
+                priceRangeEnd = state.priceRangeEnd,
+                minPrice = state.minPrice,
+                maxPrice = state.maxPrice,
+                onRangeChange = actions.onPriceChange
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(text = "Por estado", fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Estado.entries.forEach { estado ->
+                StateRow(
+                    label = estado,
+                    isSelected = state.selectedStates.contains(estado.name),
+                    onToggle = { actions.onStateToggle(estado.name) }
+                )
+            }
+            
+            // Espacio extra al final para que el scroll no tape nada importante
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -289,6 +304,9 @@ fun PriceRangeSelector(
 ) {
     val activeColor = Color(0xFF005944)
     val inactiveColor = Color.LightGray.copy(alpha = 0.3f)
+    
+    // Calculamos los pasos para que el slider sea discreto (euros enteros)
+    val steps = (maxPrice - minPrice).toInt() - 1
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -312,6 +330,7 @@ fun PriceRangeSelector(
             value = priceRangeStart..priceRangeEnd,
             onValueChange = onRangeChange,
             valueRange = minPrice..maxPrice,
+            steps = if (steps > 0) steps else 0,
             startThumb = {
                 Box(
                     modifier = Modifier
