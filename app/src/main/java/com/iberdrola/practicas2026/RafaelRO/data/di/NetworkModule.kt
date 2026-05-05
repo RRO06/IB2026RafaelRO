@@ -31,7 +31,7 @@ object NetworkModule {
     @Singleton
     fun provideGson(): Gson {
         return GsonBuilder()
-            .setLenient() // Permite JSONs con pequeñas malformaciones o espacios extraños
+            .setLenient()
             .registerTypeAdapter(LocalDate::class.java, JsonDeserializer { json, _, _ ->
                 LocalDate.parse(json.asJsonPrimitive.asString)
             })
@@ -44,18 +44,19 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
+        // Configuración para confiar en los certificados de Mockoon (HTTPS)
         val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
             override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
             override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
 
-        val sslContext = SSLContext.getInstance("SSL")
+        val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(null, trustAllCerts, SecureRandom())
 
         return OkHttpClient.Builder()
             .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true }
+            .hostnameVerifier { _, _ -> true } // Permite conectar a 127.0.0.1 aunque el cert sea para otro host
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .addInterceptor(HttpLoggingInterceptor().apply {
@@ -67,6 +68,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(gson: Gson, okHttpClient: OkHttpClient): Retrofit {
+        // Usamos HTTPS como has configurado en Mockoon
         return Retrofit.Builder()
             .baseUrl("https://127.0.0.1:3000/")
             .client(okHttpClient)
