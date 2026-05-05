@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,12 +51,16 @@ fun ItemList(factura: Factura = example, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Pasamos directamente el objeto 'estado' de la factura
             InfoFactura(fechaFormateada, factura.tipo.toString(), factura.estado)
-
             ImporteFactura(importe)
         }
-        HorizontalDivider(color = Color.LightGray.copy(0.3f))
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 2.dp,
+            color = Color.LightGray.copy(0.3f)
+
+        )
+
     }
 }
 
@@ -66,16 +72,19 @@ private fun InfoFactura(fecha: String, tipo: String, estado: Estado) {
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Factura $tipo",
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Reutilizamos la lógica del Badge que definimos antes
         FacturaStatusBadge(estado = estado)
+        Spacer(modifier = Modifier.height(8.dp))
+
     }
 }
+
 @Composable
 private fun ImporteFactura(importe: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -88,7 +97,11 @@ private fun ImporteFactura(importe: String) {
             painter = painterResource(R.drawable.chevron_right),
             contentDescription = null,
             tint = Color.Gray,
-            modifier = Modifier.size(34.dp)
+            modifier = Modifier
+                .size(34.dp)
+                // Usamos un offset para compensar el espacio transparente del PNG
+                // Esto "empuja" visualmente la flecha hacia la derecha
+                .offset(x = 10.dp)
         )
     }
 }

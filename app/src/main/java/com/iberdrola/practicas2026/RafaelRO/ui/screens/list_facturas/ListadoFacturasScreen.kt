@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -44,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -443,11 +445,6 @@ private fun FacturaListEntry(factura: Factura, onClick: () -> Unit) {
             factura = factura,
             modifier = Modifier.clickable(onClick = onClick)
         )
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth().height(1.dp),
-            thickness = DividerDefaults.Thickness,
-            color = DividerDefaults.color
-        )
     }
 }
 
@@ -479,6 +476,7 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
         modifier = Modifier
             .height(200.dp)
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.5.dp, GreenAplication)
@@ -558,6 +556,7 @@ private fun UltimaFacturaCardBody(factura: Factura) {
                 )
             )
         }
+        Spacer(Modifier.height(4.dp))
         Text(
             text = UtilyClass.toSpanishMediumDate(fecha = factura.fechaInicio) +
                     " - " +

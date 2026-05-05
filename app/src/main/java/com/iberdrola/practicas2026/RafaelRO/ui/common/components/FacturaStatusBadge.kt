@@ -22,7 +22,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.RedAplication
 fun FacturaStatusBadge(estado: Estado) {
     val (text, color) = when (estado) {
         Estado.Pagado -> "Pagada" to GreenAplication
-        Estado.PendientePago -> "Pendiente de pago" to RedAplication
+        Estado.PendientePago -> "Pendiente de Pago" to RedAplication
         Estado.Tramite -> "En trámite" to Color.Gray
         Estado.Anulado -> "Anulada" to Color.DarkGray
         Estado.CuotaFija -> "Cuota fija" to Color.Blue
@@ -36,14 +36,14 @@ fun FacturaStatusBadge(estado: Estado) {
     }
     Box(
         modifier = Modifier
-            .background(backgroundColor, RoundedCornerShape(11.dp))
-            .padding(horizontal = 11.dp, vertical = 3.dp),
+            .background(backgroundColor, RoundedCornerShape(12.dp))
+            .padding(horizontal = 13.dp, vertical = 7.dp),
     ) {
         Text(
             text = text,
             color = color,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 11.5.sp,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold
             )
         )
