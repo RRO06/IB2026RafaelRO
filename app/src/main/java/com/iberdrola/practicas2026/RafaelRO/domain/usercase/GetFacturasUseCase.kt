@@ -22,7 +22,7 @@ class GetFacturasUseCase @Inject constructor(
                         else lista
                     }
 
-                BaseResult.Sucess(facturasProcesadas)
+                BaseResult.Sucess(facturasProcesadas, isLocal = result.isLocal)
             }
 
             is BaseResult.Error -> {

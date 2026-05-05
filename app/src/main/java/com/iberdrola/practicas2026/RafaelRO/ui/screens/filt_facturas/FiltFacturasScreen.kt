@@ -197,7 +197,9 @@ fun FilterContent(
 
                 TextButton(
                     onClick = actions.onClear,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 36.dp),
                 ) {
                     Text(
                         text = "Borrar filtros",

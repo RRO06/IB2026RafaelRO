@@ -1,5 +1,9 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Euro
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
@@ -30,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,6 +58,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
@@ -60,13 +67,13 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 fun DetalleFacturaScreen(
     viewModel: DetalleFacturaViewModel,
     onBack: () -> Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     val state = viewModel.state
     var showDownloadDialog by remember { mutableStateOf(false) }
 
     if (showDownloadDialog) {
-        DownloadSuccessDialog(onDismiss = { })
+        DownloadSuccessDialog(onDismiss = { showDownloadDialog = false })
     }
 
     Column(
@@ -74,26 +81,41 @@ fun DetalleFacturaScreen(
             .systemBarsPadding()
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp)
     ) {
-        BotonAtras(onBack = onBack)
-        Spacer(modifier = Modifier.height(16.dp))
+        BotonAtras(
+            onBack = onBack,
+            modifier = Modifier.padding(16.dp)
+        )
 
-        when (val currentState = state) {
-            is DetalleFacturaState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = GreenAplication)
+        AnimatedContent(
+            targetState = state,
+            label = "StateTransition",
+            modifier = Modifier.weight(1f),
+            transitionSpec = {
+                fadeIn().togetherWith(fadeOut())
+            }
+        ) { targetState ->
+            when (targetState) {
+                is DetalleFacturaState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = GreenAplication)
+                    }
                 }
-            }
-            is DetalleFacturaState.Success -> {
-                DetalleFacturaContent(
-                    factura = currentState.factura,
-                    onDownloadClick = { }
-                )
-            }
-            is DetalleFacturaState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = currentState.message, color = Color.Red)
+                is DetalleFacturaState.Success -> {
+                    DetalleFacturaContent(
+                        factura = targetState.factura,
+                        isFallback = targetState.isFallback,
+                        onDownloadClick = { showDownloadDialog = true },
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+                is DetalleFacturaState.Error -> {
+                    ErrorScreen(
+                        mensaje = targetState.message,
+                        type = targetState.type,
+                        onRetry = { viewModel.loadFactura() },
+                        onBack = null
+                    )
                 }
             }
         }
@@ -103,13 +125,19 @@ fun DetalleFacturaScreen(
 @Composable
 fun DetalleFacturaContent(
     factura: Factura,
-    onDownloadClick: () -> Unit
+    isFallback: Boolean,
+    onDownloadClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        if (isFallback) {
+            FallbackBanner(modifier = Modifier.padding(bottom = 24.dp))
+        }
+
         Text(
             text = "Detalle de tu factura",
             style = MaterialTheme.typography.headlineMedium,
@@ -202,8 +230,7 @@ fun DetalleFacturaContent(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onDownloadClick,
@@ -214,6 +241,35 @@ fun DetalleFacturaContent(
             shape = RoundedCornerShape(28.dp)
         ) {
             Text(text = "Descargar factura en PDF", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun FallbackBanner(modifier: Modifier = Modifier) {
+    Surface(
+        color = Color(0xFFFFF3E0),
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.CloudOff,
+                contentDescription = null,
+                tint = Color(0xFFE65100),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Estás viendo una copia local. Comprueba tu conexión para actualizar.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFE65100),
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
@@ -231,7 +287,7 @@ fun DownloadSuccessDialog(onDismiss: () -> Unit) {
             Text(
                 text = "¡Descarga completada!",
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().systemBarsPadding(),
+                modifier = Modifier.fillMaxWidth(),
                 fontWeight = FontWeight.Bold
             )
         },
@@ -240,7 +296,6 @@ fun DownloadSuccessDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // He cambiado a una URL que funciona directamente con el motor de Lottie (JSON crudo)
                 val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_download_sucess))
                 
                 LottieAnimation(

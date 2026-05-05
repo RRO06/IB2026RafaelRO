@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FallbackBanner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemList
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.LoadingScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
@@ -137,7 +139,12 @@ fun ListadoFacturasContent(
             onFilterGas = onFilterGas
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Banner de Fallback si estamos en modo Nube pero cargando Local
+        if (stateUI.isFallback && stateData is ListadoFacturasState.Success) {
+            FallbackBanner(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         ListadoFacturasPager(
             pagerState = pagerState,
@@ -225,7 +232,7 @@ private fun FacturaPagerItem(
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         if (stateUI.filtroTipoActual == typeForPage) {
             FacturaDataStateWrapper(
@@ -289,14 +296,12 @@ fun FacturaDataStateWrapper(
     when (stateData) {
         is ListadoFacturasState.Loading -> LoadingScreen()
         is ListadoFacturasState.Error -> {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item {
-                    ErrorScreen(
-                        mensaje = stateData.message,
-                        onClearFilters = onClearFilters
-                    )
-                }
-            }
+            ErrorScreen(
+                mensaje = stateData.message,
+                type = stateData.type,
+                onClearFilters = onClearFilters,
+                onRetry = onRefresh
+            )
         }
         is ListadoFacturasState.Success -> {
             ListadoFacturasSuccessContent(
@@ -333,7 +338,7 @@ fun ListadoFacturasSuccessContent(
     }
 
     // Detectar cuando el usuario vuelve arriba para quitar el hueco blanco
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+    LaunchedEffect(remember { derivedStateOf { listState.firstVisibleItemIndex } }, listState.isScrollInProgress) {
         if (listState.firstVisibleItemIndex == 0 && !listState.isScrollInProgress) {
             showExtraSpacer = false
         }
@@ -341,7 +346,7 @@ fun ListadoFacturasSuccessContent(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
     ) {
         stateUI.ultimaFactura?.let { factura ->
             item(key = "ultima_factura") {

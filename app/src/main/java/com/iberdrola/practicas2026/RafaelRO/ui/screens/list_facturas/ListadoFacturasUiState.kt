@@ -20,5 +20,6 @@ data class ListadoFacturasUiState(
         valor = 45.99
     ),
     val isRefreshing: Boolean = false,
+    val isFallback: Boolean = false, // True si se esperaba nube y vino local
     val filtros: FiltUiState = FiltUiState()
 )
