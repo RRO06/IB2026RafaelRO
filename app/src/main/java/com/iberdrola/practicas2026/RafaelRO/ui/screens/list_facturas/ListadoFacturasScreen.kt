@@ -302,6 +302,7 @@ fun FacturaDataStateWrapper(
                 mensaje = stateData.message,
                 type = stateData.type,
                 onClearFilters = onClearFilters,
+                onModifierFilters = onFilter,
                 onRetry = onRefresh
             )
         }
