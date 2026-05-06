@@ -50,6 +50,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.OpinionBottomSheet
@@ -73,19 +75,29 @@ fun HomeScreen(
     onNavigateToPerfil: () -> Unit,
     modifier: Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState = viewModel.stateUI
 
-    // Creamos el objeto de acciones vinculando el ViewModel
     val actions = HomeActions(
         onNavigateToFacturas = {
-            onNavigateToFacturas()
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onNavigateToFacturas()
+            }
         },
         onModoNubeChanged = viewModel::onModoNubeChanged,
         onOpinionDada = viewModel::onOpinionDada,
         onRecordarMasTarde = viewModel::onRecordarMasTarde,
         onDismissSheet = viewModel::onDismissSheet,
-        onNavigateToFacturaElectronica = onNavigateToFacturaElectronica,
-        onNavigateToPerfil = onNavigateToPerfil
+        onNavigateToFacturaElectronica = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onNavigateToFacturaElectronica()
+            }
+        },
+        onNavigateToPerfil = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onNavigateToPerfil()
+            }
+        }
     )
 
     HomeContent(
@@ -208,7 +220,7 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .clip(cardShape)
-            .clickable { onClick() }, // Interacción
+            .clickable { onClick() },
         shape = cardShape,
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFF1F8E9)
@@ -221,7 +233,6 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono con fondo circular animado sutilmente
             Box(
                 modifier = Modifier
                     .size(52.dp)
@@ -252,7 +263,6 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
                 )
             }
 
-            // Flecha de indicación
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
@@ -266,7 +276,7 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
 @Composable
 fun UserCard(
     state: HomeUiState,
-    onEditClick: () -> Unit // Añadimos esta acción
+    onEditClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -289,7 +299,6 @@ fun UserCard(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    // Si NO HAY foto: Mostrar un Avatar con inicial o icono
                     Box(
                         modifier = Modifier
                             .size(52.dp)
@@ -314,7 +323,6 @@ fun UserCard(
                     )
                 }
 
-                // EL BOTÓN DE EDICIÓN (estilo WhatsApp)
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier.size(32.dp)

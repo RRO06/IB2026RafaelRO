@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -51,6 +52,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -69,8 +72,11 @@ fun DetalleFacturaScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
     var showDownloadDialog by remember { mutableStateOf(false) }
+
+    BackHandler { onBack() }
 
     if (showDownloadDialog) {
         DownloadSuccessDialog(onDismiss = { showDownloadDialog = false })
@@ -105,7 +111,11 @@ fun DetalleFacturaScreen(
                     DetalleFacturaContent(
                         factura = targetState.factura,
                         isFallback = targetState.isFallback,
-                        onDownloadClick = { showDownloadDialog = true },
+                        onDownloadClick = {
+                            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                                showDownloadDialog = true
+                            }
+                        },
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }

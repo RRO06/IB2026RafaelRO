@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.factura_electronica
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
@@ -35,14 +38,21 @@ fun FacturaElectronicaScreen(
     onContratoClick: (Contrato) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
+
+    BackHandler { onBack() }
 
     FacturaElectronicaStatelessContent(
         isRefreshing = state.isRefreshing,
         contratos = state.contratos,
         onRefresh = { viewModel.refreshData() },
         onBack = onBack,
-        onContratoClick = onContratoClick,
+        onContratoClick = { contrato ->
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onContratoClick(contrato)
+            }
+        },
         modifier = modifier.systemBarsPadding()
     )
 }

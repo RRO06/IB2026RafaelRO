@@ -53,6 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
@@ -83,6 +85,8 @@ fun ListadoFacturasScreen(
     onFacturaClick: (Int) -> Unit,
     filtState: FiltUiState
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
     BackHandler { onBack() }
 
     LaunchedEffect(filtState) {
@@ -93,10 +97,18 @@ fun ListadoFacturasScreen(
         stateData = viewModel.stateData,
         stateUI = viewModel.stateUI,
         onBack = onBack,
-        onFilter = { onFilter(viewModel.stateUI.filtros) },
+        onFilter = { 
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onFilter(viewModel.stateUI.filtros)
+            }
+        },
         onFilterLuz = { viewModel.onFilterLuz() },
         onFilterGas = { viewModel.onFilterGas() },
-        onFacturaClick = onFacturaClick,
+        onFacturaClick = { id ->
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onFacturaClick(id)
+            }
+        },
         onRefresh = { viewModel.refreshData() },
         onClearFilters = if (viewModel.tieneFiltrosActivos()) {
             { viewModel.limpiarFiltros() }

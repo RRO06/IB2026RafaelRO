@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,8 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
@@ -70,8 +73,12 @@ fun ActivarFacturaScreen(
     onNext: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
     var infoDialogTitle by remember { mutableStateOf<String?>(null) }
+
+    // Manejamos el botón físico de atrás
+    BackHandler { onBack() }
 
     val actions =
         ActivarFacturaActions(
@@ -79,11 +86,25 @@ fun ActivarFacturaScreen(
             onTermsAccepted = viewModel::onTermsAccepted,
             obfuscateEmail = viewModel::obfuscateEmail,
             guardarCambios = viewModel::guardarCambiosSinCodigo,
-            onBack = onBack,
-            onNext = onNext,
-            onClose = onClose,
+            onBack = { 
+                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    onBack() 
+                }
+            },
+            onNext = { id -> 
+                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    onNext(id) 
+                }
+            },
+            onClose = { 
+                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    onClose() 
+                }
+            },
             onMoreInfo = { label ->
-                infoDialogTitle = label
+                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    infoDialogTitle = label
+                }
             }
         )
 
@@ -102,7 +123,8 @@ fun ActivarFacturaScreen(
                     TextButton(onClick = { infoDialogTitle = null }) {
                         Text("Cerrar", color = Color(0xFF006644))
                     }
-                }
+                },
+                containerColor = Color.White
             )
         }
     }

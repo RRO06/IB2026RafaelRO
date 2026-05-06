@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 
@@ -48,15 +51,28 @@ fun ModificarEmailScreen(
     onNext: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
+
+    BackHandler { onBack() }
 
     val actions = ModificarEmailActions(
         onEmailChanged = { viewModel.onEmailChanged(it) },
-        onBack = onBack,
-        onClose = onClose,
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onBack()
+            }
+        },
+        onClose = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onClose()
+            }
+        },
         onSaveAndNext = {
-            viewModel.guardarCambiosSinCodigo {
-                state.contrato?.id?.let { id -> onNext(id) }
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.guardarCambiosSinCodigo {
+                    state.contrato?.id?.let { id -> onNext(id) }
+                }
             }
         }
     )

@@ -5,8 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -33,13 +35,13 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
                 onNavigateBack = { navController.safePopBackStack(Screen.Perfil.route) }
             )
         }
-        
+
         composable(Screen.Home.route) { HomeRoute(navController, modifier) }
-        
+
         composable(Screen.ListadoFacturas.route) { ListadoFacturasRoute(it, navController, modifier) }
-        
+
         composable(Screen.Filtro.route) { FiltroRoute(it, navController, modifier) }
-        
+
         composable(Screen.FacturaElectronica.route) { FacturaElectronicaRoute(navController, modifier) }
 
         composable(
@@ -48,9 +50,7 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
         ) {
             DetalleFacturaScreen(
                 viewModel = hiltViewModel(),
-                onBack = {
-                    navController.safePopBackStack(Screen.DetalleFactura.route)
-                         },
+                onBack = { navController.safePopBackStack(Screen.DetalleFactura.route) },
                 modifier = modifier
             )
         }
@@ -59,38 +59,52 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
     }
 }
 
+// --- Extensiones de Navegación Segura (Centralizadas) ---
+
 fun NavHostController.safePopBackStack(expectedRoute: String) {
-    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
-        this.popBackStack()
+    val currentEntry = currentBackStackEntry
+    if (currentEntry?.destination?.route == expectedRoute &&
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        popBackStack()
     }
 }
 
 fun NavHostController.safePopBackStackTo(expectedRoute: String, targetRoute: String, inclusive: Boolean = false) {
-    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
-        this.popBackStack(targetRoute, inclusive)
+    val currentEntry = currentBackStackEntry
+    if (currentEntry?.destination?.route == expectedRoute &&
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        popBackStack(targetRoute, inclusive)
     }
 }
 
-fun NavHostController.safeNavigate(expectedRoute: String, targetRoute: String) {
-    if (this.currentBackStackEntry?.destination?.route == expectedRoute) {
-        this.navigate(targetRoute)
+/**
+ * Navegación segura que verifica el estado del ciclo de vida y la ruta actual.
+ * El parámetro 'builder' es el último para permitir el uso de trailing lambdas para NavOptions (como popUpTo).
+ */
+fun NavHostController.safeNavigate(
+    expectedRoute: String, 
+    targetRoute: String, 
+    action: (() -> Unit)? = null,
+    builder: (NavOptionsBuilder.() -> Unit)? = null
+) {
+    val currentEntry = currentBackStackEntry
+    if (currentEntry?.destination?.route == expectedRoute &&
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        if (builder != null) navigate(targetRoute, builder) else navigate(targetRoute)
+        action?.invoke()
     }
 }
+
+// --- Implementación en las Rutas ---
 
 @Composable
 private fun HomeRoute(navController: NavHostController, modifier: Modifier) {
     val homeViewModel: HomeViewModel = hiltViewModel()
     HomeScreen(
         viewModel = homeViewModel,
-        onNavigateToFacturas = {
-            navController.safeNavigate(Screen.Home.route, Screen.ListadoFacturas.route)
-        },
-        onNavigateToFacturaElectronica = {
-            navController.safeNavigate(Screen.Home.route, Screen.FacturaElectronica.route)
-        },
-        onNavigateToPerfil = {
-            navController.safeNavigate(Screen.Home.route, Screen.Perfil.route)
-        },
+        onNavigateToFacturas = { navController.safeNavigate(Screen.Home.route, Screen.ListadoFacturas.route) },
+        onNavigateToFacturaElectronica = { navController.safeNavigate(Screen.Home.route, Screen.FacturaElectronica.route) },
+        onNavigateToPerfil = { navController.safeNavigate(Screen.Home.route, Screen.Perfil.route) },
         modifier = modifier
     )
 }
@@ -103,13 +117,17 @@ private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostCo
         viewModel = viewModel,
         onBack = { navController.safePopBackStack(Screen.ListadoFacturas.route) },
         onFilter = { currentFilt ->
-            if (navController.currentBackStackEntry?.destination?.route == Screen.ListadoFacturas.route) {
-                navController.navigate(Screen.Filtro.route)
-                navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] = currentFilt
-            }
+            // Usamos el parámetro nombrado 'action' porque queremos que se ejecute DESPUÉS de navegar
+            navController.safeNavigate(
+                expectedRoute = Screen.ListadoFacturas.route, 
+                targetRoute = Screen.Filtro.route,
+                action = {
+                    navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] = currentFilt
+                }
+            )
         },
-        onFacturaClick = { facturaId ->
-            navController.navigate(Screen.DetalleFactura.createRoute(facturaId))
+        onFacturaClick = { id -> 
+            navController.safeNavigate(Screen.ListadoFacturas.route, Screen.DetalleFactura.createRoute(id))
         },
         filtState = filtrosRecibidos,
         modifier = modifier
@@ -124,7 +142,9 @@ private fun FiltroRoute(it: NavBackStackEntry, navController: NavHostController,
         initialFilters = initialFilters,
         onBack = { navController.safePopBackStack(Screen.Filtro.route) },
         onApply = { filtState ->
-            if (navController.currentBackStackEntry?.destination?.route == Screen.Filtro.route) {
+            val currentEntry = navController.currentBackStackEntry
+            if (currentEntry?.destination?.route == Screen.Filtro.route &&
+                currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
                 navController.previousBackStackEntry?.savedStateHandle?.set("filter_data", filtState)
                 navController.popBackStack()
             }

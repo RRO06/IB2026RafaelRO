@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
@@ -43,6 +44,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
@@ -54,8 +57,12 @@ fun DetalleFacturaActivaScreen(
     onModificarClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState = viewModel.state
     var showDialog by remember { mutableStateOf(false) }
+
+    // Manejamos el botón físico de atrás
+    BackHandler { onBack() }
 
     Column(
         modifier = modifier
@@ -76,8 +83,16 @@ fun DetalleFacturaActivaScreen(
             uiState.contrato != null -> {
                 DetalleFacturaContent(
                     contrato = uiState.contrato,
-                    onModificarClick = { onModificarClick(uiState.contrato.id) },
-                    onDesactivarClick = { showDialog = true }
+                    onModificarClick = { 
+                        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                            onModificarClick(uiState.contrato.id) 
+                        }
+                    },
+                    onDesactivarClick = { 
+                        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                            showDialog = true 
+                        }
+                    }
                 )
                 if (showDialog) {
                     AlertDialog(
@@ -86,8 +101,10 @@ fun DetalleFacturaActivaScreen(
                         text = { Text("Volverás a recibir tus facturas en formato papel por correo postal.") },
                         confirmButton = {
                             TextButton(onClick = {
-                                showDialog = false
-                                viewModel.desactivarFacturaElectronica { onBack() }
+                                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                                    showDialog = false
+                                    viewModel.desactivarFacturaElectronica { onBack() }
+                                }
                             }) {
                                 Text("DESACTIVAR", color = Color.Red, fontWeight = FontWeight.Bold)
                             }

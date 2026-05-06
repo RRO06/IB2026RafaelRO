@@ -1,6 +1,7 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.Perfil
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +56,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.CustomOutlinedTextField
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.Divider
@@ -76,7 +79,11 @@ fun PerfilScreen(
     viewModel: PerfilViewModel,
     onNavigateBack: () -> Unit
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState = viewModel.stateUI
+
+    // Manejamos el botón físico de atrás
+    BackHandler { onNavigateBack() }
 
     // Vinculamos las acciones del ViewModel con la data class
     val actions = PerfilActions(
@@ -85,9 +92,15 @@ fun PerfilScreen(
         onTelefonoChanged = viewModel::onTelefonoChanged,
         onFotoChanged = viewModel::onFotoChanged,
         onSavePerfil = {
-            viewModel.saveChanges(onNavigateBack)
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.saveChanges(onNavigateBack)
+            }
         },
-        onNavigateBack = onNavigateBack
+        onNavigateBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onNavigateBack()
+            }
+        }
     )
 
     PerfilContent(

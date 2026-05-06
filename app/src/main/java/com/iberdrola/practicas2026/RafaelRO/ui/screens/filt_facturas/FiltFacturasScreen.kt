@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -57,6 +58,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FilterDatePickerDialog
@@ -88,24 +91,43 @@ fun FilterScreen(
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     LaunchedEffect(initialFilters) {
         initialFilters?.let { viewModel.initFilters(it) }
     }
 
     val state by viewModel.uiState.collectAsState()
 
+    // Manejamos el botón físico de atrás
+    BackHandler { onBack() }
+
     val actions = FiltUiActions(
-        onDateFromClick = viewModel::onDateFromClick,
-        onDateToClick = viewModel::onDateToClick,
+        onDateFromClick = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.onDateFromClick()
+            }
+        },
+        onDateToClick = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.onDateToClick()
+            }
+        },
         onDateFromSelected = viewModel::onDateFromSelected,
         onDateToSelected = viewModel::onDateToSelected,
         onDismissDate = viewModel::dismissDatePickers,
         onPriceChange = viewModel::onPriceRangeChanged,
         onStateToggle = viewModel::onStateToggle,
-        onApply = onApply,
+        onApply = { filtState ->
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onApply(filtState)
+            }
+        },
         onClear = {
-            viewModel.onClear()
-            onClear()
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.onClear()
+                onClear()
+            }
         },
         onClearError = viewModel::clearError,
         onBack = onBack

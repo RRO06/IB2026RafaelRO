@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -60,6 +61,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import kotlinx.coroutines.delay
 
@@ -83,9 +86,12 @@ fun VerificacionCodigoScreen(
     onNext: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
     var showNotification by remember { mutableStateOf(false) }
     var codeToDisplay by remember { mutableStateOf("") }
+
+    BackHandler { onBack() }
 
     LaunchedEffect(state.ultimoCodigoEnviado) {
         state.ultimoCodigoEnviado?.let { codigo ->
@@ -99,14 +105,30 @@ fun VerificacionCodigoScreen(
 
     val actions = VerificacionActions(
         onCodigoChanged = viewModel::onCodigoChanged,
-        onVolverAEnviar = viewModel::reenviarCodigo,
-        onBack = onBack,
-        onNext = onNext,
+        onVolverAEnviar = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.reenviarCodigo()
+            }
+        },
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onBack()
+            }
+        },
+        onNext = { email ->
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onNext(email)
+            }
+        },
         onDismissBanner = viewModel::dismissBanner,
         onGuardarCambios = viewModel::guardarCambiosConCodigo,
         verificarCodigo = viewModel::verificarCodigo,
         obfuscatePhone = viewModel::obfuscatePhone,
-        onClose = onClose
+        onClose = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onClose()
+            }
+        }
     )
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -442,8 +464,7 @@ private fun ErrorBanner(onDismiss: () -> Unit) {
                 text = "El código introducido no es correcto",
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Red
-            )
+                color = Color.Red)
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
                 Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Red)
             }

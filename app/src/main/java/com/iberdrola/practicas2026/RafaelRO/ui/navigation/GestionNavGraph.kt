@@ -41,7 +41,7 @@ fun NavGraphBuilder.gestionNavGraph(navController: NavHostController, modifier: 
                 navController.safeNavigate(Screen.ActivarFactura.route, Screen.VerificarCodigo.createRoute(id))
             },
             onClose = { 
-                navController.safePopBackStackTo(Screen.ActivarFactura.route, Screen.FacturaElectronica.route) 
+                navController.safePopBackStackTo(Screen.ActivarFactura.route, Screen.FacturaElectronica.route)
             },
             modifier = modifier
         )
@@ -58,7 +58,7 @@ fun NavGraphBuilder.gestionNavGraph(navController: NavHostController, modifier: 
                 navController.safeNavigate(Screen.ModificarEmail.route, Screen.VerificarCodigo.createRoute(id))
             },
             onClose = { 
-                navController.safePopBackStackTo(Screen.ModificarEmail.route, Screen.FacturaElectronica.route) 
+                navController.safePopBackStackTo(Screen.ModificarEmail.route, Screen.FacturaElectronica.route)
             },
             modifier = modifier
         )
@@ -75,15 +75,16 @@ fun NavGraphBuilder.gestionNavGraph(navController: NavHostController, modifier: 
             viewModel = viewModel,
             onBack = { navController.safePopBackStack(Screen.VerificarCodigo.route) },
             onNext = { email ->
-                if (navController.currentBackStackEntry?.destination?.route == Screen.VerificarCodigo.route) {
-                    val emailOfuscado = viewModel.obfuscateEmail(email)
-                    val route = if (viewModel.esFlujoActivacion()) Screen.ExitoActivacion.createRoute(emailOfuscado)
-                                else Screen.ExitoModificacion.createRoute(emailOfuscado)
-                    navController.navigate(route) { popUpTo(Screen.FacturaElectronica.route) }
+                val emailOfuscado = viewModel.obfuscateEmail(email)
+                val targetRoute = if (viewModel.esFlujoActivacion()) Screen.ExitoActivacion.createRoute(emailOfuscado)
+                            else Screen.ExitoModificacion.createRoute(emailOfuscado)
+                
+                navController.safeNavigate(Screen.VerificarCodigo.route, targetRoute) {
+                    popUpTo(Screen.FacturaElectronica.route)
                 }
             },
             onClose = { 
-                navController.safePopBackStackTo(Screen.VerificarCodigo.route, Screen.FacturaElectronica.route) 
+                navController.safePopBackStackTo(Screen.VerificarCodigo.route, Screen.FacturaElectronica.route)
             },
             modifier = modifier
         )
