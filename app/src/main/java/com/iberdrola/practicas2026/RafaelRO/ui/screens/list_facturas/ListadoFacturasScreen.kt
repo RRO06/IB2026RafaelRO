@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -242,12 +244,23 @@ private fun FacturaPagerItem(
 ) {
     val typeForPage = if (page == 0) Tipo.Luz else Tipo.Gas
     val isRefreshing = stateUI.isRefreshing && stateUI.filtroTipoActual == typeForPage
+    val pullToRefreshState = rememberPullToRefreshState()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize()
-    ) {
+        state = pullToRefreshState,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                containerColor = Color.White,
+                color = GreenAplication,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        },
+        modifier = Modifier.fillMaxSize().background(Color.White)
+    ){
         if (stateUI.filtroTipoActual == typeForPage) {
             FacturaDataStateWrapper(
                 stateData = stateData,

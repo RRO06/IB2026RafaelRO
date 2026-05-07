@@ -16,18 +16,20 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ItemFacturaElectronica
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +40,6 @@ fun FacturaElectronicaScreen(
     onContratoClick: (Contrato) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
 
     BackHandler { onBack() }
@@ -48,11 +49,7 @@ fun FacturaElectronicaScreen(
         contratos = state.contratos,
         onRefresh = { viewModel.refreshData() },
         onBack = onBack,
-        onContratoClick = { contrato ->
-            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                onContratoClick(contrato)
-            }
-        },
+        onContratoClick = onContratoClick,
         modifier = modifier.systemBarsPadding()
     )
 }
@@ -67,9 +64,21 @@ fun FacturaElectronicaStatelessContent(
     onContratoClick: (Contrato) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val pullToRefreshState = rememberPullToRefreshState()
+
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
+        state = pullToRefreshState,
+        indicator = {
+            PullToRefreshDefaults.Indicator(
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                containerColor = Color.White,
+                color = GreenAplication,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        },
         modifier = modifier.fillMaxSize().background(Color.White)
     ) {
         Column(
@@ -96,6 +105,7 @@ fun FacturaElectronicaStatelessContent(
         }
     }
 }
+
 @Composable
 fun HeaderSeccion(
     titulo: String,
