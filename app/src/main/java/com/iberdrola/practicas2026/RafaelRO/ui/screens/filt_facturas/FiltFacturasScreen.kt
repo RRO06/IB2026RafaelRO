@@ -241,7 +241,7 @@ fun FilterContent(
         ) {
             BotonAtras(
                 onBack = actions.onBack,
-                modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)
+                modifier = Modifier.padding( bottom = 16.dp)
             )
 
             Text(

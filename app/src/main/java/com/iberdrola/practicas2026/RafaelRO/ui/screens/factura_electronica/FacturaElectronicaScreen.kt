@@ -84,16 +84,17 @@ fun FacturaElectronicaStatelessContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            BotonAtras(onBack = onBack)
-
-            Spacer(modifier = Modifier.height(24.dp))
+            BotonAtras(
+                onBack = onBack,
+                modifier = Modifier.padding( bottom = 16.dp)
+            )
 
             HeaderSeccion(
                 titulo = "Factura electrónica",
-                modifier = Modifier.padding(start = 24.dp)
+                modifier = Modifier.padding(start = 16.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))

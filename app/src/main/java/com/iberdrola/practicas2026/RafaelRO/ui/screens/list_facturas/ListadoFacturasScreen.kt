@@ -145,7 +145,7 @@ fun ListadoFacturasContent(
     Column(modifier = modifier.systemBarsPadding().fillMaxSize()) {
         FacturasHeader(
             onBack = onBack,
-            modifier = Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -298,13 +298,13 @@ fun FacturasTabs(
             BotonFiltroFocuseado(
                 text = "Luz",
                 onClick = onFilterLuz,
-                modifier = Modifier,
+                modifier = Modifier.padding(start = 4.dp),
                 isSelected = filtroTipoActual == Tipo.Luz
             )
             BotonFiltroFocuseado(
                 text = "Gas",
                 onClick = onFilterGas,
-                modifier = Modifier,
+                modifier = Modifier.padding(start = 4.dp),
                 isSelected = filtroTipoActual == Tipo.Gas
             )
         }
@@ -374,7 +374,9 @@ fun ListadoFacturasSuccessContent(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
     ) {
         stateUI.ultimaFactura?.let { factura ->
             item(key = "ultima_factura") {
@@ -479,19 +481,21 @@ fun FacturasHeader(onBack: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         BotonAtras(
             onBack = onBack,
-            modifier = Modifier.padding(bottom = 18.dp)
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
         Text(
             text = stringResource(R.string.title_listado_facturas),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "C/ PALMA - ARTA KM 49,5, 4ºA -PINTO- MADRID",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
     }
 }

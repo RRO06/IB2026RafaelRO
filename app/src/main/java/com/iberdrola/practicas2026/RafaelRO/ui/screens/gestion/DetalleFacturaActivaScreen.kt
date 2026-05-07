@@ -3,9 +3,6 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
-import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.R
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 
 @Composable
@@ -61,17 +61,52 @@ fun DetalleFacturaActivaScreen(
     val uiState = viewModel.state
     var showDialog by remember { mutableStateOf(false) }
 
-    // Manejamos el botón físico de atrás
     BackHandler { onBack() }
 
+    DetalleFacturaActivaContent(
+        uiState = uiState,
+        showDialog = showDialog,
+        onBack = onBack,
+        onModificarClick = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                uiState.contrato?.id?.let { onModificarClick(it) }
+            }
+        },
+        onDesactivarClick = { showDialog = true },
+        onDismissDialog = { showDialog = false },
+        onConfirmDesactivar = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                showDialog = false
+                viewModel.desactivarFacturaElectronica { onBack() }
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun DetalleFacturaActivaContent(
+    uiState: GestionUiState,
+    showDialog: Boolean,
+    onBack: () -> Unit,
+    onModificarClick: () -> Unit,
+    onDesactivarClick: () -> Unit,
+    onDismissDialog: () -> Unit,
+    onConfirmDesactivar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .systemBarsPadding()
             .fillMaxSize()
-            .padding(horizontal = 10.dp)
             .background(Color.White)
     ) {
-        FacturasElectronicasHeader(onBack = onBack)
+        BotonAtras(
+            onBack = onBack,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+        )
 
         when {
             uiState.isLoading -> {
@@ -79,97 +114,75 @@ fun DetalleFacturaActivaScreen(
                     CircularProgressIndicator(color = GreenAplication)
                 }
             }
-
             uiState.contrato != null -> {
-                DetalleFacturaContent(
+                DetalleFacturaBody(
                     contrato = uiState.contrato,
-                    onModificarClick = { 
-                        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                            onModificarClick(uiState.contrato.id) 
-                        }
-                    },
-                    onDesactivarClick = { 
-                        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                            showDialog = true 
-                        }
-                    }
+                    onModificarClick = onModificarClick,
+                    onDesactivarClick = onDesactivarClick
                 )
-                if (showDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text("¿Desactivar factura electrónica?") },
-                        text = { Text("Volverás a recibir tus facturas en formato papel por correo postal.") },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                                    showDialog = false
-                                    viewModel.desactivarFacturaElectronica { onBack() }
-                                }
-                            }) {
-                                Text("DESACTIVAR", color = Color.Red, fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showDialog = false }) {
-                                Text("CANCELAR", color = Color.Gray)
-                            }
-                        },
-                        containerColor = Color.White
-                    )
-                }
             }
         }
+    }
+
+    if (showDialog) {
+        DesactivarFacturaDialog(
+            onDismiss = onDismissDialog,
+            onConfirm = onConfirmDesactivar
+        )
     }
 }
 
 @Composable
-fun FacturasElectronicasHeader(
-    onBack: () -> Unit
-) {
-    BotonAtras(onBack = onBack)
-}
-
-@Composable
-fun DetalleFacturaContent(
+private fun DetalleFacturaBody(
     contrato: Contrato,
     onModificarClick: () -> Unit,
-    onDesactivarClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onDesactivarClick: () -> Unit
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-
-        Text(
-            text = "Contrato de ${
-                when (contrato.tipo) {
-                    Tipo.Luz -> "Luz"
-                    Tipo.Gas -> "Gas"
-                }
-            }",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Dirección del contrato
-        Text(
-            text = contrato.direccion,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(top = 4.dp),
-            fontWeight = FontWeight.Bold
-        )
+        HeaderDetalle(tipo = contrato.tipo, direccion = contrato.direccion)
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Texto informativo
+        EmailSeccion(email = contrato.email)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        FacturaActivaCard(onDesactivarClick = onDesactivarClick)
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        AccionModificarEmail(onClick = onModificarClick)
+    }
+}
+
+@Composable
+private fun HeaderDetalle(tipo: Tipo, direccion: String) {
+    Column {
+        Text(
+            text = "Contrato de ${if (tipo == Tipo.Luz) "Luz" else "Gas"}",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = direccion,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
+}
+
+@Composable
+private fun EmailSeccion(email: String) {
+    Column {
         Text(
             text = "Actualmente recibes las facturas electrónicas de este contrato al:",
             style = MaterialTheme.typography.bodySmall
         )
-
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
@@ -177,31 +190,19 @@ fun DetalleFacturaContent(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
-        Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = contrato.email,
+            text = email,
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
 
-        // Línea divisoria sutil
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 16.dp),
             thickness = 1.dp,
             color = Color.LightGray.copy(alpha = 0.5f)
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        // Nota con icono informativo
         Row(verticalAlignment = Alignment.Top) {
-            Icon(
-                imageVector = Icons.Outlined.Info,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = Color.Gray
-            )
+            Icon(Icons.Outlined.Info, null, Modifier.size(20.dp), Color.Gray)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Recuerda que la factura electrónica es un requisito de este Plan, por lo que no es recomendable desactivarla.",
@@ -209,64 +210,63 @@ fun DetalleFacturaContent(
                 color = Color.Gray
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)), // Gris muy claro
-            border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Factura electrónica activa",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF006644) // Verde éxito
-                    )
-                    Text(
-                        text = "Si lo prefieres, puedes volver a recibir tus facturas en papel.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                }
+    }
+}
 
-                // Switch o Botón de texto que destaque
+@Composable
+private fun FacturaActivaCard(onDesactivarClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA)),
+        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "DESACTIVAR",
-                    color = Color(0xFFD32F2F), // Rojo suave
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier
-                        .clickable { onDesactivarClick() }
-                        .padding(8.dp)
+                    "Factura electrónica activa",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF006644)
+                )
+                Text(
+                    "Si lo prefieres, puedes volver a recibir tus facturas en papel.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
                 )
             }
+            Text(
+                text = "DESACTIVAR",
+                color = Color(0xFFD32F2F),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier
+                    .clickable { onDesactivarClick() }
+                    .padding(8.dp)
+            )
         }
-        Spacer(modifier = Modifier.weight(1f))
+    }
+}
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 0.5.dp,
-            color = Color.LightGray.copy(alpha = 0.5f)
-        )
-
+@Composable
+private fun AccionModificarEmail(onClick: () -> Unit) {
+    Column {
+        HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
         Spacer(modifier = Modifier.height(12.dp))
-
         Button(
-            onClick = onModificarClick,
+            onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp)
+                .padding(horizontal = 8.dp)
                 .height(52.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2E5148)
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E5148)),
             shape = RoundedCornerShape(24.dp)
         ) {
             Icon(
@@ -280,20 +280,87 @@ fun DetalleFacturaContent(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DetalleFacturaActivaScreenPreview() {
+private fun DesactivarFacturaDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("¿Desactivar factura electrónica?") },
+        text = { Text("Volverás a recibir tus facturas en formato papel por correo postal.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("DESACTIVAR", color = Color.Red, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CANCELAR", color = Color.Gray)
+            }
+        },
+        containerColor = Color.White
+    )
+}
+
+// --- PREVIEWS ---
+
+@Preview(showBackground = true, name = "Estado Cargado")
+@Composable
+fun DetalleFacturaActivaPreview() {
     IB2026RafaelROTheme {
-        DetalleFacturaContent(
-            contrato = Contrato(
-                tipo = Tipo.Luz,
-                telefono = "+34 600 000 000",
-                direccion = "Calle Falsa 123",
-                estado = true,
-                email = "contacto@ejemplo.com"
+        DetalleFacturaActivaContent(
+            uiState = GestionUiState(
+                contrato = Contrato(
+                    tipo = Tipo.Luz,
+                    direccion = "Calle Falsa 123",
+                    email = "usuario@ejemplo.com",
+                    estado = true
+                ),
+                isLoading = false
             ),
+            showDialog = false,
+            onBack = {},
             onModificarClick = {},
-            onDesactivarClick = {}
+            onDesactivarClick = {},
+            onDismissDialog = {},
+            onConfirmDesactivar = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Con Diálogo Abierto")
+@Composable
+fun DetalleFacturaConDialogPreview() {
+    IB2026RafaelROTheme {
+        DetalleFacturaActivaContent(
+            uiState = GestionUiState(
+                contrato = Contrato(
+                    tipo = Tipo.Gas,
+                    direccion = "Av. Principal 45",
+                    email = "test@iberdrola.es",
+                    estado = true
+                )
+            ),
+            showDialog = true,
+            onBack = {},
+            onModificarClick = {},
+            onDesactivarClick = {},
+            onDismissDialog = {},
+            onConfirmDesactivar = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Cargando")
+@Composable
+fun DetalleFacturaLoadingPreview() {
+    IB2026RafaelROTheme {
+        DetalleFacturaActivaContent(
+            uiState = GestionUiState(isLoading = true, contrato = null),
+            showDialog = false,
+            onBack = {},
+            onModificarClick = {},
+            onDesactivarClick = {},
+            onDismissDialog = {},
+            onConfirmDesactivar = {}
         )
     }
 }

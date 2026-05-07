@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -59,12 +60,16 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.iberdrola.practicas2026.RafaelRO.R
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Estado
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
+import java.time.LocalDate
 
 @Composable
 fun DetalleFacturaScreen(
@@ -72,14 +77,39 @@ fun DetalleFacturaScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
     var showDownloadDialog by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
+    DetalleFacturaStatelessContent(
+        state = state,
+        onBack = onBack,
+        showDownloadDialog = showDownloadDialog,
+        onDismissDialog = { showDownloadDialog = false },
+        onDownloadClick = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                showDownloadDialog = true
+            }
+        },
+        onRetry = { viewModel.loadFactura() },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun DetalleFacturaStatelessContent(
+    state: DetalleFacturaState,
+    onBack: () -> Unit,
+    showDownloadDialog: Boolean,
+    onDismissDialog: () -> Unit,
+    onDownloadClick: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     BackHandler { onBack() }
 
     if (showDownloadDialog) {
-        DownloadSuccessDialog(onDismiss = { showDownloadDialog = false })
+        DownloadSuccessDialog(onDismiss = onDismissDialog)
     }
 
     Column(
@@ -90,7 +120,7 @@ fun DetalleFacturaScreen(
     ) {
         BotonAtras(
             onBack = onBack,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
         )
 
         AnimatedContent(
@@ -108,14 +138,10 @@ fun DetalleFacturaScreen(
                     }
                 }
                 is DetalleFacturaState.Success -> {
-                    DetalleFacturaContent(
+                    DetalleFacturaContentSuccess(
                         factura = targetState.factura,
                         isFallback = targetState.isFallback,
-                        onDownloadClick = {
-                            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                                showDownloadDialog = true
-                            }
-                        },
+                        onDownloadClick = onDownloadClick,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -123,7 +149,7 @@ fun DetalleFacturaScreen(
                     ErrorScreen(
                         mensaje = targetState.message,
                         type = targetState.type,
-                        onRetry = { viewModel.loadFactura() },
+                        onRetry = onRetry,
                         onBack = null
                     )
                 }
@@ -133,126 +159,127 @@ fun DetalleFacturaScreen(
 }
 
 @Composable
-fun DetalleFacturaContent(
+fun DetalleFacturaContentSuccess(
     factura: Factura,
     isFallback: Boolean,
     onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        if (isFallback) {
-            FallbackBanner(modifier = Modifier.padding(bottom = 24.dp))
-        }
-
-        Text(
-            text = "Detalle de tu factura",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        Text(
-            text = "Factura de ${factura.tipo}",
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = GreenAplication.copy(alpha = 0.05f)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, GreenAplication.copy(alpha = 0.2f))
+    Column(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            if (isFallback) {
+                FallbackBanner(modifier = Modifier.padding(bottom = 24.dp))
+            }
+
+            Text(
+                text = "Detalle de tu factura",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Text(
+                text = "Factura de ${factura.tipo}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = GreenAplication.copy(alpha = 0.05f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, GreenAplication.copy(alpha = 0.2f))
             ) {
-                Text(
-                    text = "IMPORTE TOTAL",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = GreenAplication,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = "%.2f".format(factura.valor),
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Black
-                        ),
-                        color = Color.Black
+                        text = "IMPORTE TOTAL",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = GreenAplication,
+                        fontWeight = FontWeight.ExtraBold
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = "%.2f".format(factura.valor),
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Black
+                            ),
+                            color = Color.Black
+                        )
+                        Text(
+                            text = " €",
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            color = Color.Black
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    FacturaStatusBadge(estado = factura.estado)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Información de facturación",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            InfoRow(icon = Icons.Default.Receipt, label = "Número de factura", value = "FX-${factura.id}9283")
+            InfoRow(icon = Icons.Default.CalendarMonth, label = "Fecha de emisión", value = UtilyClass.toLongSpanishDate(factura.fechaExpedicion))
+            InfoRow(icon = Icons.Default.History, label = "Periodo de consumo", value = "${UtilyClass.toSpanishMediumDate(factura.fechaInicio)} - ${UtilyClass.toSpanishMediumDate(factura.fechaFinal)}")
+            InfoRow(icon = Icons.Default.Euro, label = "Forma de pago", value = "Domiciliación bancaria")
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9C4).copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color(0xFFFBC02D),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = " €",
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        color = Color.Black
+                        text = "Si tienes alguna duda con el importe, puedes contactar con nuestro servicio de atención al cliente gratuito.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.DarkGray
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                FacturaStatusBadge(estado = factura.estado)
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Información de facturación",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        InfoRow(icon = Icons.Default.Receipt, label = "Número de factura", value = "FX-${factura.id}9283")
-        InfoRow(icon = Icons.Default.CalendarMonth, label = "Fecha de emisión", value = UtilyClass.toLongSpanishDate(factura.fechaExpedicion))
-        InfoRow(icon = Icons.Default.History, label = "Periodo de consumo", value = "${UtilyClass.toSpanishMediumDate(factura.fechaInicio)} - ${UtilyClass.toSpanishMediumDate(factura.fechaFinal)}")
-        InfoRow(icon = Icons.Default.Euro, label = "Forma de pago", value = "Domiciliación bancaria")
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF9C4).copy(alpha = 0.3f))
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = Color(0xFFFBC02D),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Si tienes alguna duda con el importe, puedes contactar con nuestro servicio de atención al cliente gratuito.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.DarkGray
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = onDownloadClick,
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(vertical = 16.dp)
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenAplication),
             shape = RoundedCornerShape(28.dp)
         ) {
             Text(text = "Descargar factura en PDF", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -349,4 +376,29 @@ fun InfoRow(icon: ImageVector, label: String, value: String) {
         }
     }
     HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DetalleFacturaStatelessPreview() {
+    val mockFactura = Factura(
+        id = 123,
+        fechaExpedicion = LocalDate.of(2024, 2, 1),
+        fechaInicio = LocalDate.of(2024, 1, 1),
+        fechaFinal = LocalDate.of(2024, 1, 31),
+        tipo = Tipo.Luz,
+        estado = Estado.PendientePago,
+        valor = 20.00
+    )
+
+    IB2026RafaelROTheme {
+        DetalleFacturaStatelessContent(
+            state = DetalleFacturaState.Success(mockFactura, isFallback = false),
+            onBack = {},
+            showDownloadDialog = false,
+            onDismissDialog = {},
+            onDownloadClick = {},
+            onRetry = {}
+        )
+    }
 }
