@@ -89,7 +89,11 @@ fun ListadoFacturasScreen(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     
-    BackHandler { onBack() }
+    BackHandler { 
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            onBack() 
+        }
+    }
 
     LaunchedEffect(filtState) {
         viewModel.actualizarInterfaz(filtrosExtra = filtState)
@@ -98,7 +102,11 @@ fun ListadoFacturasScreen(
     ListadoFacturasContent(
         stateData = viewModel.stateData,
         stateUI = viewModel.stateUI,
-        onBack = onBack,
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onBack()
+            }
+        },
         onFilter = { 
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
                 onFilter(viewModel.stateUI.filtros)
@@ -142,7 +150,7 @@ fun ListadoFacturasContent(
         onFilterGas = onFilterGas
     )
 
-    Column(modifier = modifier.systemBarsPadding().fillMaxSize()) {
+    Column(modifier = modifier.systemBarsPadding().fillMaxSize().background(Color.White)) {
         FacturasHeader(
             onBack = onBack,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -155,7 +163,6 @@ fun ListadoFacturasContent(
             onFilterGas = onFilterGas
         )
 
-        // Banner de Fallback si estamos en modo Nube pero cargando Local
         if (stateUI.isFallback && stateData is ListadoFacturasState.Success) {
             FallbackBanner(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         } else {
@@ -352,8 +359,6 @@ fun ListadoFacturasSuccessContent(
     filtrosActivos: Boolean
 ) {
     val listState = rememberLazyListState()
-
-    // Estado para controlar la visibilidad del hueco blanco (spacer)
     var showExtraSpacer by remember { mutableStateOf(false) }
 
     LaunchedEffect(filtrosActivos, stateUI.filtros, stateUI.filtroTipoActual) {
@@ -365,7 +370,6 @@ fun ListadoFacturasSuccessContent(
         }
     }
 
-    // Detectar cuando el usuario vuelve arriba para quitar el hueco blanco
     LaunchedEffect(remember { derivedStateOf { listState.firstVisibleItemIndex } }, listState.isScrollInProgress) {
         if (listState.firstVisibleItemIndex == 0 && !listState.isScrollInProgress) {
             showExtraSpacer = false
@@ -408,7 +412,6 @@ fun ListadoFacturasSuccessContent(
             }
         }
 
-        // El spacer ahora solo aparece si showExtraSpacer es true
         if (showExtraSpacer) {
             item {
                 Spacer(modifier = Modifier.fillParentMaxHeight())

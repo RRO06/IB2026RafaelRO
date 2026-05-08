@@ -113,7 +113,6 @@ fun HomeContent(
     actions: HomeActions,
     modifier: Modifier = Modifier
 ) {
-    // Gestión del Bottom Sheet
     if (uiState.showBottomSheet) {
         OpinionBottomSheet(
             onOpinionSelected = actions.onOpinionDada,

@@ -61,18 +61,33 @@ fun DetalleFacturaActivaScreen(
     val uiState = viewModel.state
     var showDialog by remember { mutableStateOf(false) }
 
-    BackHandler { onBack() }
+    BackHandler {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            showDialog = false
+            onBack()
+        }
+    }
 
     DetalleFacturaActivaContent(
         uiState = uiState,
         showDialog = showDialog,
-        onBack = onBack,
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                showDialog = false
+                onBack()
+            }
+        },
         onModificarClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                showDialog = false
                 uiState.contrato?.id?.let { onModificarClick(it) }
             }
         },
-        onDesactivarClick = { showDialog = true },
+        onDesactivarClick = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                showDialog = true
+            }
+        },
         onDismissDialog = { showDialog = false },
         onConfirmDesactivar = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {

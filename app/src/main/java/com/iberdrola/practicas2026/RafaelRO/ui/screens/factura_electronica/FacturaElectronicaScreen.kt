@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
@@ -40,16 +42,27 @@ fun FacturaElectronicaScreen(
     onContratoClick: (Contrato) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
 
-    BackHandler { onBack() }
+    BackHandler {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            onBack()
+        }
+    }
 
     FacturaElectronicaStatelessContent(
         isRefreshing = state.isRefreshing,
         contratos = state.contratos,
         onRefresh = { viewModel.refreshData() },
-        onBack = onBack,
-        onContratoClick = onContratoClick,
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                onBack()
+            }
+        },
+        onContratoClick = { contrato ->
+            onContratoClick(contrato)
+        },
         modifier = modifier.systemBarsPadding()
     )
 }
@@ -79,7 +92,9 @@ fun FacturaElectronicaStatelessContent(
                 modifier = Modifier.align(Alignment.TopCenter)
             )
         },
-        modifier = modifier.fillMaxSize().background(Color.White)
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -89,7 +104,7 @@ fun FacturaElectronicaStatelessContent(
         ) {
             BotonAtras(
                 onBack = onBack,
-                modifier = Modifier.padding( bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             HeaderSeccion(

@@ -40,7 +40,7 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.CustomTypography
 data class ModificarEmailActions(
     val onEmailChanged: (String) -> Unit = {},
     val onBack: () -> Unit = {},
-    val onClose: () -> Unit = {},
+    val onClose : () -> Unit = {},
     val onSaveAndNext: () -> Unit = {}
 )
 @Composable
@@ -54,7 +54,11 @@ fun ModificarEmailScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val state = viewModel.state
 
-    BackHandler { onBack() }
+    BackHandler { 
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            onBack() 
+        }
+    }
 
     val actions = ModificarEmailActions(
         onEmailChanged = { viewModel.onEmailChanged(it) },
@@ -216,11 +220,6 @@ fun ModificarEmailContent(
                 }
             }
             Spacer(modifier = Modifier.height(36.dp))
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 0.5.dp,
-                color = Color.LightGray.copy(alpha = 0.5f)
-            )
         }
     }
 }

@@ -78,7 +78,10 @@ fun ActivarFacturaScreen(
     var infoDialogTitle by remember { mutableStateOf<String?>(null) }
 
     // Manejamos el botón físico de atrás
-    BackHandler { onBack() }
+    BackHandler { 
+        infoDialogTitle = null
+        onBack() 
+    }
 
     val actions =
         ActivarFacturaActions(
@@ -86,19 +89,22 @@ fun ActivarFacturaScreen(
             onTermsAccepted = viewModel::onTermsAccepted,
             obfuscateEmail = viewModel::obfuscateEmail,
             guardarCambios = viewModel::guardarCambiosSinCodigo,
-            onBack = { 
+            onBack = {
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                    onBack() 
+                    infoDialogTitle = null
+                    onBack()
                 }
             },
-            onNext = { id -> 
+            onNext = { id ->
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                    onNext(id) 
+                    infoDialogTitle = null
+                    onNext(id)
                 }
             },
-            onClose = { 
+            onClose = {
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                    onClose() 
+                    infoDialogTitle = null
+                    onClose()
                 }
             },
             onMoreInfo = { label ->
@@ -115,13 +121,21 @@ fun ActivarFacturaScreen(
         )
 
         if (infoDialogTitle != null) {
+            val dialogText = when (infoDialogTitle) {
+                "Responsable" -> "Iberdrola Clientes S.A.U., con domicilio social en Plaza Euskadi 5, 48009 Bilbao. Delegado de Protección de Datos: dpo@iberdrola.es."
+                "Finalidad" -> "Envío de facturas electrónicas, gestión del contrato, cumplimiento de obligaciones legales y mejora de la calidad del servicio."
+                "Derechos" -> "Puedes retirar tu consentimiento en cualquier momento y ejercer tus derechos a través de los canales de atención al cliente o en www.iberdrola.es."
+                "Condiciones Generales" -> "Al activar la factura electrónica, dejarás de recibirla en papel. Recibirás un aviso en tu email cada vez que haya una nueva factura disponible."
+                else -> "Información detallada sobre $infoDialogTitle."
+            }
+
             AlertDialog(
                 onDismissRequest = { infoDialogTitle = null },
-                title = { Text(text = infoDialogTitle!!) },
-                text = { Text("Aquí se mostraría la información detallada sobre $infoDialogTitle.") },
+                title = { Text(text = infoDialogTitle!!, fontWeight = FontWeight.Bold) },
+                text = { Text(dialogText) },
                 confirmButton = {
                     TextButton(onClick = { infoDialogTitle = null }) {
-                        Text("Cerrar", color = Color(0xFF006644))
+                        Text("Cerrar", color = Color(0xFF006644), fontWeight = FontWeight.Bold)
                     }
                 },
                 containerColor = Color.White
@@ -337,7 +351,7 @@ fun ActivarFacturaContent(
                     Text(
                         "Siguiente",
                         fontWeight = FontWeight.Bold,
-                        color = if (state.terminosAceptados && state.isEmailValido) Color.White else Color.Gray
+                        color = if (state.terminosAceptados && state.isEmailValido) Color.White else Color(0xFFaabfb9)
                     )
                 }
             }

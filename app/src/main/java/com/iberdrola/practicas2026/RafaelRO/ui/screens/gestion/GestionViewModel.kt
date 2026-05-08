@@ -173,7 +173,11 @@ class GestionViewModel @Inject constructor(
     }
 
     fun dismissBanner() {
-        state = state.copy(mostrarBannerExito = false, mostrarBannerError = false)
+        state = state.copy(
+            mostrarBannerExito = false,
+            mostrarBannerError = false,
+            errorCodigo = false
+        )
     }
 
     fun verificarCodigo(codigo: String): Boolean = codigo.length == 6
