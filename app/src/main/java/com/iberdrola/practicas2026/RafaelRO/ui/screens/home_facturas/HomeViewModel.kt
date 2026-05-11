@@ -11,6 +11,7 @@ import com.google.firebase.analytics.logEvent
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
 import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,11 +61,18 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun onOpinionDada() {
-        stateUI = stateUI.copy(showBottomSheet = false)
+        stateUI = stateUI.copy(
+            showBottomSheet = false,
+            showThankYouMessage = true
+        )
 
         viewModelScope.launch {
             // No molestar hasta dentro de 10 veces
             settingsDataStore.resetEstadoOpinion(nuevoObjetivo = 10, yaOpino = true)
+            
+            // Ocultar el mensaje de agradecimiento después de 3 segundos
+            delay(3000)
+            stateUI = stateUI.copy(showThankYouMessage = false)
         }
     }
     fun onRecordarMasTarde() {

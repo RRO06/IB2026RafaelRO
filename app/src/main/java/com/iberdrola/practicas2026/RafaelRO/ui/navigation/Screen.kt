@@ -6,6 +6,9 @@ sealed class Screen(val route : String) {
     object Filtro : Screen("filtro")
     object Perfil : Screen("perfil")
     object FacturaElectronica : Screen("factura_electronica")
+    object DetalleFactura : Screen("detalle_factura_listado/{facturaId}") {
+        fun createRoute(id: Int) = "detalle_factura_listado/$id"
+    }
     object DetalleFacturaActiva : Screen("detalle_factura/{contratoId}") {
         fun createRoute(id: Int) = "detalle_factura/$id"
     }

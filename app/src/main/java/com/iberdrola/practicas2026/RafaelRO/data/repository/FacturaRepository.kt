@@ -38,35 +38,30 @@ class FacturaRepository @Inject constructor(
             getFacturasLocal()
         }
     }
-    // Cambiamos el tipo de retorno a Flow
+
     fun getContratosFlow(): Flow<BaseResult<List<Contrato>>> = flow {
-        // 1. Escuchamos el Flow del DAO
         contratoDao.getAllContratos().collect { contratos ->
             if (contratos.isEmpty()) {
                 try {
-                    // Función auxiliar para leer el JSON e insertar en DB
                     cargarContratosDesdeJson()
-                    // No emitimos nada aquí. Al insertar en la DB,
-                    // el 'collect' se volverá a disparar automáticamente con los datos.
                 } catch (_: Exception) {
-                    // Especificamos el tipo <List<Contrato>> para ayudar al compilador
                     emit(BaseResult.Error(InvokeException.FileError))
                 }
             } else {
-                // Éxito
                 emit(BaseResult.Sucess(contratos))
             }
         }
     }.catch {
-        // Si algo falla en el flujo, emitimos el error
         emit(BaseResult.Error(InvokeException.FileError))
     }
+
     private suspend fun cargarContratosDesdeJson() {
         val jsonString = context.assets.open("contratos.json").bufferedReader().use { it.readText() }
         val type = object : TypeToken<List<Contrato>>() {}.type
         val contratosDesdeJson: List<Contrato> = gson.fromJson(jsonString, type)
         contratoDao.insertContratos(contratosDesdeJson)
     }
+
     suspend fun updateContratoFields(id: Int, nuevoEmail: String, terminosAceptados: Boolean): Boolean {
         return try {
             contratoDao.updateContratoFields(id, nuevoEmail, terminosAceptados)
@@ -75,6 +70,7 @@ class FacturaRepository @Inject constructor(
             false
         }
     }
+
     private suspend fun getFacturasAPI(): BaseResult<List<Factura>> {
         return try {
             val response = facturasApiService.getFacturas()
@@ -82,10 +78,18 @@ class FacturaRepository @Inject constructor(
                 facturaDao.deleteAll()
                 facturaDao.insertAll(response)
             }
-            BaseResult.Sucess(response)
+            BaseResult.Sucess(response, isLocal = false)
+        } catch (_: java.net.ConnectException) {
+            val local = facturaDao.getAllFacturas()
+            if (local.isNotEmpty()) BaseResult.Sucess(local, isLocal = true)
+            else BaseResult.Error(InvokeException.NetworkError)
         } catch (_: java.net.UnknownHostException) {
             val local = facturaDao.getAllFacturas()
-            if (local.isNotEmpty()) BaseResult.Sucess(local)
+            if (local.isNotEmpty()) BaseResult.Sucess(local, isLocal = true)
+            else BaseResult.Error(InvokeException.NetworkError)
+        } catch (_: java.net.SocketTimeoutException) {
+            val local = facturaDao.getAllFacturas()
+            if (local.isNotEmpty()) BaseResult.Sucess(local, isLocal = true)
             else BaseResult.Error(InvokeException.NetworkError)
         } catch (_: retrofit2.HttpException) {
             BaseResult.Error(InvokeException.ServerError)
@@ -94,13 +98,14 @@ class FacturaRepository @Inject constructor(
             BaseResult.Error(InvokeException.UnknownError(e.message))
         }
     }
+
     private fun getFacturasLocal(): BaseResult<List<Factura>> {
         return try {
             val jsonString = context.assets.open("facturas.json").bufferedReader().use { it.readText() }
             val type = object : TypeToken<FacturasJson>() {}.type
             val facturasJson = gson.fromJson<FacturasJson>(jsonString, type)
             val facturas = facturasJson.facturas
-            BaseResult.Sucess(facturas)
+            BaseResult.Sucess(facturas, isLocal = true)
         } catch (_: Exception) {
             BaseResult.Error(InvokeException.FileError)
         }

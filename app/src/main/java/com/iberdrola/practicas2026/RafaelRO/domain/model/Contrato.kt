@@ -7,9 +7,9 @@ import androidx.room.PrimaryKey
 data class Contrato(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val tipo: Tipo,
-    val telefono : String,
-    val direccion: String,
-    val estado: Boolean,
-    val email : String
+    val tipo: Tipo = Tipo.Gas,
+    val telefono : String = "",
+    val direccion: String = "",
+    val estado: Boolean = true,
+    val email : String = ""
 )

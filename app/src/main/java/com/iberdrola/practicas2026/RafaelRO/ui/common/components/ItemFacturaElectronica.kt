@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,11 +24,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightGreen
 
 @Composable
 fun ItemFacturaElectronica(
@@ -41,10 +45,10 @@ fun ItemFacturaElectronica(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(vertical = 16.dp, horizontal = 8.dp), // Alineado con el BotonAtras (16+8=24dp desde el borde)
+            verticalAlignment = Alignment.Top
         ) {
-            // Parte 1: El Icono del servicio
+            // Parte 1: El Icono del servicio (38dp)
             ServiceIcon(tipo = tipo)
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -56,37 +60,54 @@ fun ItemFacturaElectronica(
                 modifier = Modifier.weight(1f)
             )
 
-            // Parte 3: La flecha (Acción)
-            ServiceActionIcon()
+            ServiceActionIcon(modifier = Modifier.align(Alignment.CenterVertically))
         }
 
         HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 8.dp),
             thickness = 1.dp,
             color = Color.LightGray.copy(alpha = 0.3f)
         )
     }
 }
+
 @Composable
-private fun ServiceIcon(tipo: Tipo) {
-    val icon = when (tipo) {
-        Tipo.Luz -> Icons.Outlined.Lightbulb
-        Tipo.Gas -> Icons.Default.Whatshot
+private fun ServiceIcon(
+    tipo: Tipo,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.size(38.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        when (tipo) {
+            Tipo.Luz -> {
+                Icon(
+                    imageVector = Icons.Outlined.Lightbulb,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = GreenAplication
+                )
+            }
+            Tipo.Gas -> {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_gas_iberdrola),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = GreenAplication
+                )
+            }
+        }
     }
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        modifier = Modifier.size(32.dp),
-        tint = GreenAplication
-    )
 }
+
 @Composable
 private fun ServiceInfo(
     tipo: Tipo,
     estaActiva: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.padding(top = 2.dp)) {
         Text(
             text = if (tipo == Tipo.Luz) "Contrato de Luz" else "Contrato de Gas",
             style = MaterialTheme.typography.bodyLarge,
@@ -96,25 +117,28 @@ private fun ServiceInfo(
         BadgeEstadoElectronico(estaActiva)
     }
 }
+
 @Composable
-private fun ServiceActionIcon() {
+private fun ServiceActionIcon(modifier: Modifier = Modifier) {
     Icon(
-        imageVector = Icons.Default.ChevronRight,
+        painter = painterResource(R.drawable.chevron_right),
         contentDescription = null,
         tint = Color.Gray,
-        modifier = Modifier.size(28.dp)
+        modifier = modifier.size(28.dp)
     )
 }
+
 @Composable
 private fun BadgeEstadoElectronico(activa: Boolean) {
-    val color = if (activa) GreenAplication else Color.LightGray
+    val color = if (activa) GreenAplication else Color.DarkGray
     val texto = if (activa) "Activa" else "Sin Activar"
+    val backgroundColor = if (activa) LightGreen else Color.DarkGray.copy(alpha = 0.1f)
 
     Box(
         modifier = Modifier
-            .padding(top = 4.dp)
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-            .padding(horizontal = 10.dp, vertical = 2.dp)
+            .padding(top = 8.dp) // Alineado con la base del icono de 38dp
+            .background(backgroundColor, RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             text = texto,
@@ -124,12 +148,22 @@ private fun BadgeEstadoElectronico(activa: Boolean) {
         )
     }
 }
+
 @Preview(showBackground = true)
 @Composable
-fun ItemFacturaElectronicaPreview(){
+fun ItemFacturaElectronicaGasPreview(){
+    ItemFacturaElectronica(
+        tipo = Tipo.Gas,
+        estaActiva = true,
+        onClick = {}
+    )
+}
+@Preview(showBackground = true)
+@Composable
+fun ItemFacturaElectronicaLuzPreview(){
     ItemFacturaElectronica(
         tipo = Tipo.Luz,
-        estaActiva = true,
+        estaActiva = false,
         onClick = {}
     )
 }

@@ -2,8 +2,16 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 
+sealed class ReenvioEstado {
+    object Inicial : ReenvioEstado()
+    data class ConIntentos(val restantes: Int) : ReenvioEstado()
+    object Agotado : ReenvioEstado()
+}
+
 data class GestionUiState(
-    val contrato: Contrato? = null,
+    val contrato: Contrato? = Contrato(
+        email = "hola@gmail.com"
+    ),
     val isLoading: Boolean = false,
     val isVerifying: Boolean = false,
     val mostrarBannerExito: Boolean = false,
@@ -13,5 +21,14 @@ data class GestionUiState(
     val emailFormulario: String = "",
     val terminosAceptados: Boolean = false,
     val codigoVerificacion: String = "",
-    val errorCodigo: Boolean = false
-)
+    val errorCodigo: Boolean = false,
+    val codigoGenerado: String = "",
+    val intentosRestantes: Int = MAX_INTENTOS,
+    val reenvioEstado: ReenvioEstado = ReenvioEstado.Inicial,
+    val ultimoCodigoEnviado: String? = null,
+    val esFlujoActivacion: Boolean = false
+) {
+    companion object {
+        const val MAX_INTENTOS = 3
+    }
+}

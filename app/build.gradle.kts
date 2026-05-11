@@ -91,3 +91,42 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+// Tarea para automatizar adb reverse tcp:3000 tcp:3000
+// Se ejecuta en cada compilación para asegurar que Mockoon sea accesible desde el dispositivo
+tasks.register("adbReverse") {
+    group = "custom"
+    description = "Configura adb reverse para Mockoon en todos los dispositivos conectados"
+    doLast {
+        val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+        val adb = android.adbExecutable.absolutePath
+
+        try {
+            // Obtenemos todos los dispositivos conectados que están listos
+            val process = ProcessBuilder(adb, "devices").start()
+            val devices = process.inputStream.bufferedReader().readText()
+                .lines()
+                .filter { it.endsWith("\tdevice") }
+                .map { it.split("\t")[0] }
+
+            if (devices.isEmpty()) {
+                println("--- [Mockoon] No se detectaron dispositivos conectados. ---")
+            } else {
+                devices.forEach { device ->
+                    println("--- [Mockoon] Configurando adb reverse en dispositivo: $device ---")
+                    ProcessBuilder(adb, "-s", device, "reverse", "tcp:3000", "tcp:3000").start().waitFor()
+                }
+                println("--- [Mockoon] ADB Reverse completado con éxito. ---")
+            }
+        } catch (e: Exception) {
+            println("--- [Mockoon] Error ejecutando adb reverse: ${e.message} ---")
+        }
+    }
+}
+
+// Hook global para que se ejecute siempre antes de cualquier tarea de preBuild o instalación
+tasks.configureEach {
+    if (this.name == "preBuild" || this.name.startsWith("install")) {
+        dependsOn("adbReverse")
+    }
+}
