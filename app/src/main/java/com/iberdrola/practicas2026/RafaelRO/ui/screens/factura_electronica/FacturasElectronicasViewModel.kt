@@ -50,11 +50,10 @@ class FacturasElectronicasViewModel @Inject constructor(
 
     fun refreshData() {
         viewModelScope.launch {
-            state = state.copy(isRefreshing = true) // Activamos el circulito
+            state = state.copy(isRefreshing = true)
 
-            // Sincronizamos con Firebase (recuerda poner el interval a 0 para pruebas)
             remoteConfig.fetchConfig {
-                cargardatos() // Esto recargará Room y al terminar pondrá isRefreshing = false
+                cargardatos()
             }
         }
     }

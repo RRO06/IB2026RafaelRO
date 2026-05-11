@@ -1,5 +1,6 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -37,19 +38,43 @@ class ListadoFacturasViewModel @Inject constructor(
         private set
 
     init {
+        actualizarFlagsConfig()
+        observarFiltros()
         determinarTipoInicialYLoguear()
     }
+
+    private fun actualizarFlagsConfig() {
+
+        stateUI = stateUI.copy(
+            isLuzEnabled = remoteConfig.isContratosLuzEnabled(),
+            isGasEnabled = remoteConfig.isContratosGasEnabled()
+        )
+    }
+
+    private fun observarFiltros() {
+        viewModelScope.launch {
+            savedStateHandle.getStateFlow(
+                key = "filter_data",
+                initialValue = FiltUiState()
+            ).collect { nuevosFiltros ->
+                stateUI = stateUI.copy(filtros = nuevosFiltros)
+                if (stateUI.facturasBase.isNotEmpty()) {
+                    actualizarInterfaz()
+                }
+            }
+        }
+    }
+
     private fun determinarTipoInicialYLoguear() {
         val tipoInicial = when {
-            remoteConfig.isContratosLuzEnabled() -> Tipo.Luz
-            remoteConfig.isContratosGasEnabled() -> Tipo.Gas
-            else -> null // Caso en el que ambos están desactivados
+            stateUI.isLuzEnabled -> Tipo.Luz
+            stateUI.isGasEnabled -> Tipo.Gas
+            else -> null
         }
 
         if (tipoInicial != null) {
             cargarDatosIniciales(tipoInicial)
         } else {
-            // Si Firebase ha desactivado, mostramos un error directo
             stateData = ListadoFacturasState.Error("No hay servicios disponibles actualmente")
         }
     }
@@ -58,22 +83,43 @@ class ListadoFacturasViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = getFacturasUseCase()) {
                 is BaseResult.Sucess -> {
-                    stateData = ListadoFacturasState.Success(result.data)
                     stateUI = stateUI.copy(
                         facturasBase = result.data,
                         filtroTipoActual = tipoInicial
                     )
                     actualizarInterfaz(tipoInicial)
                 }
-            stateUI = stateUI.copy(isRefreshing = true)
-            cargarDatosInternal()
-            stateUI = stateUI.copy(isRefreshing = false)
+
+                is BaseResult.Error -> {
+                    refreshData()
+                }
+            }
         }
     }
 
-    private fun cargarDatos() {
+    fun refreshData() {
         viewModelScope.launch {
-            cargarDatosInternal()
+            stateUI = stateUI.copy(isRefreshing = true)
+            try {
+
+                val configResult = remoteConfig.fetchAndActivate()
+                Log.d("ListadoFacturaVM", "RemoteConfig fetch success: $configResult")
+
+                actualizarFlagsConfig()
+                cargarDatosInternal()
+
+                if (stateData is ListadoFacturasState.Error) {
+                    val msg = (stateData as ListadoFacturasState.Error).message
+                    if (msg.contains("disponibles")) {
+                        determinarTipoInicialYLoguear()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ListadoFacturaVM", "Excepción en refreshData", e)
+            } finally {
+                stateUI = stateUI.copy(isRefreshing = false)
+                Log.d("ListadoFacturaVM", "refreshData finalizado.")
+            }
         }
     }
 
@@ -82,12 +128,12 @@ class ListadoFacturasViewModel @Inject constructor(
             stateData = ListadoFacturasState.Loading
         }
 
-        val modoNubeRequested = settingsDataStore.modoNubeFlow.firstOrNull() ?: false
         val result = getFacturasUseCase()
-        delay((1000L..2000L).random())
+        delay((1000L..3000L).random())
 
         when (result) {
             is BaseResult.Sucess -> {
+                val modoNubeRequested = settingsDataStore.modoNubeFlow.firstOrNull() ?: false
                 val isFallback = modoNubeRequested && result.isLocal
                 stateUI = stateUI.copy(
                     facturasBase = result.data,
@@ -110,8 +156,6 @@ class ListadoFacturasViewModel @Inject constructor(
         }
     }
 
-    fun isLuzVisible(): Boolean = remoteConfig.isContratosLuzEnabled()
-    fun isGasVisible(): Boolean = remoteConfig.isContratosGasEnabled()
     fun limpiarFiltros() {
         val resetFiltros = calcularRangoInicial(stateUI.facturasBase)
         savedStateHandle["filter_data"] = resetFiltros
@@ -130,28 +174,31 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun onFilterLuz() {
+        if (!stateUI.isLuzEnabled) return
         analyticsManager.logClick("filtro_rapido_luz", "listado_facturas")
         actualizarInterfaz(Tipo.Luz)
     }
+
     fun onFilterGas() {
+        if (!stateUI.isGasEnabled) return
         analyticsManager.logClick("filtro_rapido_gas", "listado_facturas")
         actualizarInterfaz(Tipo.Gas)
     }
+
     fun actualizarInterfaz(
         tipo: Tipo = stateUI.filtroTipoActual,
-        filtrosExtra: FiltUiState = stateUI.filtros
+        filtrosExtra: FiltUiState? = null
     ) {
         if (estaCargando()) return
 
-        val currentState = stateData
-        if (stateUI.facturasBase.isEmpty() &&
-            currentState is ListadoFacturasState.Error &&
-            currentState.type != ListadoFacturasState.ErrorType.EMPTY_RESULTS) {
-            stateUI = stateUI.copy(filtroTipoActual = tipo)
-            return
+        // Validamos que el tipo esté habilitado
+        val tipoValidado = when {
+            tipo == Tipo.Luz && !stateUI.isLuzEnabled -> if (stateUI.isGasEnabled) Tipo.Gas else tipo
+            tipo == Tipo.Gas && !stateUI.isGasEnabled -> if (stateUI.isLuzEnabled) Tipo.Luz else tipo
+            else -> tipo
         }
 
-        if (filtrosExtra != stateUI.filtros) {
+        if (filtrosExtra != null && filtrosExtra != stateUI.filtros) {
             savedStateHandle["filter_data"] = filtrosExtra
             return
         }
@@ -161,27 +208,31 @@ class ListadoFacturasViewModel @Inject constructor(
             return
         }
 
-        val facturasFiltradas = filtrarFacturas(tipo, stateUI.filtros)
+        val facturasFiltradas = filtrarFacturas(tipoValidado, stateUI.filtros)
 
         if (facturasFiltradas.isEmpty()) {
-            gestionarErrorSinResultados(tipo)
+            gestionarErrorSinResultados(tipoValidado)
         } else {
-            actualizarEstadoExito(tipo, facturasFiltradas)
+            actualizarEstadoExito(tipoValidado, facturasFiltradas)
         }
     }
 
-    private fun estaCargando() = stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading
+    private fun estaCargando() =
+        stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading
 
-    private fun necesitaRangoInicial() = stateUI.filtros == FiltUiState() && stateUI.facturasBase.isNotEmpty()
+    private fun necesitaRangoInicial() =
+        stateUI.filtros == FiltUiState() && stateUI.facturasBase.isNotEmpty()
 
     private fun filtrarFacturas(tipo: Tipo, filtros: FiltUiState): List<Factura> {
         return stateUI.facturasBase.filter { factura ->
             val cumpleTipo = factura.tipo == tipo
-            val cumpleFecha = (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
-                    (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
+            val cumpleFecha =
+                (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
+                        (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
 
-            val cumpleImporte = factura.valor >= filtros.priceRangeStart.toInt().toDouble() &&
-                                factura.valor <= filtros.priceRangeEnd.toInt().toDouble()
+            // Corregido: Usar Double sin cast a Int para no perder precisión
+            val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
+                    factura.valor <= filtros.priceRangeEnd
 
             val cumpleEstado = filtros.selectedStates.isEmpty() ||
                     filtros.selectedStates.contains(factura.estado.name)
@@ -191,10 +242,15 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     private fun gestionarErrorSinResultados(tipo: Tipo) {
-        stateUI = stateUI.copy(filtroTipoActual = tipo)
+        stateUI = stateUI.copy(
+            filtroTipoActual = tipo,
+            facturasAMostrar = emptyList(),
+            ultimaFactura = null
+        )
         val mensaje = if (stateUI.facturasBase.isNotEmpty()) "No existen facturas con estos filtros"
-                     else "No se han encontrado facturas en su cuenta"
-        stateData = ListadoFacturasState.Error(mensaje, ListadoFacturasState.ErrorType.EMPTY_RESULTS)
+        else "No se han encontrado facturas en su cuenta"
+        stateData =
+            ListadoFacturasState.Error(mensaje, ListadoFacturasState.ErrorType.EMPTY_RESULTS)
     }
 
     private fun actualizarEstadoExito(tipo: Tipo, facturas: List<Factura>) {
@@ -209,8 +265,12 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun tieneFiltrosActivos(): Boolean {
+        if (stateUI.facturasBase.isEmpty()) return false
         val base = calcularRangoInicial(stateUI.facturasBase)
-        return stateUI.filtros.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null) !=
-                base.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null)
+        return stateUI.filtros.copy(
+            showDatePickerFrom = false,
+            showDatePickerTo = false,
+            dateError = null
+        ) != base.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null)
     }
 }

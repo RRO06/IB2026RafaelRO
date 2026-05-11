@@ -15,7 +15,7 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 retrofit = "2.11.0"
-foundationLayout = "1.11.0"
+okhttp = "4.12.0"
 firebaseBom = "33.5.1"
 googleServices = "4.4.2"
 crashlyticsPlugin = "3.0.2"
@@ -79,6 +79,8 @@ lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", versio
 #RETROFIT
 retrofit-main = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 
 [plugins]
@@ -90,4 +92,3 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyticsPlugin" }
-

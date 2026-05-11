@@ -3,8 +3,10 @@ package com.iberdrola.practicas2026.RafaelRO.data.remote
 import com.google.firebase.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.google.firebase.remoteconfig.remoteConfig
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 
 @Singleton
 class RemoteConfigManager @Inject constructor() {
@@ -15,7 +17,10 @@ class RemoteConfigManager @Inject constructor() {
             minimumFetchIntervalInSeconds = 0
         }
         remoteConfig.setConfigSettingsAsync(configSettings)
-        remoteConfig.setDefaultsAsync(mapOf("feature_contratos_enabled" to true))
+        remoteConfig.setDefaultsAsync(mapOf(
+            "luz_contratos_enabled" to true,
+            "gas_contratos_enabled" to true
+        ))
     }
 
     fun isContratosGasEnabled(): Boolean {
@@ -27,5 +32,13 @@ class RemoteConfigManager @Inject constructor() {
 
     fun fetchConfig(onComplete: () -> Unit) {
         remoteConfig.fetchAndActivate().addOnCompleteListener { onComplete() }
+    }
+
+    suspend fun fetchAndActivate(): Boolean = suspendCancellableCoroutine { continuation ->
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (continuation.isActive) {
+                continuation.resume(task.isSuccessful)
+            }
+        }
     }
 }

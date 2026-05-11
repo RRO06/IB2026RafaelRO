@@ -186,7 +186,7 @@ fun FacturaElectronicaPreview() {
             onRefresh = {},
             onBack = {},
             onContratoClick = {},
-            isContratoBloqueado = {}
+            isContratoBloqueado = {it == Tipo.Luz}
         )
     }
 }

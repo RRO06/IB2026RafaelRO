@@ -40,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +68,7 @@ data class HomeActions(
     val onNavigateToFacturaElectronica: () -> Unit = {},
     val onNavigateToPerfil: () -> Unit = {},
     val onForceCrash: () -> Unit = {},
-    val registrarClickFacturas : () -> Unit = {}
+    val registrarClickFacturas: () -> Unit = {}
 )
 
 @Composable
@@ -128,7 +129,7 @@ fun HomeContent(
         )
     }
 
-    Box(modifier = modifier.fillMaxSize() ){
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -165,7 +166,10 @@ fun HomeContent(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = actions.onNavigateToFacturas,
+                onClick = {
+                    actions.onNavigateToFacturas()
+                    actions.registrarClickFacturas()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -174,25 +178,20 @@ fun HomeContent(
             ) {
                 Text("Ver mis facturas", color = Color.White, fontWeight = FontWeight.Bold)
             }
-        Button(
-            onClick = {
-                actions.onNavigateToFacturas()
-                actions.registrarClickFacturas()
-                      },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = GreenAplication),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Ver mis facturas", color = Color.White, fontWeight = FontWeight.Bold)
-        }
 
-        DebugCrashCard(onClick = actions.onForceCrash)
+            DebugCrashCard(
+                onClick = actions.onForceCrash,
+                showThankYouMessage = uiState.showThankYouMessage
+            )
+        }
     }
 }
+
 @Composable
-fun DebugCrashCard(onClick: () -> Unit) {
+fun DebugCrashCard(
+    onClick: () -> Unit,
+    showThankYouMessage: Boolean = false,
+) {
     TextButton(
         onClick = onClick,
         modifier = Modifier.padding(top = 8.dp)
@@ -213,11 +212,10 @@ fun DebugCrashCard(onClick: () -> Unit) {
         }
 
         AnimatedVisibility(
-            visible = uiState.showThankYouMessage,
+            visible = showThankYouMessage,
             enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
             modifier = Modifier
-                .align(Alignment.TopCenter)
                 .padding(top = 48.dp)
                 .systemBarsPadding()
         ) {

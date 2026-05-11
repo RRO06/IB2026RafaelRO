@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -127,7 +128,6 @@ fun ListadoFacturasScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListadoFacturasContent(
     stateData: ListadoFacturasState,
@@ -141,10 +141,16 @@ fun ListadoFacturasContent(
     onClearFilters: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    val pagerState = rememberFacturaPagerState(stateUI.filtroTipoActual)
+    val pagerState = rememberFacturaPagerState(
+        isLuzEnabled = stateUI.isLuzEnabled,
+        isGasEnabled = stateUI.isGasEnabled,
+        filtroTipoActual = stateUI.filtroTipoActual
+    )
 
     FacturaPagerSincronizador(
         pagerState = pagerState,
+        isLuzEnabled = stateUI.isLuzEnabled,
+        isGasEnabled = stateUI.isGasEnabled,
         filtroTipoActual = stateUI.filtroTipoActual,
         onFilterLuz = onFilterLuz,
         onFilterGas = onFilterGas
@@ -158,6 +164,8 @@ fun ListadoFacturasContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         FacturasTabs(
+            isLuzEnabled = stateUI.isLuzEnabled,
+            isGasEnabled = stateUI.isGasEnabled,
             filtroTipoActual = stateUI.filtroTipoActual,
             onFilterLuz = onFilterLuz,
             onFilterGas = onFilterGas
@@ -183,34 +191,47 @@ fun ListadoFacturasContent(
 }
 
 @Composable
-private fun rememberFacturaPagerState(filtroTipoActual: Tipo): PagerState {
-    val initialPage = if (filtroTipoActual == Tipo.Luz) 0 else 1
-    return rememberPagerState(initialPage = initialPage, pageCount = { 2 })
+private fun rememberFacturaPagerState(
+    isLuzEnabled: Boolean,
+    isGasEnabled: Boolean,
+    filtroTipoActual: Tipo
+): PagerState {
+    val pageCount = if (isLuzEnabled && isGasEnabled) 2 else 1
+    val initialPage = when {
+        isLuzEnabled && isGasEnabled -> if (filtroTipoActual == Tipo.Luz) 0 else 1
+        else -> 0
+    }
+    return rememberPagerState(initialPage = initialPage, pageCount = { pageCount })
 }
 
 @Composable
 private fun FacturaPagerSincronizador(
     pagerState: PagerState,
+    isLuzEnabled: Boolean,
+    isGasEnabled: Boolean,
     filtroTipoActual: Tipo,
     onFilterLuz: () -> Unit,
     onFilterGas: () -> Unit
 ) {
     LaunchedEffect(pagerState.currentPage) {
-        val targetTipo = if (pagerState.currentPage == 0) Tipo.Luz else Tipo.Gas
-        if (filtroTipoActual != targetTipo) {
-            if (targetTipo == Tipo.Luz) onFilterLuz() else onFilterGas()
+        if (isLuzEnabled && isGasEnabled) {
+            val targetTipo = if (pagerState.currentPage == 0) Tipo.Luz else Tipo.Gas
+            if (filtroTipoActual != targetTipo) {
+                if (targetTipo == Tipo.Luz) onFilterLuz() else onFilterGas()
+            }
         }
     }
 
     LaunchedEffect(filtroTipoActual) {
-        val targetPage = if (filtroTipoActual == Tipo.Luz) 0 else 1
-        if (pagerState.currentPage != targetPage) {
-            pagerState.animateScrollToPage(targetPage)
+        if (isLuzEnabled && isGasEnabled) {
+            val targetPage = if (filtroTipoActual == Tipo.Luz) 0 else 1
+            if (pagerState.currentPage != targetPage) {
+                pagerState.animateScrollToPage(targetPage)
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListadoFacturasPager(
     pagerState: PagerState,
@@ -224,7 +245,8 @@ private fun ListadoFacturasPager(
 ) {
     HorizontalPager(
         state = pagerState,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        userScrollEnabled = stateUI.isLuzEnabled && stateUI.isGasEnabled
     ) { page ->
         FacturaPagerItem(
             page = page,
@@ -249,25 +271,31 @@ private fun FacturaPagerItem(
     onFacturaClick: (Int) -> Unit,
     onClearFilters: (() -> Unit)?
 ) {
-    val typeForPage = if (page == 0) Tipo.Luz else Tipo.Gas
+    val typeForPage = when {
+        stateUI.isLuzEnabled && stateUI.isGasEnabled -> if (page == 0) Tipo.Luz else Tipo.Gas
+        stateUI.isLuzEnabled -> Tipo.Luz
+        else -> Tipo.Gas
+    }
+    
     val isRefreshing = stateUI.isRefreshing && stateUI.filtroTipoActual == typeForPage
-    val pullToRefreshState = rememberPullToRefreshState()
+    val state = rememberPullToRefreshState()
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
-        state = pullToRefreshState,
+        state = state,
         indicator = {
-            PullToRefreshDefaults.Indicator(
-                state = pullToRefreshState,
+            Indicator(
                 isRefreshing = isRefreshing,
                 containerColor = Color.White,
                 color = GreenAplication,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.TopCenter),
+                state = state
             )
         },
+
         modifier = Modifier.fillMaxSize().background(Color.White)
-    ){
+    ) {
         if (stateUI.filtroTipoActual == typeForPage) {
             FacturaDataStateWrapper(
                 stateData = stateData,
@@ -285,6 +313,8 @@ private fun FacturaPagerItem(
 
 @Composable
 fun FacturasTabs(
+    isLuzEnabled: Boolean,
+    isGasEnabled: Boolean,
     filtroTipoActual: Tipo,
     onFilterLuz: () -> Unit,
     onFilterGas: () -> Unit,
@@ -302,18 +332,22 @@ fun FacturasTabs(
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
-            BotonFiltroFocuseado(
-                text = "Luz",
-                onClick = onFilterLuz,
-                modifier = Modifier.padding(start = 4.dp),
-                isSelected = filtroTipoActual == Tipo.Luz
-            )
-            BotonFiltroFocuseado(
-                text = "Gas",
-                onClick = onFilterGas,
-                modifier = Modifier.padding(start = 4.dp),
-                isSelected = filtroTipoActual == Tipo.Gas
-            )
+            if (isLuzEnabled) {
+                BotonFiltroFocuseado(
+                    text = "Luz",
+                    onClick = onFilterLuz,
+                    modifier = Modifier.padding(start = 4.dp),
+                    isSelected = filtroTipoActual == Tipo.Luz
+                )
+            }
+            if (isGasEnabled) {
+                BotonFiltroFocuseado(
+                    text = "Gas",
+                    onClick = onFilterGas,
+                    modifier = Modifier.padding(start = 4.dp),
+                    isSelected = filtroTipoActual == Tipo.Gas
+                )
+            }
         }
     }
 }
