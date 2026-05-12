@@ -129,6 +129,7 @@ fun DetalleFacturaActivaContent(
                     CircularProgressIndicator(color = GreenAplication)
                 }
             }
+
             uiState.contrato != null -> {
                 DetalleFacturaBody(
                     contrato = uiState.contrato,
@@ -256,15 +257,16 @@ private fun FacturaActivaCard(onDesactivarClick: () -> Unit) {
                     color = Color.Gray
                 )
             }
-            Text(
-                text = "DESACTIVAR",
-                color = Color(0xFFD32F2F),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier
-                    .clickable { onDesactivarClick() }
-                    .padding(8.dp)
-            )
+            TextButton(
+                onClick = onDesactivarClick
+            ) {
+                Text(
+                    text = "DESACTIVAR",
+                    color = Color(0xFFD32F2F),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
         }
     }
 }

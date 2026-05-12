@@ -58,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
 import kotlinx.coroutines.delay
 
 data class VerificacionActions(
@@ -163,7 +165,7 @@ fun VerificacionCodigoContent(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            VerificacionHeader(onClose = actions.onClose)
+            VerificacionHeader(onClose = actions.onClose, esFlujoActivacion = state.esFlujoActivacion)
 
             SolidProgressBar(progressValue = 0.75f)
 
@@ -203,15 +205,26 @@ fun VerificacionCodigoContent(
 }
 
 @Composable
-private fun VerificacionHeader(onClose: () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)) {
+private fun VerificacionHeader(onClose: () -> Unit, esFlujoActivacion : Boolean = false) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 10.dp)) {
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) {
             Icon(Icons.Default.Close, contentDescription = null, tint = Color(0xFF006644))
         }
-        Text(
-            text = "Activa tu factura electrónica",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
-        )
+        if (esFlujoActivacion)
+        {
+            Text(
+                text = "Activa tu factura electrónica",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
+            )
+        }
+        else{
+            Text(
+                text = "Modificar email",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
+            )
+        }
     }
 }
 
@@ -307,6 +320,7 @@ private fun ReenvioContent(
             style = MaterialTheme.typography.bodySmall,
             color = Color.Black
         )
+        Spacer(modifier = Modifier.height(6.dp))
         ReenvioMessage(estado = estado)
         if (!agotado) {
             ReenvioActionLink(onClick = onReenviar)
@@ -334,9 +348,12 @@ private fun ReenvioActionLink(onClick: () -> Unit) {
     Text(
         text = "Volver a enviar",
         fontWeight = FontWeight.Bold,
-        textDecoration = TextDecoration.Underline,
+        style = MaterialTheme.typography.bodySmall.copy(
+            textDecoration = TextDecoration.Underline
+        ),
         modifier = Modifier
             .padding(top = 8.dp)
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() },
         color = Color.Black
     )
@@ -391,7 +408,9 @@ private fun VerificacionBottomSection(
         ) {
             OutlinedButton(
                 onClick = onBack,
-                modifier = Modifier.weight(1f).height(54.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(54.dp),
                 border = BorderStroke(1.5.dp, Color(0xFF006644)),
                 shape = RoundedCornerShape(27.dp)
             ) {
@@ -400,7 +419,9 @@ private fun VerificacionBottomSection(
             Button(
                 onClick = onNext,
                 enabled = codigoValid,
-                modifier = Modifier.weight(1f).height(54.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(54.dp),
                 shape = RoundedCornerShape(27.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF006644),
@@ -482,7 +503,9 @@ private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit)
         visible = visible,
         enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-        modifier = Modifier.padding(top = 40.dp, start = 16.dp, end = 16.dp).systemBarsPadding()
+        modifier = Modifier
+            .padding(top = 40.dp, start = 16.dp, end = 16.dp)
+            .systemBarsPadding()
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -525,5 +548,7 @@ private fun LoadingOverlay(visible: Boolean) {
 @Preview(showBackground = true)
 @Composable
 fun VerificacionCodigoContentPreview() {
-    VerificacionCodigoContent(state = GestionUiState(), actions = VerificacionActions())
+    IB2026RafaelROTheme {
+        VerificacionCodigoContent(state = GestionUiState(), actions = VerificacionActions())
+    }
 }
