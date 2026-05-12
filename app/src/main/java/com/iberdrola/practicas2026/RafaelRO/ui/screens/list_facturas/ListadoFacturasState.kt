@@ -19,6 +19,7 @@ sealed interface ListadoFacturasState {
         SERVER,
         DATABASE,
         EMPTY_RESULTS,
+        NO_SERVICES,
         GENERIC
     }
 }

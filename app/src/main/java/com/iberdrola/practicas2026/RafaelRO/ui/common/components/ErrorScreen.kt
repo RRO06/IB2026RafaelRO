@@ -135,7 +135,13 @@ private fun ErrorActionsSection(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (onRetry != null && type != ListadoFacturasState.ErrorType.EMPTY_RESULTS) {
-            ActionButton(onClick = onRetry, text = "Reintentar conexión", icon = Icons.Default.Refresh)
+            val buttonText = if(type == ListadoFacturasState.ErrorType.NO_SERVICES){
+                "Actualizar servicios"
+            }
+            else{
+                "Reintentar conexión"
+            }
+            ActionButton(onClick = onRetry, text = buttonText, icon = Icons.Default.Refresh)
         }
 
         if (type == ListadoFacturasState.ErrorType.EMPTY_RESULTS) {
@@ -187,6 +193,9 @@ private fun getErrorVisuals(type: ListadoFacturasState.ErrorType): ErrorVisuals 
     return when (type) {
         ListadoFacturasState.ErrorType.NETWORK -> ErrorVisuals(
             Icons.Default.WifiOff, Color(0xFF4A90E2), "¡Vaya! No hay conexión"
+        )
+        ListadoFacturasState.ErrorType.NO_SERVICES -> ErrorVisuals(
+            Icons.Default.Block, Color(0xFF7F8C8D),"Servicios no disponibles"
         )
         ListadoFacturasState.ErrorType.SERVER -> ErrorVisuals(
             Icons.Default.CloudOff, Color(0xFFE67E22), "El servidor está descansando"

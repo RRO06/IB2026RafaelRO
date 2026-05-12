@@ -75,7 +75,10 @@ class ListadoFacturasViewModel @Inject constructor(
         if (tipoInicial != null) {
             cargarDatosIniciales(tipoInicial)
         } else {
-            stateData = ListadoFacturasState.Error("No hay servicios disponibles actualmente")
+            stateData = ListadoFacturasState.Error(
+                message = "No hay servicios disponibles actualmente",
+                type = ListadoFacturasState.ErrorType.NO_SERVICES
+            )
         }
     }
 
@@ -106,19 +109,19 @@ class ListadoFacturasViewModel @Inject constructor(
                 Log.d("ListadoFacturaVM", "RemoteConfig fetch success: $configResult")
 
                 actualizarFlagsConfig()
-                cargarDatosInternal()
 
-                if (stateData is ListadoFacturasState.Error) {
-                    val msg = (stateData as ListadoFacturasState.Error).message
-                    if (msg.contains("disponibles")) {
-                        determinarTipoInicialYLoguear()
-                    }
+                if (!stateUI.isLuzEnabled && !stateUI.isGasEnabled) {
+                    stateData = ListadoFacturasState.Error(
+                        message = "No hay servicios disponibles actualmente",
+                        type = ListadoFacturasState.ErrorType.NO_SERVICES
+                    )
+                } else {
+                    cargarDatosInternal()
                 }
             } catch (e: Exception) {
                 Log.e("ListadoFacturaVM", "Excepción en refreshData", e)
             } finally {
                 stateUI = stateUI.copy(isRefreshing = false)
-                Log.d("ListadoFacturaVM", "refreshData finalizado.")
             }
         }
     }
@@ -191,7 +194,13 @@ class ListadoFacturasViewModel @Inject constructor(
     ) {
         if (estaCargando()) return
 
-        // Validamos que el tipo esté habilitado
+        if (!stateUI.isLuzEnabled && !stateUI.isGasEnabled){
+            stateData = ListadoFacturasState.Error(
+                message = "No hay servicios disponibles actualmente",
+                type = ListadoFacturasState.ErrorType.NO_SERVICES
+            )
+            return
+        }
         val tipoValidado = when {
             tipo == Tipo.Luz && !stateUI.isLuzEnabled -> if (stateUI.isGasEnabled) Tipo.Gas else tipo
             tipo == Tipo.Gas && !stateUI.isGasEnabled -> if (stateUI.isLuzEnabled) Tipo.Luz else tipo
@@ -230,7 +239,6 @@ class ListadoFacturasViewModel @Inject constructor(
                 (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
                         (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
 
-            // Corregido: Usar Double sin cast a Int para no perder precisión
             val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
                     factura.valor <= filtros.priceRangeEnd
 
