@@ -36,7 +36,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -412,28 +411,33 @@ fun ListadoFacturasSuccessContent(
 
     LazyColumn(
         state = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         stateUI.ultimaFactura?.let { factura ->
             item(key = "ultima_factura") {
                 UltimaFacturaCard(
                     factura = factura,
-                    onClick = { actions.onFacturaClick(factura.id) }
+                    onClick = { actions.onFacturaClick(factura.id) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
 
         item(key = "header_historico") {
-            HistoricoSectionHeader(onFilter = actions.onFilter)
+            HistoricoSectionHeader(
+                onFilter = actions.onFilter,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         stateUI.facturasPorAnio.forEach { (anio, facturas) ->
             item(key = "header_$anio") {
-                AnioHeader(anio.toString())
+                AnioHeader(
+                    anio = anio.toString(),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
             items(
                 items = facturas,
@@ -455,9 +459,9 @@ fun ListadoFacturasSuccessContent(
 }
 
 @Composable
-private fun HistoricoSectionHeader(onFilter: () -> Unit) {
+private fun HistoricoSectionHeader(onFilter: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -490,9 +494,9 @@ private fun HistoricoSectionHeader(onFilter: () -> Unit) {
 }
 
 @Composable
-private fun AnioHeader(anio: String) {
+private fun AnioHeader(anio: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
@@ -508,7 +512,7 @@ private fun FacturaListEntry(factura: Factura, onClick: () -> Unit) {
     Column {
         ItemList(
             factura = factura,
-            modifier = Modifier.clickable(onClick = onClick)
+            onClick = onClick
         )
     }
 }
@@ -538,9 +542,9 @@ fun FacturasHeader(onBack: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit) {
+fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .height(200.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))

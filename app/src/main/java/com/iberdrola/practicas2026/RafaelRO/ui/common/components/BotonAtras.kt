@@ -33,6 +33,7 @@ fun BotonAtras(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onBack)
+            .padding(start = 4.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
     ) {
         Icon(
             painter = painterResource(id = R.drawable.chevron_left),

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -103,17 +102,16 @@ fun FacturaElectronicaStatelessContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             BotonAtras(
                 onBack = onBack,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
             )
 
             HeaderSeccion(
                 titulo = "Factura electrónica",
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 32.dp)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -156,19 +154,9 @@ fun ListaContratos(
                     estaActiva = contrato.estado,
                     onClick = { onContratoClick(contrato) }
                 )
-                FacturaDivider()
             }
         }
     }
-}
-
-@Composable
-fun FacturaDivider() {
-    HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        thickness = 1.dp,
-        color = Color.LightGray.copy(alpha = 0.5f)
-    )
 }
 
 @Preview(showBackground = true)
@@ -186,7 +174,7 @@ fun FacturaElectronicaPreview() {
             onRefresh = {},
             onBack = {},
             onContratoClick = {},
-            isContratoBloqueado = {it == Tipo.Luz}
+            isContratoBloqueado = { it == Tipo.Luz }
         )
     }
 }

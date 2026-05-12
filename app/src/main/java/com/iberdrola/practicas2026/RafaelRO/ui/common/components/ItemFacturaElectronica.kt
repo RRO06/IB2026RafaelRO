@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,36 +34,31 @@ import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.LightGreen
 
 @Composable
 fun ItemFacturaElectronica(
-    tipo: Tipo,
-    estaActiva: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    tipo: Tipo, estaActiva: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(vertical = 16.dp, horizontal = 8.dp), // Alineado con el BotonAtras (16+8=24dp desde el borde)
-            verticalAlignment = Alignment.Top
-        ) {
-            // Parte 1: El Icono del servicio (38dp)
+                .padding(vertical = 16.dp, horizontal = 24.dp), verticalAlignment = Alignment.Top) {
             ServiceIcon(tipo = tipo)
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Parte 2: El texto y los Badges (Cuerpo)
             ServiceInfo(
-                tipo = tipo,
-                estaActiva = estaActiva,
-                modifier = Modifier.weight(1f)
+                tipo = tipo, estaActiva = estaActiva, modifier = Modifier.weight(1f)
             )
 
             ServiceActionIcon(modifier = Modifier.align(Alignment.CenterVertically))
         }
 
         HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             thickness = 1.dp,
             color = Color.LightGray.copy(alpha = 0.3f)
         )
@@ -73,12 +67,10 @@ fun ItemFacturaElectronica(
 
 @Composable
 private fun ServiceIcon(
-    tipo: Tipo,
-    modifier: Modifier = Modifier
+    tipo: Tipo, modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.size(38.dp),
-        contentAlignment = Alignment.Center
+        modifier = modifier.size(38.dp), contentAlignment = Alignment.Center
     ) {
         when (tipo) {
             Tipo.Luz -> {
@@ -89,6 +81,7 @@ private fun ServiceIcon(
                     tint = GreenAplication
                 )
             }
+
             Tipo.Gas -> {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_gas_iberdrola),
@@ -103,9 +96,7 @@ private fun ServiceIcon(
 
 @Composable
 private fun ServiceInfo(
-    tipo: Tipo,
-    estaActiva: Boolean,
-    modifier: Modifier = Modifier
+    tipo: Tipo, estaActiva: Boolean, modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(top = 2.dp)) {
         Text(
@@ -151,19 +142,14 @@ private fun BadgeEstadoElectronico(activa: Boolean) {
 
 @Preview(showBackground = true)
 @Composable
-fun ItemFacturaElectronicaGasPreview(){
+fun ItemFacturaElectronicaGasPreview() {
     ItemFacturaElectronica(
-        tipo = Tipo.Gas,
-        estaActiva = true,
-        onClick = {}
-    )
+        tipo = Tipo.Gas, estaActiva = true, onClick = {})
 }
+
 @Preview(showBackground = true)
 @Composable
-fun ItemFacturaElectronicaLuzPreview(){
+fun ItemFacturaElectronicaLuzPreview() {
     ItemFacturaElectronica(
-        tipo = Tipo.Luz,
-        estaActiva = false,
-        onClick = {}
-    )
+        tipo = Tipo.Luz, estaActiva = false, onClick = {})
 }
