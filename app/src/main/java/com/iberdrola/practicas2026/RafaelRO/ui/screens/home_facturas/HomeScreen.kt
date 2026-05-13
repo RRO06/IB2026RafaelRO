@@ -1,10 +1,14 @@
 package com.iberdrola.practicas2026.RafaelRO.ui.screens.home_facturas
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +33,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,9 +63,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
-import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonFiltroFocuseado
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.OpinionBottomSheet
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
+import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.PistachioGreen
 
 data class HomeActions(
     val onNavigateToFacturas: () -> Unit = {},
@@ -163,7 +171,35 @@ fun HomeContent(
                 onOptionSelected = actions.onModoNubeChanged
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            AnimatedContent(
+                targetState = uiState.esModoNube,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(400)) + slideInVertically { it / 3 })
+                        .togetherWith(fadeOut(animationSpec = tween(400)) + slideOutVertically { -it / 3 })
+                }
+            ) { targetEsNube ->
+                Row(
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = if (targetEsNube) Icons.Default.Cloud else Icons.Default.Dns,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = GreenAplication.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (targetEsNube) "Conectado a servicios vía Mockoon" else "Usando datos locales del dispositivo",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
 
             Box(
                 modifier = Modifier
@@ -171,18 +207,13 @@ fun HomeContent(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                // 'this@Column' porque detecta que esta en un Box, pero la función necesita el scope
-                // de la columna para que afecte correctamente al flujo del diseño vertical
                 this@Column.AnimatedVisibility(
                     visible = uiState.showThankYouMessage,
-                    enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-                    exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-                    modifier = Modifier
-                        .systemBarsPadding()
+                    enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut()
                 ) {
                     Surface(
                         modifier = Modifier
-                            .padding(horizontal = 24.dp)
                             .fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
                         color = Color.White,
@@ -227,8 +258,7 @@ fun HomeContent(
             }
 
             DebugCrashCard(
-                onClick = actions.onForceCrash,
-                showThankYouMessage = uiState.showThankYouMessage
+                onClick = actions.onForceCrash
             )
         }
     }
@@ -236,8 +266,7 @@ fun HomeContent(
 
 @Composable
 fun DebugCrashCard(
-    onClick: () -> Unit,
-    showThankYouMessage: Boolean = false,
+    onClick: () -> Unit
 ) {
     TextButton(
         onClick = onClick,
@@ -271,7 +300,7 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
             .clickable { onClick() },
         shape = cardShape,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF1F8E9)
+            containerColor = PistachioGreen
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -398,21 +427,68 @@ fun UserCard(
 
 @Composable
 fun SelectorDeOrigen(esNube: Boolean, onOptionSelected: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround
+    
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 4.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = PistachioGreen,
+        border = BorderStroke(1.dp, GreenAplication.copy(alpha = 0.1f))
     ) {
-        BotonFiltroFocuseado(
-            text = "Local",
-            isSelected = !esNube,
-            onClick = { onOptionSelected(false) },
-            modifier = Modifier
-        )
-        BotonFiltroFocuseado(
-            text = "Nube",
-            isSelected = esNube,
-            onClick = { onOptionSelected(true) },
-            modifier = Modifier
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SelectorOption(
+                text = "Local",
+                isSelected = !esNube,
+                onClick = { onOptionSelected(false) },
+                modifier = Modifier.weight(1f)
+            )
+            SelectorOption(
+                text = "Nube",
+                isSelected = esNube,
+                onClick = { onOptionSelected(true) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SelectorOption(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val animBgColor by animateColorAsState(
+        targetValue = if (isSelected) GreenAplication else Color.Transparent,
+        animationSpec = tween(durationMillis = 300),
+        label = "bgColor"
+    )
+    val animTextColor by animateColorAsState(
+        targetValue = if (isSelected) Color.White else GreenAplication,
+        animationSpec = tween(durationMillis = 300),
+        label = "textColor"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .padding(4.dp)
+            .clip(CircleShape)
+            .background(animBgColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = animTextColor,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
         )
     }
 }
