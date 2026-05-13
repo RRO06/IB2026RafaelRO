@@ -50,7 +50,6 @@ fun OpinionBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Color.White,
-        // El DragHandle es la rayita gris horizontal de arriba
         dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0xFFE0E0E0)) }
     ) {
         Column(

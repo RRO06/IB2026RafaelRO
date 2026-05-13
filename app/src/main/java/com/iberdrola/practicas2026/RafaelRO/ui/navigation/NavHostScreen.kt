@@ -32,13 +32,13 @@ import com.iberdrola.practicas2026.RafaelRO.ui.screens.list_facturas.ListadoFact
 @Composable
 fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
 
-    val analytics= Firebase.analytics
+    val analytics = Firebase.analytics
 
     DisposableEffect(navController) {
         val listener = NavController.OnDestinationChangedListener { _, detination, _ ->
             analytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_NAME, detination.route ?: "Unknown")
-                param(FirebaseAnalytics.Param.SCREEN_CLASS,"MainActivity")
+                param(FirebaseAnalytics.Param.SCREEN_CLASS, "MainActivity")
             }
         }
         navController.addOnDestinationChangedListener(listener)
@@ -58,11 +58,24 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
 
         composable(Screen.Home.route) { HomeRoute(navController, modifier) }
 
-        composable(Screen.ListadoFacturas.route) { ListadoFacturasRoute(it, navController, modifier) }
+        composable(Screen.ListadoFacturas.route) {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            ListadoFacturasRoute(
+                it,
+                navController,
+                modifier,
+                onBackFromFacturas = { homeViewModel.onBackFromFacturas() }
+            )
+        }
 
         composable(Screen.Filtro.route) { FiltroRoute(it, navController, modifier) }
 
-        composable(Screen.FacturaElectronica.route) { FacturaElectronicaRoute(navController, modifier) }
+        composable(Screen.FacturaElectronica.route) {
+            FacturaElectronicaRoute(
+                navController,
+                modifier
+            )
+        }
 
         composable(
             route = Screen.DetalleFactura.route,
@@ -84,15 +97,21 @@ fun NavHostScreen(navController: NavHostController, modifier: Modifier) {
 fun NavHostController.safePopBackStack(expectedRoute: String) {
     val currentEntry = currentBackStackEntry
     if (currentEntry?.destination?.route == expectedRoute &&
-        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED
+    ) {
         popBackStack()
     }
 }
 
-fun NavHostController.safePopBackStackTo(expectedRoute: String, targetRoute: String, inclusive: Boolean = false) {
+fun NavHostController.safePopBackStackTo(
+    expectedRoute: String,
+    targetRoute: String,
+    inclusive: Boolean = false
+) {
     val currentEntry = currentBackStackEntry
     if (currentEntry?.destination?.route == expectedRoute &&
-        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED
+    ) {
         popBackStack(targetRoute, inclusive)
     }
 }
@@ -109,7 +128,8 @@ fun NavHostController.safeNavigate(
 ) {
     val currentEntry = currentBackStackEntry
     if (currentEntry?.destination?.route == expectedRoute &&
-        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED
+    ) {
         if (builder != null) navigate(targetRoute, builder) else navigate(targetRoute)
         action?.invoke()
     }
@@ -122,32 +142,54 @@ private fun HomeRoute(navController: NavHostController, modifier: Modifier) {
     val homeViewModel: HomeViewModel = hiltViewModel()
     HomeScreen(
         viewModel = homeViewModel,
-        onNavigateToFacturas = { navController.safeNavigate(Screen.Home.route, Screen.ListadoFacturas.route) },
-        onNavigateToFacturaElectronica = { navController.safeNavigate(Screen.Home.route, Screen.FacturaElectronica.route) },
+        onNavigateToFacturas = {
+            navController.safeNavigate(
+                Screen.Home.route,
+                Screen.ListadoFacturas.route
+            )
+        },
+        onNavigateToFacturaElectronica = {
+            navController.safeNavigate(
+                Screen.Home.route,
+                Screen.FacturaElectronica.route
+            )
+        },
         onNavigateToPerfil = { navController.safeNavigate(Screen.Home.route, Screen.Perfil.route) },
         modifier = modifier
     )
 }
 
 @Composable
-private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostController, modifier: Modifier) {
+private fun ListadoFacturasRoute(
+    it: NavBackStackEntry,
+    navController: NavHostController,
+    modifier: Modifier,
+    onBackFromFacturas: () -> Unit
+) {
     val viewModel: ListadoFacturasViewModel = hiltViewModel(it)
-    val filtrosRecibidos by it.savedStateHandle.getStateFlow("filter_data", FiltUiState()).collectAsState()
+    val filtrosRecibidos by it.savedStateHandle.getStateFlow("filter_data", FiltUiState())
+        .collectAsState()
     ListadoFacturasScreen(
         viewModel = viewModel,
-        onBack = { navController.safePopBackStack(Screen.ListadoFacturas.route) },
+        onBack = {
+            onBackFromFacturas()
+            navController.safePopBackStack(Screen.ListadoFacturas.route)
+                 },
         onFilter = { currentFilt ->
-            // Usamos el parámetro nombrado 'action' porque queremos que se ejecute DESPUÉS de navegar
             navController.safeNavigate(
                 expectedRoute = Screen.ListadoFacturas.route,
                 targetRoute = Screen.Filtro.route,
                 action = {
-                    navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] = currentFilt
+                    navController.getBackStackEntry(Screen.Filtro.route).savedStateHandle["filter_data"] =
+                        currentFilt
                 }
             )
         },
         onFacturaClick = { id ->
-            navController.safeNavigate(Screen.ListadoFacturas.route, Screen.DetalleFactura.createRoute(id))
+            navController.safeNavigate(
+                Screen.ListadoFacturas.route,
+                Screen.DetalleFactura.createRoute(id)
+            )
         },
         filtState = filtrosRecibidos,
         modifier = modifier
@@ -155,7 +197,11 @@ private fun ListadoFacturasRoute(it: NavBackStackEntry, navController: NavHostCo
 }
 
 @Composable
-private fun FiltroRoute(it: NavBackStackEntry, navController: NavHostController, modifier: Modifier) {
+private fun FiltroRoute(
+    it: NavBackStackEntry,
+    navController: NavHostController,
+    modifier: Modifier
+) {
     val initialFilters = it.savedStateHandle.get<FiltUiState>("filter_data")
     FilterScreen(
         viewModel = hiltViewModel(),
@@ -164,14 +210,21 @@ private fun FiltroRoute(it: NavBackStackEntry, navController: NavHostController,
         onApply = { filtState ->
             val currentEntry = navController.currentBackStackEntry
             if (currentEntry?.destination?.route == Screen.Filtro.route &&
-                currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                navController.previousBackStackEntry?.savedStateHandle?.set("filter_data", filtState)
+                currentEntry.lifecycle.currentState == Lifecycle.State.RESUMED
+            ) {
+                navController.previousBackStackEntry?.savedStateHandle?.set(
+                    "filter_data",
+                    filtState
+                )
                 navController.popBackStack()
             }
         },
         modifier = modifier,
         onClear = {
-            navController.previousBackStackEntry?.savedStateHandle?.set("filter_data", FiltUiState())
+            navController.previousBackStackEntry?.savedStateHandle?.set(
+                "filter_data",
+                FiltUiState()
+            )
         }
     )
 }
@@ -183,8 +236,9 @@ private fun FacturaElectronicaRoute(navController: NavHostController, modifier: 
         onBack = { navController.safePopBackStack(Screen.FacturaElectronica.route) },
         modifier = modifier,
         onContratoClick = { contrato ->
-            val targetRoute = if (contrato.estado) Screen.DetalleFacturaActiva.createRoute(contrato.id)
-                        else Screen.ActivarFactura.createRoute(contrato.id)
+            val targetRoute =
+                if (contrato.estado) Screen.DetalleFacturaActiva.createRoute(contrato.id)
+                else Screen.ActivarFactura.createRoute(contrato.id)
             navController.safeNavigate(Screen.FacturaElectronica.route, targetRoute)
         }
     )

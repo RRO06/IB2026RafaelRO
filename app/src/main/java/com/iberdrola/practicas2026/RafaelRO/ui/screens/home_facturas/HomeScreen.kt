@@ -165,6 +165,53 @@ fun HomeContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                // 'this@Column' porque detecta que esta en un Box, pero la función necesita el scope
+                // de la columna para que afecte correctamente al flujo del diseño vertical
+                this@Column.AnimatedVisibility(
+                    visible = uiState.showThankYouMessage,
+                    enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+                    modifier = Modifier
+                        .systemBarsPadding()
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        color = Color.White,
+                        border = BorderStroke(1.5.dp, GreenAplication),
+                        shadowElevation = 8.dp
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 12.dp, horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = GreenAplication,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "¡Gracias por tu respuesta!",
+                                color = GreenAplication,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             Button(
                 onClick = {
                     actions.onNavigateToFacturas()
@@ -209,45 +256,6 @@ fun DebugCrashCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
-        }
-
-        AnimatedVisibility(
-            visible = showThankYouMessage,
-            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-            modifier = Modifier
-                .padding(top = 48.dp)
-                .systemBarsPadding()
-        ) {
-            Surface(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                border = BorderStroke(1.5.dp, GreenAplication),
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 12.dp, horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = GreenAplication,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "¡Gracias por tu valoración!",
-                        color = GreenAplication,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
-            }
         }
     }
 }
@@ -413,7 +421,9 @@ fun SelectorDeOrigen(esNube: Boolean, onOptionSelected: (Boolean) -> Unit) {
 @Composable
 fun HomeScreenPreview() {
     HomeContent(
-        uiState = HomeUiState(),
+        uiState = HomeUiState(
+            showThankYouMessage = true
+        ),
         actions = HomeActions()
     )
 }
