@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
+import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
 import com.iberdrola.practicas2026.RafaelRO.domain.usercase.GetContratosUseCase
 import com.iberdrola.practicas2026.RafaelRO.domain.usercase.UpdateContratoUseCase
@@ -37,32 +38,44 @@ class GestionViewModel @Inject constructor(
         viewModelScope.launch {
             state = state.copy(isLoading = true)
             getContratosUseCase().collect { result ->
-                when (result) {
-                    is BaseResult.Sucess -> {
-                        val encontrado = result.data.find { it.id == id }
-                        val isActivacion = encontrado?.estado == false
-                        state = state.copy(
-                            contrato = encontrado,
-                            esFlujoActivacion = isActivacion,
-                            emailFormulario = if (isFirstLoad) {
-                                ""
-                            } else state.emailFormulario,
-                            isEmailValido = if (isFirstLoad) {
-                                if (isActivacion) false else (encontrado?.email?.matches(emailPattern) ?: false)
-                            } else state.isEmailValido,
-                            isLoading = false
-                        )
-                        if (isFirstLoad) {
-                            generarNuevoCodigo()
-                            isFirstLoad = false
-                        }
-                    }
-
-                    is BaseResult.Error -> {
-                        state = state.copy(error = "Error al cargar contrato", isLoading = false)
-                    }
-                }
+                handleCargarDatosResult(result, id)
             }
+        }
+    }
+
+    private fun handleCargarDatosResult(result: BaseResult<List<Contrato>>, id: Int) {
+        when (result) {
+            is BaseResult.Sucess -> {
+                val encontrado = result.data.find { it.id == id }
+                handleCargarDatosExito(encontrado)
+            }
+            is BaseResult.Error -> {
+                state = state.copy(error = "Error al cargar contrato", isLoading = false)
+            }
+        }
+    }
+
+    private fun handleCargarDatosExito(encontrado: Contrato?) {
+        val isActivacion = encontrado?.estado == false
+
+        val nextEmailFormulario = if (isFirstLoad) "" else state.emailFormulario
+        val nextEmailValido = if (isFirstLoad) {
+            if (isActivacion) false else (encontrado?.email?.matches(emailPattern) ?: false)
+        } else {
+            state.isEmailValido
+        }
+
+        state = state.copy(
+            contrato = encontrado,
+            esFlujoActivacion = isActivacion,
+            emailFormulario = nextEmailFormulario,
+            isEmailValido = nextEmailValido,
+            isLoading = false
+        )
+
+        if (isFirstLoad) {
+            generarNuevoCodigo()
+            isFirstLoad = false
         }
     }
 
@@ -88,7 +101,7 @@ class GestionViewModel @Inject constructor(
         val id = contratoId ?: return
         viewModelScope.launch {
             state = state.copy(isVerifying = true)
-            val email = if (state.emailFormulario.isBlank()) state.contrato?.email ?: "" else state.emailFormulario
+            val email = state.emailFormulario.ifBlank { state.contrato?.email ?: "" }
             val success = updateContratoUseCase(id, email, false)
             if (success) {
                 state = state.copy(isVerifying = false)
@@ -104,14 +117,15 @@ class GestionViewModel @Inject constructor(
     }
 
     fun guardarCambiosSinCodigo(onSuccess: () -> Unit) {
-        onSuccess()
+        ejecutarProcesoGuardado(validarCodigo = false, onSuccess = onSuccess)
     }
 
     private fun ejecutarProcesoGuardado(validarCodigo: Boolean, onSuccess: () -> Unit) {
         val id = contratoId ?: return
 
         viewModelScope.launch {
-            state = state.copy(isVerifying = true, errorCodigo = false)
+            // Limpiamos banner de éxito anterior al empezar una nueva verificación
+            state = state.copy(isVerifying = true, errorCodigo = false, mostrarBannerExito = false)
             val codigoCorrecto = state.codigoVerificacion == state.codigoGenerado
             val puedeProceder = if (validarCodigo) codigoCorrecto else true
 
@@ -132,9 +146,6 @@ class GestionViewModel @Inject constructor(
                 }
             } else {
                 state = state.copy(isVerifying = false, errorCodigo = true)
-                delay(4000)
-                state = state.copy(errorCodigo = false)
-
             }
         }
     }
@@ -144,7 +155,7 @@ class GestionViewModel @Inject constructor(
     }
 
     fun onCodigoChanged(codigo: String) {
-        if (codigo.length <= 6) state = state.copy(codigoVerificacion = codigo, errorCodigo = false)
+        if (codigo.length <= 6) state = state.copy(codigoVerificacion = codigo)
     }
 
     fun onTermsAccepted(aceptado: Boolean) {
@@ -161,10 +172,20 @@ class GestionViewModel @Inject constructor(
     fun reenviarCodigo() {
         if (state.isVerifying || state.reenvioEstado is ReenvioEstado.Agotado) return
         viewModelScope.launch {
-            state = state.copy(isVerifying = true, mostrarBannerExito = false)
+            // Limpiamos banner de error anterior al reenviar
+            state = state.copy(
+                isVerifying = true,
+                mostrarBannerExito = false,
+                errorCodigo = false,
+                ultimoCodigoEnviado = null
+            )
             delay(1500)
             val nuevosIntentos = state.intentosRestantes - 1
-            val nuevoEstado = if (nuevosIntentos <= 0) ReenvioEstado.Agotado else ReenvioEstado.ConIntentos(nuevosIntentos)
+            val nuevoEstado = when{
+                nuevosIntentos == 1 -> ReenvioEstado.ConIntento(nuevosIntentos)
+                nuevosIntentos > 1 -> ReenvioEstado.ConIntentos(nuevosIntentos)
+                else -> ReenvioEstado.Agotado
+            }
             val nuevoCodigo = (100000..999999).random().toString()
             state = state.copy(
                 isVerifying = false,
@@ -174,13 +195,14 @@ class GestionViewModel @Inject constructor(
                 codigoGenerado = nuevoCodigo,
                 ultimoCodigoEnviado = nuevoCodigo
             )
-            delay(4000)
-            state = state.copy(mostrarBannerExito = false)
+
         }
     }
+
     fun logSiguientePaso(contratoId: Int) {
         analyticsManager.logClick("activar_siguiente_paso", "activar_factura", mapOf("id" to contratoId.toString()))
     }
+
     fun dismissBanner() {
         state = state.copy(
             mostrarBannerExito = false,

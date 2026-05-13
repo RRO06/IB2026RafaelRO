@@ -5,7 +5,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Euro
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Receipt
@@ -65,7 +66,7 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.BotonAtras
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.ErrorScreen
-import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusBadge
+import com.iberdrola.practicas2026.RafaelRO.ui.common.components.FacturaStatusDetails
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
@@ -181,6 +182,8 @@ fun DetalleFacturaContentSuccess(
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = "Factura de ${factura.tipo}",
                 style = MaterialTheme.typography.bodyLarge,
@@ -191,39 +194,49 @@ fun DetalleFacturaContentSuccess(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = GreenAplication.copy(alpha = 0.05f)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, GreenAplication.copy(alpha = 0.2f))
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.5.dp, GreenAplication.copy(alpha = 0.3f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp, horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "IMPORTE TOTAL",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = GreenAplication,
-                        fontWeight = FontWeight.ExtraBold
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         Text(
                             text = "%.2f".format(factura.valor),
                             style = MaterialTheme.typography.headlineLarge.copy(
-                                fontSize = 48.sp,
+                                fontSize = 52.sp,
                                 fontWeight = FontWeight.Black
                             ),
                             color = Color.Black
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = " €",
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            color = Color.Black
+                            text = "€",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = GreenAplication
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    FacturaStatusBadge(estado = factura.estado)
+                    FacturaStatusDetails(
+                        estado = factura.estado,
+                        modifier = Modifier.fillMaxWidth(0.85f)
+                    )
                 }
             }
 
@@ -236,12 +249,23 @@ fun DetalleFacturaContentSuccess(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            InfoRow(icon = Icons.Default.Receipt, label = "Número de factura", value = "FX-${factura.id}9283")
-            InfoRow(icon = Icons.Default.CalendarMonth, label = "Fecha de emisión", value = UtilyClass.toLongSpanishDate(factura.fechaExpedicion))
-            InfoRow(icon = Icons.Default.History, label = "Periodo de consumo", value = "${UtilyClass.toSpanishMediumDate(factura.fechaInicio)} - ${UtilyClass.toSpanishMediumDate(factura.fechaFinal)}")
-            InfoRow(icon = Icons.Default.Euro, label = "Forma de pago", value = "Domiciliación bancaria")
+            InfoRow(
+                icon = Icons.Default.Receipt,
+                label = "Número de factura",
+                value = "FX-${factura.id}9283"
+            )
+            InfoRow(
+                icon = Icons.Default.CalendarMonth,
+                label = "Fecha de emisión",
+                value = UtilyClass.toLongSpanishDate(factura.fechaExpedicion)
+            )
+            InfoRow(
+                icon = Icons.Default.History,
+                label = "Periodo de consumo",
+                value = "${UtilyClass.toSpanishMediumDate(factura.fechaInicio)} - ${UtilyClass.toSpanishMediumDate(factura.fechaFinal)}"
+            )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -266,7 +290,6 @@ fun DetalleFacturaContentSuccess(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
         Button(
@@ -317,12 +340,12 @@ fun DownloadSuccessDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("¡Genial!", color = GreenAplication, fontWeight = FontWeight.Bold)
+                Text("Vale", color = GreenAplication, fontWeight = FontWeight.Bold)
             }
         },
         title = {
             Text(
-                text = "¡Descarga completada!",
+                text = "Estamos trabajando en esta funcionalidad",
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
                 fontWeight = FontWeight.Bold
@@ -333,20 +356,12 @@ fun DownloadSuccessDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_download_sucess))
+                val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anim_engranajes))
                 
                 LottieAnimation(
                     composition = composition,
                     iterations = LottieConstants.IterateForever,
                     modifier = Modifier.size(150.dp)
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "Tu factura ya está a salvo en tu dispositivo. ✨\n¡Ya puedes revisarla cuando quieras!",
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         },
@@ -367,12 +382,21 @@ fun InfoRow(icon: ImageVector, label: String, value: String) {
             imageVector = icon,
             contentDescription = null,
             tint = GreenAplication,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(32.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(text = label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-            Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
     HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))

@@ -5,6 +5,7 @@ import com.iberdrola.practicas2026.RafaelRO.domain.model.Contrato
 sealed class ReenvioEstado {
     object Inicial : ReenvioEstado()
     data class ConIntentos(val restantes: Int) : ReenvioEstado()
+    data class ConIntento(val restantes: Int) : ReenvioEstado()
     object Agotado : ReenvioEstado()
 }
 

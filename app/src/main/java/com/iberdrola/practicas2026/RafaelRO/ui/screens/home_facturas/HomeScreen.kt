@@ -164,7 +164,7 @@ fun HomeContent(
                 onClick = actions.onNavigateToFacturaElectronica
             )
 
-            Spacer(modifier = Modifier.weight(1.5f))
+            Spacer(modifier = Modifier.weight(0.8f))
 
             SelectorDeOrigen(
                 esNube = uiState.esModoNube,
@@ -333,6 +333,7 @@ fun FacturaElectronicaCard(onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2E5148)
                 )
+                Spacer(modifier = Modifier.padding(vertical = 2.dp))
                 Text(
                     text = "Gestiona tus contratos y cuida el medio ambiente.",
                     style = MaterialTheme.typography.bodySmall,

@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Sms
 import androidx.compose.material.icons.filled.Warning
@@ -44,12 +43,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,7 +66,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.IberdrolaTextField
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.IB2026RafaelROTheme
-import kotlinx.coroutines.delay
 
 data class VerificacionActions(
     val onCodigoChanged: (String) -> Unit = {},
@@ -100,12 +95,11 @@ fun VerificacionCodigoScreen(
     BackHandler { onBack() }
 
     LaunchedEffect(state.ultimoCodigoEnviado) {
-        state.ultimoCodigoEnviado?.let { codigo ->
-            codeToDisplay = codigo
-            showNotification = true
-            delay(5000)
+        if (state.ultimoCodigoEnviado == null) {
             showNotification = false
-            viewModel.toastMostrado()
+        } else {
+            codeToDisplay = state.ultimoCodigoEnviado
+            showNotification = true
         }
     }
 
@@ -143,7 +137,10 @@ fun VerificacionCodigoScreen(
         SMSNotification(
             visible = showNotification,
             code = codeToDisplay,
-            onClose = { showNotification = false }
+            onClose = {
+                showNotification = false
+                viewModel.toastMostrado()
+            }
         )
     }
 }
@@ -165,7 +162,10 @@ fun VerificacionCodigoContent(
                 .fillMaxSize()
                 .systemBarsPadding()
         ) {
-            VerificacionHeader(onClose = actions.onClose, esFlujoActivacion = state.esFlujoActivacion)
+            VerificacionHeader(
+                onClose = actions.onClose,
+                esFlujoActivacion = state.esFlujoActivacion
+            )
 
             SolidProgressBar(progressValue = 0.75f)
 
@@ -205,21 +205,21 @@ fun VerificacionCodigoContent(
 }
 
 @Composable
-private fun VerificacionHeader(onClose: () -> Unit, esFlujoActivacion : Boolean = false) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 10.dp)) {
+private fun VerificacionHeader(onClose: () -> Unit, esFlujoActivacion: Boolean = false) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) {
             Icon(Icons.Default.Close, contentDescription = null, tint = Color(0xFF006644))
         }
-        if (esFlujoActivacion)
-        {
+        if (esFlujoActivacion) {
             Text(
                 text = "Activa tu factura electrónica",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
             )
-        }
-        else{
+        } else {
             Text(
                 text = "Modificar email",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold)
@@ -279,7 +279,8 @@ private fun ReenvioInfoCard(
 ) {
     val agotado = estado is ReenvioEstado.Agotado
     val cardBackground = if (agotado) Color(0xFFFFE0B2) else Color(0xFFE3F2FD)
-    val cardShape = RoundedCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
+    val cardShape =
+        RoundedCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
 
     Box(
         modifier = Modifier
@@ -333,6 +334,7 @@ private fun ReenvioMessage(estado: ReenvioEstado) {
     val mensaje = when (estado) {
         is ReenvioEstado.Inicial -> "Si no lo encuentras, podemos volver a enviar el SMS."
         is ReenvioEstado.ConIntentos -> "Si no lo encuentras, podemos volver a enviar el SMS. Recuerda que hoy te quedan ${estado.restantes} intentos."
+        is ReenvioEstado.ConIntento -> "Si no lo encuentras, podemos volver a enviar el SMS. Recuerda que hoy te queda ${estado.restantes} intento."
         is ReenvioEstado.Agotado -> "Has superado el límite de reenvíos para hoy. Por favor, inténtalo de nuevo más tarde."
     }
 
@@ -377,6 +379,7 @@ private fun VerificacionBottomSection(
             SuccessBanner(onDismiss = onDismissBanner)
         }
 
+
         AnimatedVisibility(
             visible = mostrarError,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -384,6 +387,7 @@ private fun VerificacionBottomSection(
         ) {
             ErrorBanner(onDismiss = onDismissBanner)
         }
+
 
         AnimatedVisibility(
             visible = !mostrarBanner && !mostrarError,
@@ -428,7 +432,11 @@ private fun VerificacionBottomSection(
                     disabledContainerColor = Color(0xFFE8F3EF)
                 )
             ) {
-                Text("Siguiente", fontWeight = FontWeight.Bold, color = if (codigoValid) Color.White else Color.Gray)
+                Text(
+                    "Siguiente",
+                    fontWeight = FontWeight.Bold,
+                    color = if (codigoValid) Color.White else Color.Gray
+                )
             }
         }
         Spacer(modifier = Modifier.height(36.dp))
@@ -463,7 +471,12 @@ private fun SuccessBanner(onDismiss: () -> Unit) {
                 color = Color.Black
             )
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Black)
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Black
+                )
             }
         }
     }
@@ -489,9 +502,15 @@ private fun ErrorBanner(onDismiss: () -> Unit) {
                 text = "El código introducido no es correcto",
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Red)
+                color = Color.Red
+            )
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Red)
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Red
+                )
             }
         }
     }
@@ -512,12 +531,24 @@ private fun SMSNotification(visible: Boolean, code: String, onClose: () -> Unit)
             colors = CardDefaults.cardColors(containerColor = Color(0xFF006644)),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(Icons.Default.Sms, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Nuevo código de seguridad", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelSmall)
-                    Text("Tu código es: $code", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(
+                        "Nuevo código de seguridad",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Text(
+                        "Tu código es: $code",
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp
+                    )
                 }
                 IconButton(onClick = onClose) {
                     Icon(Icons.Default.Close, contentDescription = null, tint = Color.White)
