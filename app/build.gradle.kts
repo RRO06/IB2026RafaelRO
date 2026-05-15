@@ -93,8 +93,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
-// Tarea para automatizar adb reverse tcp:3000 tcp:3000
-// Se ejecuta en cada compilación para asegurar que Mockoon sea accesible desde el dispositivo
+// Tarea para automatizar adb reverse tcp:3000 tcp:3000 para Mockoon
 tasks.register("adbReverse") {
     group = "custom"
     description = "Configura adb reverse para Mockoon en todos los dispositivos conectados"
@@ -103,7 +102,6 @@ tasks.register("adbReverse") {
         val adb = android.adbExecutable.absolutePath
 
         try {
-            // Obtenemos todos los dispositivos conectados que están listos
             val process = ProcessBuilder(adb, "devices").start()
             val devices = process.inputStream.bufferedReader().readText()
                 .lines()
@@ -125,9 +123,41 @@ tasks.register("adbReverse") {
     }
 }
 
-// Hook global para que se ejecute siempre antes de cualquier tarea de preBuild o instalación
+// Tarea para habilitar el modo DebugView de Firebase Analytics automáticamente
+tasks.register("enableFirebaseDebug") {
+    group = "custom"
+    description = "Habilita el modo DebugView de Firebase Analytics en todos los dispositivos conectados"
+    doLast {
+        val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+        val adb = android.adbExecutable.absolutePath
+        val appId = "com.iberdrola.practicas2026.RafaelRO"
+
+        try {
+            val process = ProcessBuilder(adb, "devices").start()
+            val devices = process.inputStream.bufferedReader().readText()
+                .lines()
+                .filter { it.endsWith("\tdevice") }
+                .map { it.split("\t")[0] }
+
+            if (devices.isEmpty()) {
+                println("--- [Firebase] No se detectaron dispositivos para habilitar DebugView. ---")
+            } else {
+                devices.forEach { device ->
+                    println("--- [Firebase] Habilitando DebugView en: $device para $appId ---")
+                    ProcessBuilder(adb, "-s", device, "shell", "setprop", "debug.firebase.analytics.app", appId).start().waitFor()
+                }
+                println("--- [Firebase] DebugView habilitado con éxito. ---")
+            }
+        } catch (e: Exception) {
+            println("--- [Firebase] Error al habilitar DebugView: ${e.message} ---")
+        }
+    }
+}
+
+// Hook global para que se ejecuten las tareas antes de construir o instalar
 tasks.configureEach {
     if (this.name == "preBuild" || this.name.startsWith("install")) {
         dependsOn("adbReverse")
+        dependsOn("enableFirebaseDebug")
     }
 }
