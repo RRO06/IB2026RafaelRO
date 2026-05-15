@@ -89,6 +89,7 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun refreshData() {
+        logClick("pull_to_refresh", "listado_facturas")
         viewModelScope.launch {
             stateUI = stateUI.copy(isRefreshing = true)
             stateData = ListadoFacturasState.Loading
@@ -147,6 +148,7 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     fun limpiarFiltros() {
+        logClick("boton_limpiar_filtros_error", "listado_facturas")
         val resetFiltros = calcularRangoInicial(stateUI.facturasBase)
         Log.d("ListadoFacturaVM", "limpiarFiltros: $resetFiltros")
         savedStateHandle["filter_data"] = resetFiltros
@@ -166,13 +168,13 @@ class ListadoFacturasViewModel @Inject constructor(
 
     fun onFilterLuz() {
         if (!stateUI.isLuzEnabled) return
-        analyticsManager.logClick("filtro_rapido_luz", "listado_facturas")
+        analyticsManager.registrarClic("filtro_rapido_luz", "listado_facturas")
         actualizarInterfaz(Tipo.Luz)
     }
 
     fun onFilterGas() {
         if (!stateUI.isGasEnabled) return
-        analyticsManager.logClick("filtro_rapido_gas", "listado_facturas")
+        analyticsManager.registrarClic("filtro_rapido_gas", "listado_facturas")
         actualizarInterfaz(Tipo.Gas)
     }
 
@@ -319,5 +321,9 @@ class ListadoFacturasViewModel @Inject constructor(
             showDatePickerTo = false,
             dateError = null
         ) != base.copy(showDatePickerFrom = false, showDatePickerTo = false, dateError = null)
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }

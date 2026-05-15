@@ -91,8 +91,13 @@ fun ListadoFacturasScreen(
 
     BackHandler {
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "listado_facturas")
             onBack()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "listado_facturas")
     }
 
     LaunchedEffect(filtState) {
@@ -104,11 +109,13 @@ fun ListadoFacturasScreen(
         stateUI = viewModel.stateUI,
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "listado_facturas")
                 onBack()
             }
         },
         onFilter = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_abrir_filtros", "listado_facturas")
                 onFilter(viewModel.stateUI.filtros)
             }
         },
@@ -116,6 +123,7 @@ fun ListadoFacturasScreen(
         onFilterGas = { viewModel.onFilterGas() },
         onFacturaClick = { id ->
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("item_factura", "listado_facturas", mapOf("facturaId" to id.toString()))
                 onFacturaClick(id)
             }
         },
