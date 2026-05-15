@@ -5,9 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.analytics
-import com.google.firebase.analytics.logEvent
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
 import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +58,7 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun onOpinionDada() {
+        logClick("votar_opinion", "home_bottom_sheet")
         stateUI = stateUI.copy(
             showBottomSheet = false,
             showThankYouMessage = true
@@ -76,6 +74,7 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun onRecordarMasTarde() {
+        logClick("recordar_tarde_opinion", "home_bottom_sheet")
         stateUI = stateUI.copy(showBottomSheet = false)
 
         viewModelScope.launch {
@@ -84,6 +83,7 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun onDismissSheet() {
+        logClick("cerrar_sheet_opinion", "home_bottom_sheet")
         stateUI = stateUI.copy(showBottomSheet = false)
 
         viewModelScope.launch {
@@ -93,16 +93,20 @@ class HomeViewModel @Inject constructor(
     }
     fun onModoNubeChanged(value : Boolean) {
         val modo = if (value) "nube" else "local"
-        analyticsManager.logClick("cambio_modo_datos", "home", mapOf("modo" to modo))
+        analyticsManager.registrarClic("cambio_modo_datos", "home", mapOf("modo" to modo))
         viewModelScope.launch {
             settingsDataStore.setModoNube(value)
         }
     }
     fun registrarClickFacturas() {
-        analyticsManager.logClick("ver_mis_facturas", "home")
+        analyticsManager.registrarClic("ver_mis_facturas", "home")
     }
 
     fun onNavigateToFacturaElectronica() {
-        analyticsManager.logClick("acceso_factura_electronica", "home")
+        analyticsManager.registrarClic("acceso_factura_electronica", "home")
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }

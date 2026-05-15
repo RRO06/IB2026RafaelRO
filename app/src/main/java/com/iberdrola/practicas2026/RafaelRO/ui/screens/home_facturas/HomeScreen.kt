@@ -49,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,9 +91,20 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState = viewModel.stateUI
 
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "home")
+    }
+
+    LaunchedEffect(uiState.showBottomSheet) {
+        if (uiState.showBottomSheet) {
+            viewModel.logClick("visualizacion_bottom_sheet_opinion", "home")
+        }
+    }
+
     val actions = HomeActions(
         onNavigateToFacturas = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.registrarClickFacturas()
                 onNavigateToFacturas()
             }
         },
@@ -102,15 +114,18 @@ fun HomeScreen(
         onDismissSheet = viewModel::onDismissSheet,
         onNavigateToFacturaElectronica = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.onNavigateToFacturaElectronica()
                 onNavigateToFacturaElectronica()
             }
         },
         onNavigateToPerfil = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("editar_perfil", "home")
                 onNavigateToPerfil()
             }
         },
         onForceCrash = {
+            viewModel.logClick("boton_forzar_error", "home")
             throw RuntimeException("Test Crash desde el botón de la Home")
         },
         registrarClickFacturas = viewModel::registrarClickFacturas
@@ -246,7 +261,6 @@ fun HomeContent(
             Button(
                 onClick = {
                     actions.onNavigateToFacturas()
-                    actions.registrarClickFacturas()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
