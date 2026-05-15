@@ -7,7 +7,7 @@ data class PerfilUiState(
     val email: String = "",
     val telefono: String = "",
     val isLoading: Boolean = false,
-    // Nuevos campos de validación
+    val nombreError: String? = null,
     val emailError: String? = null,
     val telefonoError: String? = null
 )

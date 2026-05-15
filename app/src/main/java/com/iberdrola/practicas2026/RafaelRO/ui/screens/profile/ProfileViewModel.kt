@@ -30,10 +30,11 @@ class PerfilViewModel @Inject constructor(
 
     val isFormValid: Boolean
         get() = stateUI.nombreUsuario.isNotBlank() &&
-                stateUI.email.isNotEmpty() &&
-                stateUI.telefono.isNotEmpty() &&
+                UtilyClass.isValidEmail(stateUI.email) &&
+                UtilyClass.isValidSpanishPhone(stateUI.telefono) &&
                 stateUI.emailError == null &&
-                stateUI.telefonoError == null
+                stateUI.telefonoError == null &&
+                stateUI.nombreError == null
 
     init {
         viewModelScope.launch {
@@ -50,7 +51,10 @@ class PerfilViewModel @Inject constructor(
     }
 
     fun onNombreChanged(v: String) {
-        stateUI = stateUI.copy(nombreUsuario = v)
+        stateUI = stateUI.copy(
+            nombreUsuario = v,
+            nombreError = if (v.isBlank()) "El nombre es obligatorio" else null
+        )
     }
 
     fun onEmailChanged(v: String) {
@@ -63,18 +67,22 @@ class PerfilViewModel @Inject constructor(
     }
 
     fun onTelefonoChanged(v: String) {
+        val filtered = v.filter { it.isDigit() }.take(9)
+        
         val error = when {
-            v.isEmpty() -> "El teléfono es obligatorio"
-            !UtilyClass.isValidSpanishPhone(v) -> "Número inválido (9 dígitos)"
+            filtered.isEmpty() -> "El teléfono es obligatorio"
+            filtered.isNotEmpty() && filtered[0] !in listOf('6', '7', '9') ->
+                "Debe empezar por 6, 7 o 9 (España)"
+            filtered.length < 9 -> "Faltan dígitos (9 requeridos)"
             else -> null
         }
-        stateUI = stateUI.copy(telefono = v, telefonoError = error)
+        
+        stateUI = stateUI.copy(telefono = filtered, telefonoError = error)
     }
 
     fun onFotoChanged(uri: Uri?) {
         if (uri != null) {
             logClick("cambiar_foto_perfil", "perfil")
-            // Guardamos en la carpeta temporal de caché del sistema
             val cachePath = UtilyClass.saveImageToCache(context, uri)
 
             if (cachePath != null) {
@@ -84,7 +92,31 @@ class PerfilViewModel @Inject constructor(
     }
 
     fun saveChanges(onSuccess: () -> Unit) {
-        if (!isFormValid) return
+        val nombreErr = if (stateUI.nombreUsuario.isBlank()) "El nombre es obligatorio" else null
+        
+        val emailErr = when {
+            stateUI.email.isEmpty() -> "El correo es obligatorio"
+            !UtilyClass.isValidEmail(stateUI.email) -> "Formato de correo inválido"
+            else -> null
+        }
+        
+        val telefonoErr = when {
+            stateUI.telefono.isEmpty() -> "El teléfono es obligatorio"
+            stateUI.telefono.isNotEmpty() && stateUI.telefono[0] !in listOf('6', '7', '9') ->
+                "Debe empezar por 6, 7 o 9 (España)"
+            stateUI.telefono.length < 9 -> "Faltan dígitos (9 requeridos)"
+            else -> null
+        }
+
+        if (nombreErr != null || emailErr != null || telefonoErr != null) {
+            stateUI = stateUI.copy(
+                nombreError = nombreErr,
+                emailError = emailErr,
+                telefonoError = telefonoErr
+            )
+            return
+        }
+
         logClick("boton_guardar_perfil", "perfil")
 
         viewModelScope.launch {

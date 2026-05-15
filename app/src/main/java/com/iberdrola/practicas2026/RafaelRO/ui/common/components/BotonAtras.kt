@@ -19,10 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.iberdrola.practicas2026.RafaelRO.R
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 
-/**
- * Componente reutilizable para el botón de navegación hacia atrás.
- * Mantiene la consistencia visual en toda la aplicación.
- */
 @Composable
 fun BotonAtras(
     onBack: () -> Unit,

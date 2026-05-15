@@ -87,9 +87,9 @@ fun PerfilScreen(
         viewModel.logClick("visualizacion_pantalla", "perfil")
     }
 
-    // Manejamos el botón físico de atrás
+    // Manejamos el botón físico de atrás: Bloqueado si está cargando
     BackHandler {
-        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+        if (!uiState.isLoading && lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
             viewModel.logClick("boton_atras_fisico", "perfil")
             onNavigateBack()
         }
@@ -107,7 +107,7 @@ fun PerfilScreen(
             }
         },
         onNavigateBack = {
-            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            if (!uiState.isLoading && lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
                 viewModel.logClick("boton_atras", "perfil")
                 onNavigateBack()
             }
@@ -131,16 +131,19 @@ fun PerfilContent(
     ) { uri -> actions.onFotoChanged(uri) }
 
     Scaffold(
-        containerColor = Color(0xFFF7F9F8), // Un fondo grisáceo muy claro casi blanco
+        containerColor = Color(0xFFF7F9F8),
         topBar = {
             TopAppBar(
                 title = { Text("Mi Perfil", fontWeight = FontWeight.Bold, color = GreenButton) },
                 navigationIcon = {
-                    IconButton(onClick = actions.onNavigateBack) {
+                    IconButton(
+                        onClick = actions.onNavigateBack,
+                        enabled = !uiState.isLoading
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = GreenButton
+                            tint = if (uiState.isLoading) Color.Gray else GreenButton
                         )
                     }
                 },
@@ -151,7 +154,7 @@ fun PerfilContent(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -160,7 +163,9 @@ fun PerfilContent(
             ProfileHeader(
                 fotoUri = uiState.fotoUri,
                 onFotoClick = {
-                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    if (!uiState.isLoading) {
+                        launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    }
                 }
             )
 
@@ -184,56 +189,55 @@ fun PerfilContent(
                     CustomOutlinedTextField(
                         value = uiState.nombreUsuario,
                         onValueChange = actions.onNombreChanged,
-                        label = "Nombre Completo",
-                        icon = Icons.Default.Person
+                        label = "* Nombre Completo",
+                        icon = Icons.Default.Person,
+                        error = uiState.nombreError
                     )
                     CustomOutlinedTextField(
                         value = uiState.email,
                         onValueChange = actions.onEmailChanged,
-                        label = "Correo electrónico",
+                        label = "* Correo electrónico",
                         icon = Icons.Default.Email,
                         error = uiState.emailError,
                         keyboardType = KeyboardType.Email
                     )
 
-                    // Campo Teléfono con validación de UtilyClass
                     CustomOutlinedTextField(
                         value = uiState.telefono,
                         onValueChange = actions.onTelefonoChanged,
-                        label = "Teléfono",
+                        label = "* Teléfono",
                         icon = Icons.Default.Phone,
                         error = uiState.telefonoError,
                         keyboardType = KeyboardType.Phone
                     )
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Botón estilo Iberdrola (GreenButton)
-                Button(
-                    onClick = actions.onSavePerfil,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp), // Más redondeado, estilo moderno
-                    enabled = !uiState.isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenButton,
-                        disabledContainerColor = Color.LightGray
+            Button(
+                onClick = actions.onSavePerfil,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                enabled = !uiState.isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GreenButton,
+                    disabledContainerColor = Color.LightGray
+                )
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
                     )
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.White
-                        )
-                    } else {
-                        Text(
-                            "GUARDAR CAMBIOS",
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
-                        )
-                    }
+                } else {
+                    Text(
+                        "GUARDAR CAMBIOS",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
                 }
             }
         }
@@ -247,11 +251,6 @@ fun ProfileHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(GreenAplication.copy(alpha = 0.1f), Color.Transparent)
-                )
-            )
             .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -290,10 +289,9 @@ fun ProfileHeader(
                 }
             }
 
-            // Botón de edición flotante
             Surface(
                 shape = CircleShape,
-                color = GreenButton, // Color corporativo
+                color = GreenButton,
                 modifier = Modifier
                     .size(36.dp)
                     .offset(x = (-4).dp, y = (-4).dp),

@@ -94,7 +94,6 @@ class FacturaRepository @Inject constructor(
         } catch (_: retrofit2.HttpException) {
             BaseResult.Error(InvokeException.ServerError)
         } catch (e: Exception) {
-            Log.e("REPO_DEBUG", "Error capturado: ${e.message}", e)
             BaseResult.Error(InvokeException.UnknownError(e.message))
         }
     }
