@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import com.iberdrola.practicas2026.RafaelRO.ui.common.components.UtilyClass
 import com.iberdrola.practicas2026.RafaelRO.ui.screens.profile.PerfilUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PerfilViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
+    private val analyticsManager: AnalyticsManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -71,6 +73,7 @@ class PerfilViewModel @Inject constructor(
 
     fun onFotoChanged(uri: Uri?) {
         if (uri != null) {
+            logClick("cambiar_foto_perfil", "perfil")
             // Guardamos en la carpeta temporal de caché del sistema
             val cachePath = UtilyClass.saveImageToCache(context, uri)
 
@@ -82,6 +85,7 @@ class PerfilViewModel @Inject constructor(
 
     fun saveChanges(onSuccess: () -> Unit) {
         if (!isFormValid) return
+        logClick("boton_guardar_perfil", "perfil")
 
         viewModelScope.launch {
             stateUI = stateUI.copy(isLoading = true)
@@ -101,5 +105,9 @@ class PerfilViewModel @Inject constructor(
                 Log.e("PerfilViewModel", "Error al guardar: ${e.message}")
             }
         }
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }

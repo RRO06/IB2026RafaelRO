@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -82,8 +83,17 @@ fun PerfilScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState = viewModel.stateUI
 
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "perfil")
+    }
+
     // Manejamos el botón físico de atrás
-    BackHandler { onNavigateBack() }
+    BackHandler {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "perfil")
+            onNavigateBack()
+        }
+    }
 
     // Vinculamos las acciones del ViewModel con la data class
     val actions = PerfilActions(
@@ -98,6 +108,7 @@ fun PerfilScreen(
         },
         onNavigateBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "perfil")
                 onNavigateBack()
             }
         }
