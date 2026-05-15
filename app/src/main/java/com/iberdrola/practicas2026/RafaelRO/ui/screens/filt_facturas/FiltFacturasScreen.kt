@@ -97,40 +97,63 @@ fun FilterScreen(
         initialFilters?.let { viewModel.initFilters(it) }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "filtro_facturas")
+    }
+
     val state by viewModel.uiState.collectAsState()
 
     // Manejamos el botón físico de atrás
-    BackHandler { onBack() }
+    BackHandler {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "filtro_facturas")
+            onBack()
+        }
+    }
 
     val actions = FiltUiActions(
         onDateFromClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_seleccionar_fecha_desde", "filtro_facturas")
                 viewModel.onDateFromClick()
             }
         },
         onDateToClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_seleccionar_fecha_hasta", "filtro_facturas")
                 viewModel.onDateToClick()
             }
         },
         onDateFromSelected = viewModel::onDateFromSelected,
         onDateToSelected = viewModel::onDateToSelected,
         onDismissDate = viewModel::dismissDatePickers,
-        onPriceChange = viewModel::onPriceRangeChanged,
-        onStateToggle = viewModel::onStateToggle,
+        onPriceChange = { range ->
+            viewModel.onPriceRangeChanged(range)
+        },
+        onStateToggle = { estado ->
+            viewModel.logClick("checkbox_estado", "filtro_facturas", mapOf("estado" to estado))
+            viewModel.onStateToggle(estado)
+        },
         onApply = { filtState ->
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_aplicar_filtros", "filtro_facturas")
                 onApply(filtState)
             }
         },
         onClear = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_borrar_filtros", "filtro_facturas")
                 viewModel.onClear()
                 onClear()
             }
         },
         onClearError = viewModel::clearError,
-        onBack = onBack
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "filtro_facturas")
+                onBack()
+            }
+        }
     )
 
     FilterContent(

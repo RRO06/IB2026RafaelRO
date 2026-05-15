@@ -3,6 +3,7 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.filt_facturas
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDate
 import javax.inject.Inject
@@ -10,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 
 @HiltViewModel
 class FilterViewModel @Inject constructor(
+    private val analyticsManager: AnalyticsManager,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -122,5 +124,9 @@ class FilterViewModel @Inject constructor(
     private fun updateState(newState: FiltUiState) {
         Log.d("FilterViewModel", "DEBUG: Updating state in SavedStateHandle: $newState")
         savedStateHandle["filter_data"] = newState
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }
