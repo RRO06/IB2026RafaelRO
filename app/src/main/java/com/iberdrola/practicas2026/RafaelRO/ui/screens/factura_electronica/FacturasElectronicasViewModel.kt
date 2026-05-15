@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import com.iberdrola.practicas2026.RafaelRO.data.remote.RemoteConfigManager
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Tipo
 import com.iberdrola.practicas2026.RafaelRO.domain.network.BaseResult
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class FacturasElectronicasViewModel @Inject constructor(
     private val getContratosUseCase: GetContratosUseCase,
-    private val remoteConfig: RemoteConfigManager
+    private val remoteConfig: RemoteConfigManager,
+    private val analyticsManager: AnalyticsManager
 ) : ViewModel() {
     var state by mutableStateOf(FacturasElectronicasUiState())
         private set
@@ -49,6 +51,7 @@ class FacturasElectronicasViewModel @Inject constructor(
     }
 
     fun refreshData() {
+        logClick("pull_to_refresh", "factura_electronica")
         viewModelScope.launch {
             state = state.copy(isRefreshing = true)
 
@@ -63,5 +66,9 @@ class FacturasElectronicasViewModel @Inject constructor(
             Tipo.Luz -> !remoteConfig.isContratosLuzEnabled()
             Tipo.Gas -> !remoteConfig.isContratosGasEnabled()
         }
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }

@@ -62,7 +62,7 @@ fun DetalleFacturaActivaScreen(
 
     BackHandler {
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-            viewModel.logClick("boton_atras_fisico", "detalle_factura_activa")
+            viewModel.logClick("boton_atras_fisico", "detalle_factura")
             showDialog = false
             onBack()
         }
@@ -73,31 +73,30 @@ fun DetalleFacturaActivaScreen(
         showDialog = showDialog,
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                viewModel.logClick("boton_atras", "detalle_factura_activa")
+                viewModel.logClick("boton_atras", "detalle_factura")
                 showDialog = false
                 onBack()
             }
         },
         onModificarClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                viewModel.logClick("boton_modificar_email", "detalle_factura_activa")
+                viewModel.logClick("boton_modificar_email", "detalle_factura")
                 showDialog = false
                 uiState.contrato?.id?.let { onModificarClick(it) }
             }
         },
         onDesactivarClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                viewModel.logClick("boton_desactivar_factura", "detalle_factura_activa")
+                viewModel.logClick("boton_desactivar_factura", "detalle_factura")
                 showDialog = true
             }
         },
         onDismissDialog = {
-            viewModel.logClick("cerrar_dialogo_desactivacion", "detalle_factura_activa")
+            viewModel.logClick("boton_cancelar_desactivar", "detalle_factura")
             showDialog = false
         },
         onConfirmDesactivar = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                viewModel.logClick("confirmar_desactivacion", "detalle_factura_activa")
                 showDialog = false
                 viewModel.desactivarFacturaElectronica { onBack() }
             }

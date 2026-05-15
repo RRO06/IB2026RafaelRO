@@ -18,6 +18,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,8 +47,13 @@ fun FacturaElectronicaScreen(
 
     BackHandler {
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "factura_electronica")
             onBack()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "factura_electronica")
     }
 
     FacturaElectronicaStatelessContent(
@@ -56,11 +62,19 @@ fun FacturaElectronicaScreen(
         onRefresh = { viewModel.refreshData() },
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "factura_electronica")
                 onBack()
             }
         },
         onContratoClick = { contrato ->
-            onContratoClick(contrato)
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick(
+                    "item_contrato", 
+                    "factura_electronica", 
+                    mapOf("tipo" to contrato.tipo.name, "estado" to contrato.estado.toString())
+                )
+                onContratoClick(contrato)
+            }
         },
         isContratoBloqueado = { tipo ->
             viewModel.isContratoBloqueado(tipo)
