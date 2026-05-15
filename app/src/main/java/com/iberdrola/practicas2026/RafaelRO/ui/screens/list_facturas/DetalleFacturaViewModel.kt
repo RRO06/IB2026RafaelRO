@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iberdrola.practicas2026.RafaelRO.data.local.datastore.SettingsDataStore
+import com.iberdrola.practicas2026.RafaelRO.data.remote.AnalyticsManager
 import com.iberdrola.practicas2026.RafaelRO.domain.model.Factura
 import com.iberdrola.practicas2026.RafaelRO.domain.usercase.GetFacturaByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +32,7 @@ sealed class DetalleFacturaState {
 class DetalleFacturaViewModel @Inject constructor(
     private val getFacturaByIdUseCase: GetFacturaByIdUseCase,
     private val settingsDataStore: SettingsDataStore,
+    private val analyticsManager: AnalyticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -62,5 +64,9 @@ class DetalleFacturaViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 }

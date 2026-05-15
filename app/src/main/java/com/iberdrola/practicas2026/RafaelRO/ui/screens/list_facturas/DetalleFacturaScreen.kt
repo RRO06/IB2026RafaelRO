@@ -41,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,17 +83,40 @@ fun DetalleFacturaScreen(
     var showDownloadDialog by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "detalle_factura")
+    }
+
+    BackHandler {
+        if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "detalle_factura")
+            onBack()
+        }
+    }
+
     DetalleFacturaStatelessContent(
         state = state,
-        onBack = onBack,
+        onBack = {
+            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "detalle_factura")
+                onBack()
+            }
+        },
         showDownloadDialog = showDownloadDialog,
-        onDismissDialog = { showDownloadDialog = false },
+        onDismissDialog = { 
+            viewModel.logClick("cerrar_dialogo_descarga", "detalle_factura")
+            showDownloadDialog = false 
+        },
         onDownloadClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_descargar_pdf", "detalle_factura")
                 showDownloadDialog = true
             }
         },
-        onRetry = { viewModel.loadFactura() },
+        onRetry = { 
+            viewModel.logClick("boton_reintentar_error", "detalle_factura")
+            viewModel.loadFactura() 
+        },
         modifier = modifier
     )
 }
@@ -107,8 +131,6 @@ fun DetalleFacturaStatelessContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BackHandler { onBack() }
-
     if (showDownloadDialog) {
         DownloadSuccessDialog(onDismiss = onDismissDialog)
     }
