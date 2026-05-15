@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.text.toRegex
 
 @HiltViewModel
 class GestionViewModel @Inject constructor(
@@ -26,7 +27,7 @@ class GestionViewModel @Inject constructor(
     var state by mutableStateOf(GestionUiState())
         private set
     private val contratoId: Int? = savedStateHandle["contratoId"]
-    private val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
+    private val emailPattern = "^[a-zA-Z0-9]+([._%+-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+([-.][a-zA-Z0-9]+)*\\.[a-zA-Z]{2,}$".toRegex()
     private var isFirstLoad = true
 
     init {
@@ -65,10 +66,13 @@ class GestionViewModel @Inject constructor(
             state.isEmailValido
         }
 
+        val emailOriginal = if (isFirstLoad) encontrado?.email ?: "" else state.emailOriginal
+
         state = state.copy(
             contrato = encontrado,
             esFlujoActivacion = isActivacion,
             emailFormulario = nextEmailFormulario,
+            emailOriginal = emailOriginal,
             isEmailValido = nextEmailValido,
             isLoading = false
         )
@@ -117,6 +121,11 @@ class GestionViewModel @Inject constructor(
     }
 
     fun guardarCambiosSinCodigo(onSuccess: () -> Unit) {
+        // Comparamos contra el email original que tenía el contrato antes de empezar a editar
+        if (state.emailFormulario == state.emailOriginal) {
+            state = state.copy(mostrarDialogoEmailIdentico = true)
+            return
+        }
         ejecutarProcesoGuardado(validarCodigo = false, onSuccess = onSuccess)
     }
 
@@ -209,6 +218,10 @@ class GestionViewModel @Inject constructor(
             mostrarBannerError = false,
             errorCodigo = false
         )
+    }
+
+    fun dismissDialogoEmailIdentico() {
+        state = state.copy(mostrarDialogoEmailIdentico = false)
     }
 
     fun verificarCodigo(codigo: String): Boolean = codigo.length == 6

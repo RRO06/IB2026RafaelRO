@@ -44,7 +44,6 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     private fun actualizarFlagsConfig() {
-
         stateUI = stateUI.copy(
             isLuzEnabled = remoteConfig.isContratosLuzEnabled(),
             isGasEnabled = remoteConfig.isContratosGasEnabled()
@@ -84,30 +83,17 @@ class ListadoFacturasViewModel @Inject constructor(
 
     private fun cargarDatosIniciales(tipoInicial: Tipo) {
         viewModelScope.launch {
-            when (val result = getFacturasUseCase()) {
-                is BaseResult.Sucess -> {
-                    stateUI = stateUI.copy(
-                        facturasBase = result.data,
-                        filtroTipoActual = tipoInicial
-                    )
-                    actualizarInterfaz(tipoInicial)
-                }
-
-                is BaseResult.Error -> {
-                    refreshData()
-                }
-            }
+            stateUI = stateUI.copy(filtroTipoActual = tipoInicial)
+            cargarDatosInternal()
         }
     }
 
     fun refreshData() {
         viewModelScope.launch {
             stateUI = stateUI.copy(isRefreshing = true)
+            stateData = ListadoFacturasState.Loading
             try {
-
-                val configResult = remoteConfig.fetchAndActivate()
-                Log.d("ListadoFacturaVM", "RemoteConfig fetch success: $configResult")
-
+                remoteConfig.fetchAndActivate()
                 actualizarFlagsConfig()
 
                 if (!stateUI.isLuzEnabled && !stateUI.isGasEnabled) {
@@ -127,9 +113,7 @@ class ListadoFacturasViewModel @Inject constructor(
     }
 
     private suspend fun cargarDatosInternal() {
-        if (!stateUI.isRefreshing) {
-            stateData = ListadoFacturasState.Loading
-        }
+        stateData = ListadoFacturasState.Loading
 
         val result = getFacturasUseCase()
         delay((1000L..3000L).random())
@@ -142,6 +126,7 @@ class ListadoFacturasViewModel @Inject constructor(
                     facturasBase = result.data,
                     isFallback = isFallback
                 )
+                stateData = ListadoFacturasState.Success(result.data, isFallback)
                 actualizarInterfaz(stateUI.filtroTipoActual)
             }
 
@@ -154,6 +139,8 @@ class ListadoFacturasViewModel @Inject constructor(
                         is InvokeException.UnknownError -> "Se ha producido un error inesperado" to ListadoFacturasState.ErrorType.GENERIC
                     }
                     stateData = ListadoFacturasState.Error(mensaje, type)
+                } else {
+                    actualizarInterfaz()
                 }
             }
         }
@@ -161,6 +148,7 @@ class ListadoFacturasViewModel @Inject constructor(
 
     fun limpiarFiltros() {
         val resetFiltros = calcularRangoInicial(stateUI.facturasBase)
+        Log.d("ListadoFacturaVM", "limpiarFiltros: $resetFiltros")
         savedStateHandle["filter_data"] = resetFiltros
     }
 
@@ -192,42 +180,85 @@ class ListadoFacturasViewModel @Inject constructor(
         tipo: Tipo = stateUI.filtroTipoActual,
         filtrosExtra: FiltUiState? = null
     ) {
-        if (estaCargando()) return
+        if (ignorarPorCargaInicial(filtrosExtra)) return
+        if (!asegurarServiciosDisponibles()) return
 
-        if (!stateUI.isLuzEnabled && !stateUI.isGasEnabled){
+        val tipoValidado = validarYObtenerTipo(tipo)
+         if (procesarCambioFiltros(filtrosExtra)) return
+
+        if (asegurarRangoInicial()) return
+
+        val facturasFiltradas = filtrarFacturas(tipoValidado, stateUI.filtros)
+
+
+        finalizarActualizacion(tipoValidado, facturasFiltradas)
+    }
+
+    private fun ignorarPorCargaInicial(filtrosExtra: FiltUiState?): Boolean {
+        if (stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading) {
+            if (stateUI.isLuzEnabled || stateUI.isGasEnabled) {
+                filtrosExtra?.let {
+                    if (it != stateUI.filtros) savedStateHandle["filter_data"] = it
+                }
+            }
+            if (stateUI.isLuzEnabled || stateUI.isGasEnabled) {
+                filtrosExtra?.let {
+                    if (it != stateUI.filtros) savedStateHandle["filter_data"] = it
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun asegurarServiciosDisponibles(): Boolean {
+        if (!stateUI.isLuzEnabled && !stateUI.isGasEnabled) {
             stateData = ListadoFacturasState.Error(
                 message = "No hay servicios disponibles actualmente",
                 type = ListadoFacturasState.ErrorType.NO_SERVICES
             )
-            return
+            return false
         }
-        val tipoValidado = when {
+        return true
+    }
+
+    private fun validarYObtenerTipo(tipo: Tipo): Tipo {
+        return when {
             tipo == Tipo.Luz && !stateUI.isLuzEnabled -> if (stateUI.isGasEnabled) Tipo.Gas else tipo
             tipo == Tipo.Gas && !stateUI.isGasEnabled -> if (stateUI.isLuzEnabled) Tipo.Luz else tipo
             else -> tipo
         }
-
+    }
+    private fun procesarCambioFiltros(filtrosExtra: FiltUiState?): Boolean {
         if (filtrosExtra != null && filtrosExtra != stateUI.filtros) {
             savedStateHandle["filter_data"] = filtrosExtra
-            return
+            return true
         }
-
-        if (necesitaRangoInicial()) {
-            savedStateHandle["filter_data"] = calcularRangoInicial(stateUI.facturasBase)
-            return
-        }
-
-        val facturasFiltradas = filtrarFacturas(tipoValidado, stateUI.filtros)
-
-        if (facturasFiltradas.isEmpty()) {
-            gestionarErrorSinResultados(tipoValidado)
-        } else {
-            actualizarEstadoExito(tipoValidado, facturasFiltradas)
-        }
+        return false
     }
 
-    private fun estaCargando() =
-        stateUI.facturasBase.isEmpty() && stateData is ListadoFacturasState.Loading
+    private fun asegurarRangoInicial(): Boolean {
+        if (necesitaRangoInicial()) {
+            savedStateHandle["filter_data"] = calcularRangoInicial(stateUI.facturasBase)
+            return true
+        }
+        return false
+    }
+
+    private fun finalizarActualizacion(tipo: Tipo, facturasFiltradas: List<Factura>) {
+        if (facturasFiltradas.isEmpty()) {
+            val estadoActual = stateData
+            if (estadoActual is ListadoFacturasState.Error &&
+                estadoActual.type != ListadoFacturasState.ErrorType.EMPTY_RESULTS
+            ) {
+                stateUI = stateUI.copy(filtroTipoActual = tipo)
+                return
+            }
+            gestionarErrorSinResultados(tipo)
+        } else {
+            actualizarEstadoExito(tipo, facturasFiltradas)
+        }
+    }
 
     private fun necesitaRangoInicial() =
         stateUI.filtros == FiltUiState() && stateUI.facturasBase.isNotEmpty()
@@ -238,27 +269,35 @@ class ListadoFacturasViewModel @Inject constructor(
             val cumpleFecha =
                 (filtros.dateFrom == null || !factura.fechaExpedicion.isBefore(filtros.dateFrom)) &&
                         (filtros.dateTo == null || !factura.fechaExpedicion.isAfter(filtros.dateTo))
-
-            val cumpleImporte = factura.valor >= filtros.priceRangeStart &&
-                    factura.valor <= filtros.priceRangeEnd
-
-            val cumpleEstado = filtros.selectedStates.isEmpty() ||
-                    filtros.selectedStates.contains(factura.estado.name)
+            val cumpleImporte =
+                factura.valor >= filtros.priceRangeStart && factura.valor <= filtros.priceRangeEnd
+            val cumpleEstado =
+                filtros.selectedStates.isEmpty() || filtros.selectedStates.contains(factura.estado.name)
 
             cumpleTipo && cumpleFecha && cumpleImporte && cumpleEstado
         }
     }
 
     private fun gestionarErrorSinResultados(tipo: Tipo) {
+        val tieneFacturasDeEsteTipo = stateUI.facturasBase.any { it.tipo == tipo }
+
         stateUI = stateUI.copy(
             filtroTipoActual = tipo,
             facturasAMostrar = emptyList(),
+            facturasPorAnio = emptyMap(),
             ultimaFactura = null
         )
-        val mensaje = if (stateUI.facturasBase.isNotEmpty()) "No existen facturas con estos filtros"
-        else "No se han encontrado facturas en su cuenta"
-        stateData =
-            ListadoFacturasState.Error(mensaje, ListadoFacturasState.ErrorType.EMPTY_RESULTS)
+
+        val mensaje = if (tieneFacturasDeEsteTipo) {
+            "No existen facturas con estos filtros"
+        } else {
+            "No se han encontrado facturas de tipo ${tipo.name} en su cuenta"
+        }
+
+        stateData = ListadoFacturasState.Error(
+            message = mensaje,
+            type = ListadoFacturasState.ErrorType.EMPTY_RESULTS
+        )
     }
 
     private fun actualizarEstadoExito(tipo: Tipo, facturas: List<Factura>) {

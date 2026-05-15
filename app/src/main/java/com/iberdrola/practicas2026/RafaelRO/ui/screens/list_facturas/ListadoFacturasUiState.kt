@@ -11,7 +11,7 @@ data class ListadoFacturasUiState(
     val facturasPorAnio: Map<Int, List<Factura>> = emptyMap(),
     val ultimaFactura: Factura? = null,
     val isRefreshing: Boolean = false,
-    val isFallback: Boolean = false, // True si se esperaba nube y vino local
+    val isFallback: Boolean = false,
     val filtros: FiltUiState = FiltUiState(),
     val isLuzEnabled: Boolean = true,
     val isGasEnabled: Boolean = true

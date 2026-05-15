@@ -20,6 +20,7 @@ data class GestionUiState(
     val error: String? = null,
     val isEmailValido: Boolean = false,
     val emailFormulario: String = "",
+    val emailOriginal: String = "",
     val terminosAceptados: Boolean = false,
     val codigoVerificacion: String = "",
     val errorCodigo: Boolean = false,
@@ -27,7 +28,8 @@ data class GestionUiState(
     val intentosRestantes: Int = MAX_INTENTOS,
     val reenvioEstado: ReenvioEstado = ReenvioEstado.Inicial,
     val ultimoCodigoEnviado: String? = null,
-    val esFlujoActivacion: Boolean = false
+    val esFlujoActivacion: Boolean = false,
+    val mostrarDialogoEmailIdentico: Boolean = false
 ) {
     companion object {
         const val MAX_INTENTOS = 3

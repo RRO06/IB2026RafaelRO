@@ -155,7 +155,10 @@ fun ListadoFacturasContent(
         onFilterGas = onFilterGas
     )
 
-    Column(modifier = modifier.systemBarsPadding().fillMaxSize().background(Color.White)) {
+    Column(modifier = modifier
+        .systemBarsPadding()
+        .fillMaxSize()
+        .background(Color.White)) {
         FacturasHeader(
             onBack = onBack,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -275,7 +278,7 @@ private fun FacturaPagerItem(
         stateUI.isLuzEnabled -> Tipo.Luz
         else -> Tipo.Gas
     }
-    
+
     val isRefreshing = stateUI.isRefreshing && stateUI.filtroTipoActual == typeForPage
     val state = rememberPullToRefreshState()
 
@@ -293,20 +296,18 @@ private fun FacturaPagerItem(
             )
         },
 
-        modifier = Modifier.fillMaxSize().background(Color.White)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        if (stateUI.filtroTipoActual == typeForPage) {
-            FacturaDataStateWrapper(
-                stateData = stateData,
-                stateUI = stateUI,
-                onFilter = onFilter,
-                onFacturaClick = onFacturaClick,
-                onRefresh = onRefresh,
-                onClearFilters = onClearFilters
-            )
-        } else {
-            LoadingScreen()
-        }
+        FacturaDataStateWrapper(
+            stateData = stateData,
+            stateUI = stateUI,
+            onFilter = onFilter,
+            onFacturaClick = onFacturaClick,
+            onRefresh = onRefresh,
+            onClearFilters = onClearFilters
+        )
     }
 }
 
@@ -371,6 +372,7 @@ fun FacturaDataStateWrapper(
                 onRetry = onRefresh
             )
         }
+
         is ListadoFacturasState.Success -> {
             ListadoFacturasSuccessContent(
                 actions = ListadoFacturasActions(
@@ -403,7 +405,10 @@ fun ListadoFacturasSuccessContent(
         }
     }
 
-    LaunchedEffect(remember { derivedStateOf { listState.firstVisibleItemIndex } }, listState.isScrollInProgress) {
+    LaunchedEffect(
+        remember { derivedStateOf { listState.firstVisibleItemIndex } },
+        listState.isScrollInProgress
+    ) {
         if (listState.firstVisibleItemIndex == 0 && !listState.isScrollInProgress) {
             showExtraSpacer = false
         }
@@ -481,7 +486,9 @@ private fun HistoricoSectionHeader(onFilter: () -> Unit, modifier: Modifier = Mo
             Icon(
                 imageVector = Icons.Default.Tune,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp).padding(end = 4.dp)
+                modifier = Modifier
+                    .size(20.dp)
+                    .padding(end = 4.dp)
             )
             Text(
                 text = "Filtrar",
@@ -558,7 +565,9 @@ fun UltimaFacturaCard(factura: Factura, onClick: () -> Unit, modifier: Modifier 
             UltimaFacturaCardBody(factura = factura)
             Spacer(modifier = Modifier.weight(1f))
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth().height(1.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp),
                 thickness = DividerDefaults.Thickness,
                 color = DividerDefaults.color
             )
