@@ -92,7 +92,14 @@ fun VerificacionCodigoScreen(
     var showNotification by remember { mutableStateOf(false) }
     var codeToDisplay by remember { mutableStateOf("") }
 
-    BackHandler { onBack() }
+    BackHandler {
+        viewModel.logClick("boton_atras_fisico", "verificacion_codigo")
+        onBack()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "verificacion_codigo")
+    }
 
     LaunchedEffect(state.ultimoCodigoEnviado) {
         if (state.ultimoCodigoEnviado == null) {
@@ -112,6 +119,7 @@ fun VerificacionCodigoScreen(
         },
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_anterior", "verificacion_codigo")
                 onBack()
             }
         },
@@ -120,12 +128,16 @@ fun VerificacionCodigoScreen(
                 onNext(email)
             }
         },
-        onDismissBanner = viewModel::dismissBanner,
+        onDismissBanner = {
+            viewModel.logClick("cerrar_banner_exito", "verificacion_codigo")
+            viewModel.dismissBanner()
+        },
         onGuardarCambios = viewModel::guardarCambiosConCodigo,
         verificarCodigo = viewModel::verificarCodigo,
         obfuscatePhone = viewModel::obfuscatePhone,
         onClose = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_cerrar", "verificacion_codigo")
                 onClose()
             }
         }
@@ -138,6 +150,7 @@ fun VerificacionCodigoScreen(
             visible = showNotification,
             code = codeToDisplay,
             onClose = {
+                viewModel.logClick("cerrar_notificacion_sms", "verificacion_codigo")
                 showNotification = false
                 viewModel.toastMostrado()
             }
@@ -167,7 +180,7 @@ fun VerificacionCodigoContent(
                 esFlujoActivacion = state.esFlujoActivacion
             )
 
-            SolidProgressBar(progressValue = 0.75f)
+            SolidProgressBar()
 
             Column(
                 modifier = Modifier
@@ -229,7 +242,7 @@ private fun VerificacionHeader(onClose: () -> Unit, esFlujoActivacion: Boolean =
 }
 
 @Composable
-private fun SolidProgressBar(progressValue: Float) {
+private fun SolidProgressBar(progressValue: Float = 0.75f) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

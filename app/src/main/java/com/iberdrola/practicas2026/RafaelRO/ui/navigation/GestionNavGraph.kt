@@ -101,6 +101,7 @@ fun NavGraphBuilder.gestionNavGraph(navController: NavHostController, modifier: 
             onContinuar = { 
                 navController.safePopBackStackTo(Screen.ExitoActivacion.route, Screen.FacturaElectronica.route) 
             },
+            viewModel = hiltViewModel(),
             modifier = modifier
         )
     }
@@ -116,6 +117,7 @@ fun NavGraphBuilder.gestionNavGraph(navController: NavHostController, modifier: 
             onContinuar = { 
                 navController.safePopBackStackTo(Screen.ExitoModificacion.route, Screen.FacturaElectronica.route) 
             },
+            viewModel = hiltViewModel(),
             modifier = modifier
         )
     }

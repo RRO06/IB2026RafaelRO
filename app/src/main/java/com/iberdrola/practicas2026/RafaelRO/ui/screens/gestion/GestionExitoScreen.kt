@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.iberdrola.practicas2026.RafaelRO.R
 
 @Composable
@@ -36,8 +38,13 @@ fun GestionExitoScreen(
     titulo: String,
     email: String,
     onContinuar: () -> Unit,
+    viewModel: GestionViewModel,
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "gestion_exito")
+    }
+
     // Box para fondo verde total incluyendo status bar
     Box(
         modifier = modifier
@@ -58,7 +65,10 @@ fun GestionExitoScreen(
                     .padding(top = 8.dp),
                 contentAlignment = Alignment.TopEnd
             ) {
-                IconButton(onClick = onContinuar) {
+                IconButton(onClick = {
+                    viewModel.logClick("boton_cerrar", "gestion_exito")
+                    onContinuar()
+                }) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Cerrar",
@@ -108,7 +118,10 @@ fun GestionExitoScreen(
 
             // Botón Aceptar inferior
             Button(
-                onClick = onContinuar,
+                onClick = {
+                    viewModel.logClick("boton_aceptar", "gestion_exito")
+                    onContinuar()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -138,6 +151,7 @@ fun GestionExitoScreenPreview(){
     GestionExitoScreen(
         titulo = "¡Has modificado correctamente tu email!",
         email = "holasoyrafa@gmail.com",
-        onContinuar = {}
+        onContinuar = {},
+        viewModel = hiltViewModel()
     )
 }

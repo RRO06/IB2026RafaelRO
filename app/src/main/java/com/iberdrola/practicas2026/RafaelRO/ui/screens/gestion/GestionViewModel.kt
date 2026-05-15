@@ -101,8 +101,8 @@ class GestionViewModel @Inject constructor(
     fun esFlujoActivacion(): Boolean = state.esFlujoActivacion
 
     fun desactivarFacturaElectronica(onSuccess: () -> Unit) {
-        analyticsManager.logClick("desactivar_factura_confirmado", "detalle_factura_activa")
         val id = contratoId ?: return
+        logClick("confirmar_desactivacion", "detalle_factura_activa")
         viewModelScope.launch {
             state = state.copy(isVerifying = true)
             val email = state.emailFormulario.ifBlank { state.contrato?.email ?: "" }
@@ -117,11 +117,12 @@ class GestionViewModel @Inject constructor(
     }
 
     fun guardarCambiosConCodigo(onSuccess: () -> Unit) {
+        logClick("boton_verificar_codigo", "verificacion_codigo")
         ejecutarProcesoGuardado(validarCodigo = true, onSuccess = onSuccess)
     }
 
     fun guardarCambiosSinCodigo(onSuccess: () -> Unit) {
-        // Comparamos contra el email original que tenía el contrato antes de empezar a editar
+        logClick("boton_continuar_email", "modificar_email")
         if (state.emailFormulario == state.emailOriginal) {
             state = state.copy(mostrarDialogoEmailIdentico = true)
             return
@@ -133,7 +134,6 @@ class GestionViewModel @Inject constructor(
         val id = contratoId ?: return
 
         viewModelScope.launch {
-            // Limpiamos banner de éxito anterior al empezar una nueva verificación
             state = state.copy(isVerifying = true, errorCodigo = false, mostrarBannerExito = false)
             val codigoCorrecto = state.codigoVerificacion == state.codigoGenerado
             val puedeProceder = if (validarCodigo) codigoCorrecto else true
@@ -180,8 +180,8 @@ class GestionViewModel @Inject constructor(
 
     fun reenviarCodigo() {
         if (state.isVerifying || state.reenvioEstado is ReenvioEstado.Agotado) return
+        logClick("boton_reenviar_codigo", "verificacion_codigo")
         viewModelScope.launch {
-            // Limpiamos banner de error anterior al reenviar
             state = state.copy(
                 isVerifying = true,
                 mostrarBannerExito = false,
@@ -208,8 +208,8 @@ class GestionViewModel @Inject constructor(
         }
     }
 
-    fun logSiguientePaso(contratoId: Int) {
-        analyticsManager.logClick("activar_siguiente_paso", "activar_factura", mapOf("id" to contratoId.toString()))
+    fun logClick(nombreBoton: String, nombrePantalla: String, parametrosExtra: Map<String, String> = emptyMap()) {
+        analyticsManager.registrarClic(nombreBoton, nombrePantalla, parametrosExtra)
     }
 
     fun dismissBanner() {

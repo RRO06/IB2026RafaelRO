@@ -11,15 +11,15 @@ class AnalyticsManager @Inject constructor() {
 
     private val analytics = Firebase.analytics
 
-    fun logClick(
-        buttonName: String,
-        screenName: String,
-        extraParams: Map<String, String> = emptyMap()
+    fun registrarClic(
+        nombreBoton: String,
+        nombrePantalla: String,
+        parametrosExtra: Map<String, String> = emptyMap()
     ) {
-        analytics.logEvent("button_click") {
-            param("button_name", buttonName)
-            param("screen_name", screenName)
-            extraParams.forEach { (key, value) -> param(key, value) }
+        analytics.logEvent("clic_boton") {
+            param("nombre_boton", nombreBoton)
+            param("nombre_pantalla", nombrePantalla)
+            parametrosExtra.forEach { (llave, valor) -> param(llave, valor) }
         }
     }
 }

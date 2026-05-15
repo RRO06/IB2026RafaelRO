@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,7 +60,18 @@ fun ModificarEmailScreen(
 
     BackHandler {
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "modificar_email")
             onBack()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.logClick("visualizacion_pantalla", "modificar_email")
+    }
+
+    LaunchedEffect(state.mostrarDialogoEmailIdentico) {
+        if (state.mostrarDialogoEmailIdentico) {
+            viewModel.logClick("dialogo_email_identico_mostrado", "modificar_email")
         }
     }
 
@@ -67,11 +79,13 @@ fun ModificarEmailScreen(
         onEmailChanged = { viewModel.onEmailChanged(it) },
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_anterior", "modificar_email")
                 onBack()
             }
         },
         onClose = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_cerrar", "modificar_email")
                 onClose()
             }
         },
@@ -82,7 +96,10 @@ fun ModificarEmailScreen(
                 }
             }
         },
-        onDismissDialog = { viewModel.dismissDialogoEmailIdentico() }
+        onDismissDialog = {
+            viewModel.logClick("boton_aceptar_email_identico", "modificar_email")
+            viewModel.dismissDialogoEmailIdentico()
+        }
     )
 
     ModificarEmailContent(

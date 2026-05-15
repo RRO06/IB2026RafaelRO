@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,6 +62,7 @@ fun DetalleFacturaActivaScreen(
 
     BackHandler {
         if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+            viewModel.logClick("boton_atras_fisico", "detalle_factura_activa")
             showDialog = false
             onBack()
         }
@@ -73,24 +73,31 @@ fun DetalleFacturaActivaScreen(
         showDialog = showDialog,
         onBack = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_atras", "detalle_factura_activa")
                 showDialog = false
                 onBack()
             }
         },
         onModificarClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_modificar_email", "detalle_factura_activa")
                 showDialog = false
                 uiState.contrato?.id?.let { onModificarClick(it) }
             }
         },
         onDesactivarClick = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("boton_desactivar_factura", "detalle_factura_activa")
                 showDialog = true
             }
         },
-        onDismissDialog = { showDialog = false },
+        onDismissDialog = {
+            viewModel.logClick("cerrar_dialogo_desactivacion", "detalle_factura_activa")
+            showDialog = false
+        },
         onConfirmDesactivar = {
             if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                viewModel.logClick("confirmar_desactivacion", "detalle_factura_activa")
                 showDialog = false
                 viewModel.desactivarFacturaElectronica { onBack() }
             }

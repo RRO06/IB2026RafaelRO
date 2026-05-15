@@ -3,11 +3,9 @@ package com.iberdrola.practicas2026.RafaelRO.ui.screens.gestion
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import com.iberdrola.practicas2026.RafaelRO.ui.common.theme.GreenAplication
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,14 +27,10 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,6 +79,7 @@ fun ActivarFacturaScreen(
 
     // Manejamos el botón físico de atrás
     BackHandler {
+        viewModel.logClick("boton_atras_fisico", "activar_factura")
         infoDialogTitle = null
         onBack()
     }
@@ -92,29 +87,36 @@ fun ActivarFacturaScreen(
     val actions =
         ActivarFacturaActions(
             onEmailChanged = viewModel::onEmailChanged,
-            onTermsAccepted = viewModel::onTermsAccepted,
+            onTermsAccepted = {
+                viewModel.logClick("checkbox_terminos", "activar_factura", mapOf("aceptado" to it.toString()))
+                viewModel.onTermsAccepted(it)
+            },
             obfuscateEmail = viewModel::obfuscateEmail,
             guardarCambios = viewModel::guardarCambiosSinCodigo,
             onBack = {
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    viewModel.logClick("boton_anterior", "activar_factura")
                     infoDialogTitle = null
                     onBack()
                 }
             },
             onNext = { id ->
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    viewModel.logClick("boton_siguiente", "activar_factura")
                     infoDialogTitle = null
                     onNext(id)
                 }
             },
             onClose = {
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    viewModel.logClick("boton_cerrar", "activar_factura")
                     infoDialogTitle = null
                     onClose()
                 }
             },
             onMoreInfo = { label ->
                 if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    viewModel.logClick("enlace_mas_info", "activar_factura", mapOf("seccion" to label))
                     infoDialogTitle = label
                 }
             }
@@ -136,11 +138,17 @@ fun ActivarFacturaScreen(
             }
 
             AlertDialog(
-                onDismissRequest = { infoDialogTitle = null },
+                onDismissRequest = {
+                    viewModel.logClick("cerrar_dialogo_info_externo", "activar_factura")
+                    infoDialogTitle = null
+                },
                 title = { Text(text = infoDialogTitle!!, fontWeight = FontWeight.Bold) },
                 text = { Text(dialogText) },
                 confirmButton = {
-                    TextButton(onClick = { infoDialogTitle = null }) {
+                    TextButton(onClick = {
+                        viewModel.logClick("boton_cerrar_dialogo_info", "activar_factura")
+                        infoDialogTitle = null
+                    }) {
                         Text("Cerrar", color = Color(0xFF006644), fontWeight = FontWeight.Bold)
                     }
                 },
